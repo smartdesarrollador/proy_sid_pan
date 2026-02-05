@@ -1,0 +1,114 @@
+# ============================================
+# .gitignore - AI/ML Development Project
+# ============================================
+
+# ---------- Environment & Secrets ----------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+credentials/
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.venv/
+venv/
+env/
+ENV/
+
+# ---------- Node.js / TypeScript ----------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.yarn/cache
+.pnp.*
+
+# ---------- AI/ML Models & Data ----------
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.gguf
+*.bin
+models/
+checkpoints/
+data/raw/
+data/processed/
+data/cache/
+*.parquet
+*.feather
+*.arrow
+
+# ---------- Embeddings & Vector DBs ----------
+*.faiss
+*.index
+chroma_db/
+qdrant_storage/
+weaviate_data/
+
+# ---------- Notebooks ----------
+.ipynb_checkpoints/
+
+# ---------- IDE ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Build & Dist ----------
+dist/
+build/
+out/
+*.egg-info/
+*.whl
+
+# ---------- Testing & Coverage ----------
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage/
+*.lcov
+
+# ---------- Logs ----------
+logs/
+*.log
+
+# ---------- Docker ----------
+.docker/
+
+# ---------- Claude Code (local only) ----------
+.claude/settings.local.json
+
+# ---------- Reports (generated) ----------
+# reports/  # Uncomment if you don't want to track generated reports
