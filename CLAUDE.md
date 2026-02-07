@@ -80,8 +80,9 @@ src/
 
 ## Custom Tools & Skills
 
-- Skills: `.claude/skills/` (code-review, testing-patterns, debugging)
-- Commands: `.claude/commands/` (onboard, create-prd, generate-report, pr-review)
+- Skills: `.claude/skills/` (django-db-models, drf-auth, drf-core-api, drf-docs, drf-errors, drf-performance, drf-security, drf-testing, drf-utils)
+- Commands: `.claude/commands/` (create-prd, generate-report, onboard, pr-review)
 - Agents: `.claude/agents/` (code-reviewer, planner, researcher)
-- Rules: `.claude/rules/` (code-style, security, ai-development)
+- Rules: `.claude/rules/` (ai-development, code-style, security)
+- Hooks: `.claude/hooks/` (detect-doc-changes.sh, sync-claude-md.sh, task-finished-alert.py)
 - See `.claude/README.md` for full configuration reference
