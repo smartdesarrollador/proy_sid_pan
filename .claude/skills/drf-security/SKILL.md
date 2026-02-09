@@ -1,12 +1,88 @@
-# Django REST Framework Security - Complete Guide
+---
+name: drf-security
+description: |
+  Django REST Framework security guide covering OWASP Top 10 and production hardening. Use this skill when:
+  - Implementing authentication/authorization (JWT, OAuth, API keys, permissions)
+  - Preventing vulnerabilities (SQL injection, XSS, CSRF, SSRF, broken access control)
+  - Configuring CORS, security headers, HTTPS/SSL, rate limiting
+  - Securing sensitive data (encryption, secrets management, PII handling)
+  - Hardening production APIs (input validation, error handling, logging)
+  - Conducting security reviews, audits, or pentesting
+  - Implementing file upload security, session management, database security
+  - Following compliance standards (OWASP Top 10, PCI-DSS, GDPR, HIPAA)
+  - Setting up security monitoring, dependency scanning, security testing
+license: MIT
+---
 
-Patrones y mejores prácticas para asegurar APIs REST con Django REST Framework, cubriendo las vulnerabilidades OWASP Top 10 y técnicas de hardening aplicables a cualquier proyecto.
+# Django REST Framework - Security Guide
 
-**Cuándo usar**: Implementación de seguridad, auditorías de código, hardening de APIs, prevención de vulnerabilidades, configuración de producción, pentesting, security reviews.
+Complete security guide for Django REST Framework APIs covering OWASP Top 10 vulnerabilities, authentication, authorization, and production hardening.
+
+## When to Use This Skill
+
+Invoke this skill when you need to:
+
+**Prevent Vulnerabilities**:
+- SQL Injection, XSS, CSRF, SSRF, Command Injection
+- Broken Access Control, Authentication Failures
+- Cryptographic Failures, Security Misconfiguration
+
+**Implement Security Features**:
+- Authentication (JWT, OAuth2, API Keys, Session-based)
+- Authorization (Permissions, RBAC, ABAC, Object-level)
+- Rate Limiting, CORS, Security Headers, HTTPS/SSL
+
+**Secure Sensitive Operations**:
+- File uploads, Password handling, Secrets management
+- PII/PHI data protection, Encryption at rest/transit
+- Session security, Token management
+
+**Production Hardening**:
+- Input validation, Error handling, Logging/monitoring
+- Dependency security, Database security, API key rotation
+- Compliance (GDPR, HIPAA, PCI-DSS, SOC 2)
+
+## How to Use This Skill
+
+1. **Identify your security concern** from the quick reference below
+2. **Jump to the relevant section** (§1-§22 for features, OWASP for vulnerabilities)
+3. **Apply secure patterns** - all code examples are production-ready
+4. **Test security** using the security testing section (§20)
+
+## Quick Reference
+
+| Security Area | Section | Critical Patterns |
+|---------------|---------|-------------------|
+| **CORS** | §1 | Whitelist origins, never use ALLOW_ALL in production |
+| **SQL Injection** | §2 | Use ORM, parameterized queries, avoid raw SQL |
+| **Authentication** | §3 | Strong password hashing (Argon2), MFA, account lockout |
+| **JWT Security** | §4 | Short expiry, refresh tokens, blacklisting, secure algorithms |
+| **Rate Limiting** | §5 | Per-user/IP limits, burst protection, backoff |
+| **HTTPS/SSL** | §6 | TLS 1.2+, HSTS, certificate validation |
+| **Security Headers** | §7 | CSP, X-Frame-Options, HSTS, X-Content-Type |
+| **CSRF** | §8 | Token validation, SameSite cookies, double-submit |
+| **Input Validation** | §9 | Whitelist validation, DRF serializers, sanitization |
+| **XSS Prevention** | §10 | Output escaping, CSP, sanitize HTML input |
+| **Authorization** | §11 | Permissions, RBAC, object-level checks |
+| **Session Security** | §12 | Secure cookies, session timeout, regeneration |
+| **API Keys** | §13 | Hashing, rotation, rate limiting per key |
+| **Sensitive Data** | §14 | Encryption at rest/transit, secrets management, PII |
+| **File Upload** | §15 | Type validation, size limits, antivirus scanning |
+| **Dependencies** | §16 | Vulnerability scanning, auto-updates, SCA tools |
+| **Logging** | §17 | Security events, anomaly detection, SIEM |
+| **Error Handling** | §18 | Safe error messages, no stack traces in production |
+| **Database** | §19 | Least privilege, encrypted connections, backups |
+| **Testing** | §20 | SAST, DAST, penetration testing, fuzzing |
+| **Production** | §21 | Hardening checklist, monitoring, incident response |
+| **Compliance** | §22 | OWASP, GDPR, HIPAA, PCI-DSS, SOC 2 |
 
 ---
 
-## 1. CORS Configuration
+## §1. CORS Configuration
+
+**Quick Start**: Use `django-cors-headers`. Whitelist specific origins with `CORS_ALLOWED_ORIGINS`. NEVER use `CORS_ALLOW_ALL_ORIGINS=True` in production.
+
+### Setup
 
 ### Setup de django-cors-headers
 
@@ -107,9 +183,13 @@ CORS_ALLOWED_ORIGINS = [
 
 ---
 
-## 2. SQL Injection Prevention
+## §2. SQL Injection Prevention
 
-### Django ORM - Parametrized queries (seguro por defecto)
+**Quick Start**: Django ORM is secure by default (uses parameterized queries). NEVER use f-strings or string concatenation in raw SQL. Always use `%s` placeholders with parameter lists.
+
+**⚠️ Critical**: Avoid `.raw()` and `.extra()` when possible. If required, always use parameterized queries.
+
+### Secure by Default (Django ORM)
 
 ```python
 # ✅ SEGURO - Django ORM usa prepared statements
@@ -192,7 +272,9 @@ Product.objects.filter(price__gt=F('cost') * 1.5)
 
 ---
 
-## 3. Authentication Security
+## §3. Authentication Security
+
+**Quick Start**: Use Argon2 for password hashing. Implement MFA, account lockout after failed attempts, password strength requirements. Use Django's built-in `User` model or extend with `AbstractBaseUser`.
 
 ### Password Hashing
 
@@ -3960,15 +4042,73 @@ escape(user_content)
 
 ---
 
-## Referencias
+## Security Best Practices - Executive Summary
+
+### 🔐 Authentication & Authorization
+- ✅ Argon2 password hashing, 12+ chars minimum, MFA for privileged accounts
+- ✅ JWT: 15min access + 7d refresh tokens, blacklist on logout, rotate secrets
+- ✅ Object-level permissions (not just endpoint-level), principle of least privilege
+
+### 🛡️ Input Validation & Injection Prevention
+- ✅ NEVER use f-strings in SQL (use `%s` placeholders with params)
+- ✅ Validate ALL input with DRF serializers, whitelist allowed values
+- ✅ Escape output, use Django templates (auto-escaping), sanitize HTML
+
+### 🌐 API Security Configuration
+- ✅ CORS: Whitelist origins, NEVER `ALLOW_ALL=True` in production
+- ✅ Rate limiting: per-user + per-IP, burst protection, exponential backoff
+- ✅ HTTPS only: TLS 1.2+, HSTS with long max-age, secure cookies
+
+### 🔒 Headers & Session Security
+- ✅ Security headers: CSP, X-Frame-Options: DENY, X-Content-Type-Options: nosniff
+- ✅ Secure cookies: HttpOnly, Secure, SameSite=Strict
+- ✅ Session timeout: 15-30min inactivity, regenerate ID after login
+
+### 💾 Sensitive Data Protection
+- ✅ Encrypt PII/PHI at rest (field-level), environment vars for secrets
+- ✅ Mask sensitive data in logs (passwords, tokens, credit cards)
+- ✅ Data retention policies, purge old data regularly
+
+### 📊 Logging & Monitoring
+- ✅ Log security events: failed logins, permission denials, suspicious patterns
+- ✅ NEVER expose stack traces/debug info in production (DEBUG=False)
+- ✅ Centralized logging + SIEM integration, alerting on critical events
+
+### 🏗️ Production Hardening
+- ✅ Strong SECRET_KEY (50+ chars), limit ALLOWED_HOSTS to specific domains
+- ✅ Vulnerability scanning: pip-audit, Safety, Bandit in CI/CD
+- ✅ Keep dependencies updated, monitor CVE databases
+- ✅ File uploads: validate type/size, antivirus scanning, isolated storage
+
+### ✅ OWASP Top 10 Quick Reference
+
+| Vulnerability | Critical Prevention |
+|---------------|---------------------|
+| **A01: Broken Access Control** | Check permissions on EVERY request, object-level checks |
+| **A02: Cryptographic Failures** | TLS 1.2+, Argon2 hashing, no hardcoded secrets |
+| **A03: Injection** | Parameterized queries, input validation, output escaping |
+| **A04: Insecure Design** | Threat modeling, security by design, secure defaults |
+| **A05: Security Misconfiguration** | DEBUG=False, secure headers, hardening checklist |
+| **A06: Vulnerable Components** | Regular updates, SCA tools, automated scanning |
+| **A07: Auth Failures** | MFA, account lockout (5 attempts), strong passwords |
+| **A08: Data Integrity Failures** | Code signing, integrity checks, secure pipelines |
+| **A09: Logging Failures** | Security event logging, SIEM integration, monitoring |
+| **A10: SSRF** | Whitelist domains, validate URLs, block private networks |
+
+---
+
+## References
 
 - **OWASP Top 10**: https://owasp.org/www-project-top-ten/
 - **Django Security**: https://docs.djangoproject.com/en/stable/topics/security/
 - **DRF Security**: https://www.django-rest-framework.org/topics/security/
 - **CWE Top 25**: https://cwe.mitre.org/top25/
 - **NIST Cybersecurity Framework**: https://www.nist.gov/cyberframework
+- **OWASP ASVS**: https://owasp.org/www-project-application-security-verification-standard/
+- **Django Deployment Checklist**: https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
 
 ---
 
-**Última actualización**: 2026-02
-**Versión**: 1.0
+**Last Updated**: 2026-02
+**Version**: 2.0
+**License**: MIT

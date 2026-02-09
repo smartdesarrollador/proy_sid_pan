@@ -1,14 +1,68 @@
+---
+name: drf-utils
+description: |
+  Django REST Framework utilities and common patterns. Use this skill when implementing:
+  - Management commands (data cleanup, imports, batch processing)
+  - Django signals (model events, cache invalidation, notifications)
+  - File uploads (validation, S3/cloud storage, image processing)
+  - Email sending (HTML templates, queuing, attachments)
+  - Background tasks with Celery (async processing, periodic tasks, retries)
+  - Logging patterns (structured logging, audit trails, request tracking)
+  - Custom mixins/abstract models (timestamps, soft delete, UUID, publishable)
+  - Custom middleware (timing, logging, user agent detection)
+  - Model managers/querysets (custom filters, reusable query methods)
+  - Decorators (permissions, caching, rate limiting, retry logic)
+  - Data export/import (CSV, Excel, PDF, bulk operations, streaming)
+  - Common patterns (health checks, audit logging, webhooks, API versioning)
+license: MIT
+---
+
 # Django REST Framework - Utilities & Common Patterns
 
-Patrones reutilizables y utilities frecuentemente necesarios en proyectos Django REST Framework.
+This skill provides production-ready code patterns for common Django/DRF features. All code examples are copy-paste ready and follow Django/DRF best practices.
 
-**Cuándo usar**: Desarrollo de features comunes, utilities, management commands, background tasks, file uploads, emails, mixins, decorators, exports, imports.
+## When to Use This Skill
+
+Invoke this skill when you need to implement any of these features in a Django REST Framework project:
+
+- **Infrastructure**: Management commands, signals, middleware, logging
+- **File Handling**: Uploads, validation, cloud storage, image processing
+- **Communication**: Emails, background tasks, webhooks, notifications
+- **Data Operations**: Import/export (CSV, Excel, PDF), bulk operations, streaming
+- **Code Patterns**: Mixins, abstract models, custom managers, decorators
+- **System Features**: Health checks, audit logging, soft delete, API versioning
+
+## How to Use This Skill
+
+1. **Identify your need** from the quick reference below
+2. **Jump to the relevant section** for implementation details
+3. **Copy and adapt** the code to your project
+4. **Follow the inline comments** for customization options
+
+## Quick Reference
+
+| Feature | Section | Use Cases |
+|---------|---------|-----------|
+| Management Commands | §1 | Data cleanup, imports, batch jobs, scheduled tasks |
+| Django Signals | §2 | Auto-create related objects, cache invalidation, audit logs |
+| File Uploads | §3 | Handle file/image uploads, S3 storage, validation, thumbnails |
+| Email Sending | §4 | HTML emails, attachments, async with Celery |
+| Background Tasks | §5 | Async processing, periodic tasks, retry logic |
+| Logging | §6 | Structured logs, request tracking, JSON formatting |
+| Mixins & Abstract Models | §7 | Timestamps, soft delete, UUID, publishable content |
+| Custom Middleware | §8 | Request/response processing, timing, logging |
+| Model Managers | §9 | Custom filters, reusable querysets, soft delete |
+| Decorators | §10 | Permissions, caching, rate limiting, retry |
+| Export/Import | §11 | CSV, Excel, PDF, bulk imports, streaming |
+| Common Patterns | §12 | Health checks, audit logs, webhooks, versioning |
 
 ---
 
-## 1. Custom Management Commands
+## §1. Custom Management Commands
 
-### Estructura Básica
+**Quick Start**: Create `management/commands/my_command.py` with a `Command` class.
+
+### Basic Structure
 
 ```python
 # management/commands/my_command.py
@@ -132,9 +186,13 @@ class CommandTests(TestCase):
 
 ---
 
-## 2. Django Signals
+## §2. Django Signals
 
-### Signal Types
+**Quick Start**: Use `@receiver` decorator to connect signal handlers. Common signals: `post_save`, `pre_save`, `post_delete`, `m2m_changed`.
+
+**⚠️ Warning**: Avoid using signals for business logic that belongs in model methods. Signals are for cross-app communication, not core business rules.
+
+### Common Signal Patterns
 
 ```python
 from django.db.models.signals import (
@@ -270,9 +328,11 @@ def notify_comment_author(sender, instance, created, **kwargs):
 
 ---
 
-## 3. File Upload Handling
+## §3. File Upload Handling
 
-### FileField vs ImageField
+**Quick Start**: Use `models.FileField` for any file, `models.ImageField` for images (auto-validates). Add validators for size/type restrictions.
+
+### Model Configuration
 
 ```python
 # models.py
@@ -456,9 +516,11 @@ class Photo(models.Model):
 
 ---
 
-## 4. Email Sending
+## §4. Email Sending
 
-### Email Configuration
+**Quick Start**: Configure `EMAIL_BACKEND` in settings. Use `EmailMultiAlternatives` for HTML emails. Queue with Celery for async delivery.
+
+### Configuration (settings.py)
 
 ```python
 # settings.py
@@ -628,9 +690,13 @@ class EmailTests(TestCase):
 
 ---
 
-## 5. Background Tasks (Celery)
+## §5. Background Tasks (Celery)
 
-### Setup Básico
+**Quick Start**: Install `celery` and `redis`. Create `celery.py` with app configuration. Decorate functions with `@shared_task`.
+
+**Common Use Cases**: Sending emails, processing uploads, generating reports, data cleanup, external API calls.
+
+### Setup
 
 ```python
 # Install: pip install celery redis
@@ -817,9 +883,11 @@ result = job.apply_async()
 
 ---
 
-## 6. Logging Patterns
+## §6. Logging Patterns
 
-### Configuration in settings.py
+**Quick Start**: Configure `LOGGING` dict in settings.py. Use Python's `logging.getLogger(__name__)` in each module. Add extra fields for structured logging.
+
+### Basic Configuration
 
 ```python
 # settings.py
@@ -1033,9 +1101,11 @@ LOGGING = {
 
 ---
 
-## 7. Mixins & Abstract Models
+## §7. Mixins & Abstract Models
 
-### TimestampedModel
+**Quick Start**: Create abstract base models with `Meta: abstract = True`. Common mixins: timestamps, soft delete, UUID primary key, publishable content.
+
+### Essential Mixins
 
 ```python
 # models.py
@@ -1223,9 +1293,11 @@ post.publish()
 
 ---
 
-## 8. Custom Middleware
+## §8. Custom Middleware
 
-### Middleware Structure
+**Quick Start**: Create class with `__init__(get_response)` and `__call__(request)`. Add to `MIDDLEWARE` in settings.py.
+
+### Structure
 
 ```python
 # middleware.py
@@ -1366,9 +1438,11 @@ class MiddlewareTests(TestCase):
 
 ---
 
-## 9. Model Managers & QuerySets
+## §9. Model Managers & QuerySets
 
-### Custom Managers
+**Quick Start**: Create custom `QuerySet` with reusable filter methods. Create `Manager` that returns your custom QuerySet. Assign to model's `objects`.
+
+### Pattern
 
 ```python
 # models.py
@@ -1498,9 +1572,11 @@ class SoftDeleteModel(models.Model):
 
 ---
 
-## 10. Decorators
+## §10. Decorators
 
-### Permission Decorators
+**Quick Start**: Use `@functools.wraps(func)` to preserve function metadata. Common patterns: permissions, caching, rate limiting, retry logic, timing.
+
+### Common Decorators
 
 ```python
 # decorators.py
@@ -1678,9 +1754,11 @@ def expensive_operation():
 
 ---
 
-## 11. Data Export/Import
+## §11. Data Export/Import
 
-### CSV/Excel Export
+**Quick Start**: Use `csv.writer()` for CSV, `openpyxl` for Excel, `reportlab` for PDF. For large datasets, use `StreamingHttpResponse` with `.iterator(chunk_size=100)`.
+
+### Export Formats
 
 ```python
 # views.py
@@ -1945,9 +2023,11 @@ class StreamJSONView(APIView):
 
 ---
 
-## 12. Common Patterns
+## §12. Common Patterns
 
-### Health Check Endpoints
+**Quick Start**: Production-ready patterns for health checks, audit logging, webhooks, and API versioning.
+
+### Monitoring & Operations
 
 ```python
 # views.py
@@ -2191,5 +2271,34 @@ def my_task(self, data):
 
 ---
 
-**Última actualización**: 2026-02
-**Versión**: 1.0
+## Summary: Best Practices
+
+**Code Organization**:
+- Keep management commands focused on single responsibility
+- Use abstract models for reusable patterns (timestamps, soft delete, UUID)
+- Create custom QuerySets for reusable filter logic
+- Place signals in `signals.py`, register in `apps.py`
+
+**Performance**:
+- Queue emails and heavy processing with Celery
+- Use `.iterator(chunk_size=100)` for large querysets
+- Stream large exports with `StreamingHttpResponse`
+- Cache expensive operations with decorators
+
+**Security**:
+- Validate file uploads (type, size, dimensions)
+- Verify webhook signatures with HMAC
+- Use environment variables for secrets (S3 keys, SMTP passwords)
+- Sanitize user input before processing
+
+**Production Ready**:
+- Add health check endpoints for monitoring
+- Implement structured logging with request IDs
+- Create audit trails for sensitive operations
+- Use versioning for public APIs (URL or header-based)
+
+---
+
+**Last Updated**: 2026-02
+**Version**: 2.0
+**License**: MIT
