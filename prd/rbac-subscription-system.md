@@ -1,10 +1,10 @@
 # PRD: Sistema Avanzado de Gestión de Roles, Permisos y Suscripciones Multi-Tenant
 
-**Version:** 1.0.0
-**Date:** 2026-02-09
+**Version:** 2.0.0
+**Date:** 2026-02-10
 **Status:** Draft
 **Owner:** Product Team
-**Tech Stack:** Django REST Framework, PostgreSQL, Angular, Tailwind CSS
+**Tech Stack:** Django REST Framework, PostgreSQL, Angular (Admin + Cliente), React (Prototipos), Tailwind CSS
 
 ---
 
@@ -12,7 +12,11 @@
 
 ### 1.1 Visión del Producto
 
-Construir una plataforma SaaS empresarial que permita a organizaciones gestionar usuarios, roles, permisos y suscripciones con aislamiento completo de datos (multi-tenant), escalabilidad horizontal, y cumplimiento de estándares de seguridad modernos. El sistema ofrecerá un modelo RBAC (Role-Based Access Control) avanzado con permisos granulares, jerarquía de roles, delegación temporal, y auditoría completa.
+Construir una plataforma SaaS empresarial que permita a organizaciones gestionar usuarios, roles, permisos y suscripciones con aislamiento completo de datos (multi-tenant), escalabilidad horizontal, y cumplimiento de estándares de seguridad modernos. El sistema ofrecerá:
+
+1. **Panel Administrativo (RBAC)**: Modelo RBAC (Role-Based Access Control) avanzado con permisos granulares, jerarquía de roles, delegación temporal, y auditoría completa para administradores de organizaciones.
+
+2. **Suite de Servicios para Clientes**: Herramientas productivas (Calendario, Tareas, Notificaciones, Archivos, Portafolio) disponibles para usuarios finales según su plan de suscripción.
 
 ### 1.2 Objetivos del Negocio
 
@@ -62,7 +66,7 @@ Construir una plataforma SaaS empresarial que permita a organizaciones gestionar
 
 ### 2.1 Descripción Detallada
 
-El sistema es una plataforma SaaS multi-tenant que combina tres pilares fundamentales:
+El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundamentales:
 
 1. **Identity & Access Management (IAM)**: Gestión completa del ciclo de vida de usuarios, desde registro hasta offboarding, con autenticación robusta (JWT + refresh tokens + MFA opcional).
 
@@ -81,10 +85,22 @@ El sistema es una plataforma SaaS multi-tenant que combina tres pilares fundamen
    - Upgrades/downgrades con proration
    - Gestión de límites por plan (usuarios, storage, API calls)
 
+4. **Servicios de Suscripción** (Customer-Facing Features): Suite de herramientas productivas incluidas según el plan:
+   - **Calendario**: Gestión de eventos, reuniones, recordatorios
+   - **Tareas**: Sistema de task management con estados, prioridades, asignaciones
+   - **Notificaciones**: Centro de notificaciones en tiempo real (email, in-app, push)
+   - **Archivos**: Almacenamiento de documentos con control de versiones y compartición
+   - **Dashboard Usuario**: Panel personalizado con métricas y actividad reciente
+   - **Portafolio**: Gestión de proyectos y colecciones de trabajo
+
 **Arquitectura Clave:**
 - **Multi-tenancy**: Row-Level Security (RLS) en PostgreSQL garantiza aislamiento de datos
 - **Escalabilidad**: Arquitectura stateless con Redis para cache/sessions
 - **Seguridad**: Encriptación en tránsito (TLS 1.3) y en reposo (AES-256)
+- **Arquitectura Dual Frontend**:
+  - **Frontend Admin** (Angular): Gestión de RBAC, usuarios, suscripciones, billing, auditoría
+  - **Frontend Cliente** (Angular): Servicios productivos para usuarios finales (calendario, tareas, archivos)
+  - **Backend Unificado** (Django): API única que sirve a ambos frontends
 
 ### 2.2 Usuarios Objetivo (Personas)
 
@@ -213,6 +229,383 @@ El sistema es una plataforma SaaS multi-tenant que combina tres pilares fundamen
 - Mobile apps (iOS/Android)
 - Marketplace de integraciones
 - White-label solution para partners
+
+---
+
+## 2.5 Servicios de Suscripción - Customer Features
+
+Los usuarios finales (clientes) de las organizaciones acceden a una suite de servicios productivos según su plan de suscripción. Estos servicios están disponibles en el **Frontend Cliente** (separado del panel administrativo).
+
+### 2.5.1 Calendario (Calendar Service)
+
+**Descripción**: Sistema de gestión de eventos, reuniones y recordatorios con sincronización en tiempo real.
+
+**Features por Plan:**
+- **Free**: Calendario personal, hasta 50 eventos/mes
+- **Starter**: Calendarios compartidos de equipo, hasta 200 eventos/mes, recordatorios por email
+- **Professional**: Calendarios ilimitados, integración con Google Calendar/Outlook, reserva de recursos (salas), recordatorios multi-canal
+- **Enterprise**: Calendarios con aprobaciones, sincronización bidireccional, webhooks de eventos
+
+**Funcionalidades Clave:**
+- Creación de eventos con título, descripción, fecha/hora inicio/fin, ubicación
+- Vista mensual, semanal, diaria, agenda
+- Invitación de participantes internos y externos
+- Recordatorios configurables (15min, 1h, 1día antes)
+- Eventos recurrentes (diario, semanal, mensual)
+- Categorías/etiquetas de eventos con colores
+- Exportación a iCal/ICS
+- Búsqueda y filtros por categoría, participante, fecha
+
+**Permisos RBAC:**
+- `calendar.create`: Crear eventos
+- `calendar.read`: Ver calendarios
+- `calendar.update`: Editar eventos
+- `calendar.delete`: Eliminar eventos
+- `calendar.share`: Compartir calendarios con otros usuarios
+
+### 2.5.2 Tareas (Task Management)
+
+**Descripción**: Sistema de gestión de tareas con estados, prioridades, asignaciones y seguimiento de progreso.
+
+**Features por Plan:**
+- **Free**: Tareas personales, hasta 100 tareas activas
+- **Starter**: Asignación de tareas a miembros, listas de tareas, hasta 500 tareas
+- **Professional**: Subtareas, dependencias, tableros Kanban, tareas ilimitadas, plantillas
+- **Enterprise**: Automatizaciones, reportes de productividad, integraciones con Jira/Asana
+
+**Funcionalidades Clave:**
+- Creación de tareas con título, descripción, fecha límite, prioridad (baja/media/alta)
+- Estados configurables: To Do, In Progress, In Review, Done
+- Asignación a uno o múltiples usuarios
+- Etiquetas/tags para categorización
+- Adjuntar archivos a tareas (hasta límite de storage del plan)
+- Comentarios y menciones (@usuario)
+- Filtros y búsqueda avanzada
+- Notificaciones de vencimiento y cambios de estado
+- Vista de lista, tablero Kanban, calendario de tareas
+- Historial de cambios con auditoría
+
+**Permisos RBAC:**
+- `tasks.create`: Crear tareas
+- `tasks.read`: Ver tareas
+- `tasks.update`: Editar tareas
+- `tasks.delete`: Eliminar tareas
+- `tasks.assign`: Asignar tareas a otros
+- `tasks.complete`: Marcar tareas como completadas
+
+### 2.5.3 Notificaciones (Notification Center)
+
+**Descripción**: Centro de notificaciones unificado con múltiples canales y preferencias configurables.
+
+**Features por Plan:**
+- **Free**: Notificaciones in-app, hasta 100 notificaciones/día
+- **Starter**: Email notifications, hasta 500 notificaciones/día
+- **Professional**: Notificaciones push, webhooks, notificaciones ilimitadas
+- **Enterprise**: Canales personalizados, integración con Slack/Teams, digest personalizado
+
+**Tipos de Notificaciones:**
+- **Sistema**: Invitaciones, cambios de rol, actualizaciones de suscripción
+- **Tareas**: Asignaciones, vencimientos, cambios de estado, menciones
+- **Calendario**: Recordatorios de eventos, cambios en eventos compartidos
+- **Archivos**: Comparticiones, comentarios en documentos, vencimiento de links
+- **Auditoría**: Cambios de permisos (solo para admins)
+
+**Funcionalidades Clave:**
+- Centro de notificaciones in-app con contador de no leídas
+- Preferencias por tipo de notificación (email, in-app, push)
+- Marcado de leído/no leído
+- Archivo de notificaciones antiguas
+- Búsqueda y filtros por tipo, fecha, estado
+- Agrupación inteligente de notificaciones similares
+- Modo "No molestar" con horarios configurables
+
+**Permisos RBAC:**
+- `notifications.read`: Ver notificaciones propias
+- `notifications.manage`: Gestionar preferencias de notificaciones
+
+### 2.5.4 Archivos (File Storage & Sharing)
+
+**Descripción**: Sistema de almacenamiento de archivos con control de versiones, compartición y colaboración.
+
+**Features por Plan:**
+- **Free**: 1 GB storage, archivos hasta 10 MB
+- **Starter**: 5 GB storage, archivos hasta 50 MB, compartición con link público
+- **Professional**: 50 GB storage, archivos hasta 500 MB, control de versiones, comentarios en archivos
+- **Enterprise**: Storage ilimitado, archivos hasta 5 GB, watermarking, DLP (Data Loss Prevention)
+
+**Funcionalidades Clave:**
+- Upload de archivos drag & drop
+- Organización en carpetas jerárquicas
+- Preview de archivos (imágenes, PDFs, documentos office)
+- Compartición con usuarios internos (con permisos: ver, editar, comentar)
+- Links públicos con expiración y contraseña opcional
+- Control de versiones (historial de cambios)
+- Búsqueda por nombre, tipo, fecha, propietario
+- Etiquetas/tags para categorización
+- Papelera de reciclaje (30 días)
+- Descarga de carpetas completas (ZIP)
+
+**Permisos RBAC:**
+- `files.upload`: Subir archivos
+- `files.read`: Ver archivos
+- `files.update`: Editar archivos
+- `files.delete`: Eliminar archivos
+- `files.share`: Compartir archivos
+- `files.download`: Descargar archivos
+
+### 2.5.5 Dashboard Usuario
+
+**Descripción**: Panel personalizado con métricas de actividad y accesos rápidos a servicios.
+
+**Widgets Disponibles:**
+- **Tareas Pendientes**: Lista de tareas asignadas con prioridad
+- **Próximos Eventos**: Calendario de los próximos 7 días
+- **Notificaciones Recientes**: Últimas 10 notificaciones
+- **Archivos Recientes**: Últimos archivos subidos/editados
+- **Actividad del Equipo**: Timeline de actividad de colaboradores
+- **Métricas Personales**: Tareas completadas, eventos asistidos, archivos compartidos
+
+**Personalización:**
+- Drag & drop para reorganizar widgets
+- Ocultar/mostrar widgets según preferencia
+- Temas: claro, oscuro, auto (según OS)
+
+### 2.5.6 Portafolio (Projects/Collections) - Gestión de Proyectos
+
+**Descripción**: Sistema completo de gestión de proyectos con organización jerárquica por tags/secciones, control granular de items con campos customizables, operaciones batch y auditoría completa.
+
+**Features por Plan:**
+- **Free**:
+  - 2 proyectos
+  - 50 items totales
+  - 3 secciones por proyecto
+  - Sin operaciones batch
+  - Sin exportación
+
+- **Starter**:
+  - 10 proyectos
+  - 200 items totales
+  - 10 secciones por proyecto
+  - Operaciones batch básicas (selección múltiple, eliminar lotes)
+  - Exportar a CSV
+
+- **Professional**:
+  - Proyectos ilimitados
+  - Items ilimitados
+  - Secciones ilimitadas
+  - Operaciones batch avanzadas (mover sección, editar en masa)
+  - Plantillas reutilizables de proyectos
+  - Exportar a CSV/JSON
+  - Búsqueda full-text
+
+- **Enterprise**:
+  - Todo lo de Professional +
+  - Webhooks de cambios en proyectos
+  - Integración API para sincronización externa
+  - Auditoría avanzada con exportación de logs
+  - Dashboards analíticos de proyectos
+  - Compartición externa (read-only links)
+
+**Funcionalidades Clave:**
+
+1. **Gestión de Proyectos**:
+   - Creación de proyectos con nombre, descripción, color/icono identificador
+   - Estados del proyecto: Activo, Archivado, En Pausa
+   - Filtrado por estado y búsqueda por nombre
+
+2. **Organización por Secciones/Tags**:
+   - Creación de secciones/tags configurables dentro de cada proyecto
+   - Agrupación lógica de items relacionados
+   - Colapsar/expandir secciones
+   - Ordenamiento de secciones
+
+3. **Gestión de Items**:
+   - Tipos de items: Credenciales, Documentos, Enlaces, Notas, Configuraciones
+   - Campos customizables por tipo: usuario, contraseña, email, URL, descripción, fecha vencimiento
+   - Campos de contraseña con ocultación/mostrar
+
+4. **Operaciones por Item**:
+   - Editar: modificar todos los campos del item
+   - Copiar/Clonar: duplicar item con todos sus datos
+   - Reordenar: mover item arriba/abajo dentro de la sección
+   - Eliminar: remover item con confirmación
+   - Ver información: mostrar metadata (creado por, fecha, última modificación)
+
+5. **Operaciones Batch** (Professional+):
+   - Selección múltiple de items
+   - Mover items seleccionados a otra sección
+   - Editar en masa campos comunes
+   - Eliminar múltiples items
+   - Exportar selección
+
+6. **Búsqueda y Filtros**:
+   - Búsqueda global dentro del proyecto
+   - Filtrar por sección/tag específico
+   - Filtrar por tipo de item
+   - Buscar en campos específicos (usuario, email, etc.)
+
+7. **Compartición y Colaboración**:
+   - Compartir proyecto con miembros del equipo
+   - Permisos granulares por miembro: Ver, Editar, Admin
+   - Notificaciones de cambios en proyectos compartidos
+   - Historial de actividad
+
+8. **Auditoría y Seguridad**:
+   - Historial completo de cambios: quién modificó qué y cuándo
+   - Log de accesos a items sensibles (credenciales)
+   - Encriptación de campos de contraseña
+   - Backup automático de proyectos
+
+9. **Importación/Exportación**:
+   - Importar proyectos desde CSV/JSON
+   - Exportar proyecto completo o por sección
+   - Plantillas de proyectos reutilizables
+
+10. **Vistas Personalizadas**:
+    - Vista Lista (por defecto): items en lista vertical
+    - Vista Tabla: grid con todas las columnas visibles
+    - Vista Compacta: solo títulos de items
+
+11. **Integraciones** (Enterprise):
+    - Webhooks para sincronización con sistemas externos
+    - API REST para gestión programática
+    - Conectores con password managers (1Password, LastPass)
+
+12. **Notificaciones**:
+    - Alertas de items próximos a vencer
+    - Notificaciones de cambios en proyectos compartidos
+    - Recordatorios de contraseñas a renovar
+
+**Permisos RBAC:**
+- `projects.create`: Crear nuevos proyectos
+- `projects.read`: Ver proyectos asignados
+- `projects.update`: Editar detalles de proyecto (nombre, descripción)
+- `projects.delete`: Eliminar proyectos (solo propietario)
+- `projects.manage_sections`: Crear/editar/eliminar secciones/tags
+- `projects.manage_items`: Crear, editar, reordenar items
+- `projects.delete_items`: Eliminar items del proyecto
+- `projects.manage_members`: Agregar/remover miembros, asignar permisos
+- `projects.export`: Exportar datos del proyecto
+
+---
+
+## 2.6 Arquitectura Dual Frontend
+
+El sistema implementa una arquitectura de **dos aplicaciones frontend separadas** que consumen una **API unificada en Django**.
+
+### 2.6.1 Frontend Admin (Angular)
+
+**Propósito**: Panel de administración para gestión de RBAC, usuarios, suscripciones y configuración organizacional.
+
+**Tecnologías:**
+- Angular 17+ (Standalone Components)
+- Tailwind CSS + Angular Material
+- RxJS para manejo de estado
+- Angular Guards para protección de rutas según permisos
+
+**Módulos Principales:**
+- **Dashboard Admin**: Métricas de tenants, usuarios, roles, uso de storage/API
+- **User Management**: CRUD de usuarios, invitaciones, asignación de roles
+- **Role Management**: Creación de roles personalizados, gestión de permisos
+- **Permission Management**: Catálogo de permisos, asignación granular
+- **Subscription Management**: Comparación de planes, upgrade/downgrade, facturación
+- **Audit Logs**: Timeline de eventos, filtros, exportación
+- **Settings**: Branding, integraciones, configuración general
+
+**Acceso:**
+- URL: `admin.plataforma.com` o `{subdomain}.plataforma.com/admin`
+- Usuarios con roles: SuperAdmin, OrgAdmin, Manager (según permisos)
+
+**Repositorio**: `/frontend-admin` (proyecto Angular separado)
+
+### 2.6.2 Frontend Cliente (Angular)
+
+**Propósito**: Aplicación para usuarios finales que consumen los servicios de suscripción.
+
+**Tecnologías:**
+- Angular 17+ (Standalone Components)
+- Tailwind CSS
+- RxJS + Signals para estado reactivo
+- Angular Guards para feature gates según plan
+
+**Módulos Principales:**
+- **Landing Page**: Marketing, precios, registro
+- **Dashboard Usuario**: Widgets personalizables, actividad reciente
+- **Calendario**: Gestión de eventos, vistas múltiples
+- **Tareas**: Tableros Kanban, listas, filtros
+- **Notificaciones**: Centro de notificaciones, preferencias
+- **Archivos**: Explorador de archivos, upload, compartición
+- **Portafolio**: Gestión de proyectos, vistas personalizadas
+- **Perfil**: Configuración de cuenta, seguridad, preferencias
+
+**Acceso:**
+- URL: `app.plataforma.com` o `{subdomain}.plataforma.com`
+- Usuarios: Todos los miembros de la organización (Member, Manager, OrgAdmin)
+
+**Repositorio**: `/frontend-cliente` (proyecto Angular separado)
+
+### 2.6.3 Backend Unificado (Django)
+
+**Propósito**: API única que sirve a ambos frontends con endpoints diferenciados.
+
+**Estructura de APIs:**
+```
+/api/v1/admin/          # Endpoints para frontend admin
+  /tenants              # Gestión de tenants (SuperAdmin)
+  /users                # CRUD de usuarios
+  /roles                # CRUD de roles
+  /permissions          # CRUD de permisos
+  /subscriptions        # Gestión de planes y facturación
+  /audit-logs           # Logs de auditoría
+  /analytics            # Métricas y reportes
+
+/api/v1/app/            # Endpoints para frontend cliente
+  /calendar             # CRUD de eventos
+  /tasks                # CRUD de tareas
+  /notifications        # Centro de notificaciones
+  /files                # Upload, download, gestión de archivos
+  /projects             # Gestión de portafolio/proyectos
+  /dashboard            # Widgets y métricas del usuario
+
+/api/v1/auth/           # Autenticación compartida
+  /login
+  /logout
+  /refresh-token
+  /register
+  /verify-email
+  /reset-password
+```
+
+**Seguridad:**
+- Misma autenticación JWT para ambos frontends
+- Middleware RBAC verifica permisos según endpoint
+- Feature gates validan plan de suscripción antes de acceso a endpoints premium
+- RLS (Row-Level Security) garantiza aislamiento de datos por tenant
+
+### 2.6.4 Prototipos React
+
+**Propósito**: Prototipos estáticos para demo y validación de UX antes del desarrollo Angular.
+
+**Prototipos:**
+1. **Prototipo Admin** (`docs/ui-ux/prototype-react/`):
+   - Ya implementado con login simulado, RBAC, gestión de usuarios/roles, suscripciones
+   - Datos mock, sin backend
+
+2. **Prototipo Cliente** (`docs/ui-ux/prototype-customer/`):
+   - Nuevo prototipo a implementar
+   - Servicios: Calendario, Tareas, Notificaciones, Archivos, Dashboard, Portafolio
+   - Datos mock de servicios
+
+**Tecnologías:**
+- React 18 + Vite
+- Tailwind CSS (misma paleta que prototipos Angular)
+- Datos mock en archivos JS
+- Sin backend, solo simulación client-side
+
+**Uso:**
+- Demos con stakeholders
+- Validación de flujos UX
+- Referencia para desarrollo Angular final
 
 ---
 
@@ -556,6 +949,140 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
+### 3.5 Gestión de Proyectos (Cliente)
+
+**US-26: Crear Proyecto**
+- Como usuario cliente
+- Quiero crear un nuevo proyecto con nombre y descripción
+- Para organizar mis credenciales, documentos y enlaces
+
+**Criterios de Aceptación:**
+- [ ] Usuario puede crear proyecto desde botón "+ Nuevo Proyecto"
+- [ ] Formulario solicita: nombre (requerido), descripción (opcional), color
+- [ ] Sistema valida límites del plan (Free: 2 proyectos max)
+- [ ] Proyecto creado aparece en lista "Mis Proyectos"
+- [ ] Usuario es asignado como owner del proyecto automáticamente
+
+---
+
+**US-27: Organizar Items por Secciones**
+- Como usuario con proyecto existente
+- Quiero crear secciones/tags para agrupar items relacionados
+- Para mantener organizado el contenido del proyecto
+
+**Criterios de Aceptación:**
+- [ ] Usuario puede crear sección desde panel del proyecto
+- [ ] Sección tiene nombre único dentro del proyecto
+- [ ] Usuario puede colapsar/expandir secciones
+- [ ] Items se muestran agrupados por sección
+- [ ] Sistema respeta límites del plan (Free: 3 secciones max)
+
+---
+
+**US-28: Gestionar Items de Credenciales**
+- Como usuario del proyecto
+- Quiero agregar items con campos customizables (usuario, password, email)
+- Para almacenar credenciales de forma segura
+
+**Criterios de Aceptación:**
+- [ ] Usuario puede crear item dentro de una sección
+- [ ] Item tipo "Credencial" tiene campos: usuario, password, email, URL, notas
+- [ ] Campo password se muestra oculto por defecto (•••)
+- [ ] Usuario puede mostrar/ocultar password con botón
+- [ ] Passwords se almacenan encriptados en base de datos
+- [ ] Sistema respeta límites del plan (Free: 50 items max)
+
+---
+
+**US-29: Operaciones de Item Individual**
+- Como usuario con permisos de edición
+- Quiero editar, copiar, reordenar y eliminar items
+- Para gestionar el contenido del proyecto eficientemente
+
+**Criterios de Aceptación:**
+- [ ] Botón editar (✏️) abre modal con formulario de campos
+- [ ] Botón copiar (📋) duplica el item con sufijo "(copia)"
+- [ ] Botones ordenar (↑↓) mueven item arriba/abajo dentro de sección
+- [ ] Botón info (ℹ️) muestra metadata (creado por, fecha)
+- [ ] Botón eliminar (🗑️) solicita confirmación antes de borrar
+- [ ] Auditoría registra todas las operaciones
+
+---
+
+**US-30: Operaciones Batch (Professional+)**
+- Como usuario con plan Professional
+- Quiero seleccionar múltiples items y aplicar acciones masivas
+- Para ahorrar tiempo en gestión de proyectos grandes
+
+**Criterios de Aceptación:**
+- [ ] Checkboxes disponibles para selección múltiple
+- [ ] Barra de acciones aparece al seleccionar items
+- [ ] Acciones disponibles: Mover a sección, Eliminar, Exportar
+- [ ] Confirmación requerida para operaciones destructivas
+- [ ] Feature gate valida plan Professional antes de permitir
+
+---
+
+**US-31: Búsqueda y Filtros**
+- Como usuario con muchos items
+- Quiero buscar y filtrar dentro del proyecto
+- Para encontrar información rápidamente
+
+**Criterios de Aceptación:**
+- [ ] Barra de búsqueda disponible en vista de proyecto
+- [ ] Búsqueda en tiempo real (debounce 300ms)
+- [ ] Busca en: título item, campos de texto, nombre sección
+- [ ] Filtros laterales por: tipo item, sección/tag
+- [ ] Resultados destacan texto coincidente
+
+---
+
+**US-32: Exportar/Importar Proyectos**
+- Como usuario con plan Starter+
+- Quiero exportar proyecto a CSV/JSON e importar desde archivo
+- Para backup y migración de datos
+
+**Criterios de Aceptación:**
+- [ ] Botón "Exportar" genera archivo descargable
+- [ ] Formatos soportados: CSV (Starter+), JSON (Professional+)
+- [ ] Export incluye: proyecto, secciones, items, fields
+- [ ] Passwords exportados quedan encriptados en archivo
+- [ ] Importar valida formato y límites del plan
+- [ ] Importar permite mapeo de campos si difieren
+
+---
+
+**US-33: Compartir Proyecto con Equipo**
+- Como owner de proyecto
+- Quiero compartir el proyecto con miembros de mi organización
+- Para colaborar en la gestión de credenciales y documentos
+
+**Criterios de Aceptación:**
+- [ ] Botón "Compartir" abre modal de gestión de miembros
+- [ ] Owner puede agregar usuarios de la organización
+- [ ] Roles disponibles: Viewer, Editor, Admin
+- [ ] Viewer: solo lectura
+- [ ] Editor: leer, crear, editar items (no eliminar proyecto)
+- [ ] Admin: todas las operaciones excepto eliminar proyecto
+- [ ] Miembros reciben notificación de acceso
+
+---
+
+**US-34: Auditoría de Cambios en Proyecto**
+- Como owner o admin de proyecto
+- Quiero ver historial completo de cambios
+- Para auditoría de seguridad y cumplimiento
+
+**Criterios de Aceptación:**
+- [ ] Panel "Actividad" muestra timeline de cambios
+- [ ] Cada entrada registra: usuario, acción, timestamp, detalles
+- [ ] Acciones auditadas: crear, editar, eliminar items/secciones
+- [ ] Accesos a items sensibles (credenciales) se registran
+- [ ] Filtros por: usuario, tipo acción, rango de fechas
+- [ ] Export de logs disponible para plan Enterprise
+
+---
+
 ## 4. Functional Requirements
 
 ### 4.1 Gestión de Usuarios
@@ -720,6 +1247,68 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 - Logo DEBE aplicarse a navbar, emails, PDFs
 - Custom branding disponible en plan Professional+
 - Plan Enterprise DEBE permitir ocultar "Powered by"
+
+---
+
+### 4.5 Gestión de Proyectos
+
+**FR-050: Creación de Proyectos**
+- El sistema DEBE permitir a usuarios crear proyectos con nombre, descripción, color
+- El sistema DEBE asignar al creador como owner automáticamente
+- El sistema DEBE validar límites del plan antes de crear (Free: 2, Starter: 10, Professional+: ilimitado)
+- El sistema DEBE generar UUID único para cada proyecto
+
+**FR-051: Organización por Secciones**
+- El sistema DEBE permitir crear secciones/tags dentro de cada proyecto
+- El sistema DEBE permitir nombres de sección únicos dentro del proyecto
+- El sistema DEBE soportar reordenamiento de secciones con drag-and-drop
+- El sistema DEBE respetar límites del plan (Free: 3 secciones, Starter: 10, Professional+: ilimitado)
+
+**FR-052: Gestión de Items**
+- El sistema DEBE soportar tipos de items: Credencial, Documento, Enlace, Nota, Configuración
+- El sistema DEBE permitir campos customizables por item según su tipo
+- El sistema DEBE encriptar valores de campos tipo "password" en base de datos (AES-256)
+- El sistema DEBE validar límites de items según plan (Free: 50, Starter: 200, Professional+: ilimitado)
+
+**FR-053: Operaciones de Item**
+- El sistema DEBE permitir editar todos los campos de un item
+- El sistema DEBE permitir clonar items duplicando todos sus datos
+- El sistema DEBE permitir reordenar items dentro de su sección (mover arriba/abajo)
+- El sistema DEBE solicitar confirmación antes de eliminar items
+- El sistema DEBE registrar auditoría de todas las operaciones
+
+**FR-054: Operaciones Batch (Professional+)**
+- El sistema DEBE permitir seleccionar múltiples items con checkboxes
+- El sistema DEBE soportar acciones batch: mover a sección, eliminar, exportar
+- El sistema DEBE validar feature gate antes de permitir operaciones batch
+- El sistema DEBE mostrar progreso durante operaciones batch extensas
+
+**FR-055: Búsqueda y Filtros**
+- El sistema DEBE implementar búsqueda full-text dentro del proyecto
+- El sistema DEBE buscar en: título item, valores de campos, nombre sección
+- El sistema DEBE soportar filtros por: tipo item, sección específica
+- El sistema DEBE aplicar debounce de 300ms en búsqueda en tiempo real
+- El sistema DEBE destacar texto coincidente en resultados
+
+**FR-056: Compartición y Permisos**
+- El sistema DEBE permitir a owner compartir proyecto con usuarios de la organización
+- El sistema DEBE soportar roles de proyecto: Owner, Admin, Editor, Viewer
+- El sistema DEBE validar permisos antes de cada operación según rol
+- El sistema DEBE notificar a usuarios cuando se les comparte un proyecto
+
+**FR-057: Importación y Exportación**
+- El sistema DEBE permitir exportar proyecto a formatos CSV (Starter+) y JSON (Professional+)
+- El sistema DEBE incluir en export: proyecto, secciones, items, fields
+- El sistema DEBE encriptar passwords en archivos exportados
+- El sistema DEBE permitir importar proyectos validando formato y límites del plan
+- El sistema DEBE manejar errores de importación con mensajes claros
+
+**FR-058: Auditoría y Seguridad**
+- El sistema DEBE registrar todos los cambios en proyectos, secciones e items
+- El sistema DEBE auditar accesos a items tipo "Credencial"
+- El sistema DEBE almacenar: usuario, acción, timestamp, IP, detalles del cambio
+- El sistema DEBE permitir consultar auditoría con filtros (usuario, fecha, acción)
+- El sistema DEBE permitir exportar logs de auditoría (Enterprise only)
 
 ---
 
@@ -945,6 +1534,224 @@ class AuditLog(models.Model):
             models.Index(fields=['tenant', 'timestamp']),
             models.Index(fields=['tenant', 'actor_user', 'timestamp']),
             models.Index(fields=['tenant', 'resource_type', 'timestamp']),
+        ]
+
+# services/models.py - Modelos para Servicios de Suscripción
+class Event(TenantAwareModel, AuditedModel):
+    """Eventos de calendario"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    start_time = models.DateTimeField(db_index=True)
+    end_time = models.DateTimeField()
+    location = models.CharField(max_length=255, blank=True)
+    is_all_day = models.BooleanField(default=False)
+    recurrence_rule = models.CharField(max_length=255, blank=True)  # iCal RRULE
+    category = models.CharField(max_length=50, blank=True)
+    color = models.CharField(max_length=7, default='#3B82F6')
+    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
+    participants = models.ManyToManyField(User, related_name='events')
+    reminders = models.JSONField(default=list)  # [{'minutes_before': 15, 'method': 'email'}]
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['tenant', 'start_time']),
+            models.Index(fields=['tenant', 'organizer', 'start_time']),
+        ]
+
+class Task(TenantAwareModel, AuditedModel):
+    """Tareas"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=[
+        ('todo', 'To Do'),
+        ('in_progress', 'In Progress'),
+        ('in_review', 'In Review'),
+        ('done', 'Done')
+    ], default='todo', db_index=True)
+    priority = models.CharField(max_length=20, choices=[
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent')
+    ], default='medium', db_index=True)
+    due_date = models.DateTimeField(null=True, blank=True, db_index=True)
+    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_tasks')
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
+    project = models.ForeignKey('Project', on_delete=models.CASCADE, null=True, blank=True, related_name='tasks')
+    tags = models.JSONField(default=list)  # ['frontend', 'bug', 'urgent']
+    attachments = models.ManyToManyField('File', blank=True)
+    parent_task = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='subtasks')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['tenant', 'status', 'due_date']),
+            models.Index(fields=['tenant', 'assignee', 'status']),
+        ]
+
+class Notification(TenantAwareModel):
+    """Notificaciones"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    type = models.CharField(max_length=50, db_index=True)  # 'task_assigned', 'event_reminder', etc.
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    link = models.CharField(max_length=255, blank=True)  # Link para ir al recurso
+    is_read = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict)  # Datos adicionales específicos del tipo
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['tenant', 'user', 'is_read', 'created_at']),
+            models.Index(fields=['tenant', 'user', 'type', 'created_at']),
+        ]
+        ordering = ['-created_at']
+
+class File(TenantAwareModel, AuditedModel):
+    """Archivos almacenados"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=255)
+    original_filename = models.CharField(max_length=255)
+    file_path = models.FileField(upload_to='files/%Y/%m/%d/')
+    file_size = models.BigIntegerField()  # Bytes
+    mime_type = models.CharField(max_length=100)
+    folder = models.ForeignKey('Folder', null=True, blank=True, on_delete=models.CASCADE, related_name='files')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_files')
+    shared_with = models.ManyToManyField(User, through='FileShare', related_name='shared_files')
+    tags = models.JSONField(default=list)
+    version = models.IntegerField(default=1)
+    parent_file = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='versions')
+    is_deleted = models.BooleanField(default=False)  # Soft delete
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['tenant', 'owner', 'is_deleted']),
+            models.Index(fields=['tenant', 'folder', 'is_deleted']),
+        ]
+
+class Folder(TenantAwareModel, AuditedModel):
+    """Carpetas para organización de archivos"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=255)
+    parent_folder = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='subfolders')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class FileShare(TenantAwareModel):
+    """Compartición de archivos"""
+    file = models.ForeignKey(File, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    permission = models.CharField(max_length=20, choices=[
+        ('view', 'View'),
+        ('comment', 'Comment'),
+        ('edit', 'Edit')
+    ])
+    shared_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shares_created')
+    shared_at = models.DateTimeField(auto_now_add=True)
+
+class Project(TenantAwareModel, AuditedModel):
+    """Proyectos/Portafolio"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=[
+        ('planning', 'Planning'),
+        ('active', 'Active'),
+        ('on_hold', 'On Hold'),
+        ('completed', 'Completed')
+    ], default='planning', db_index=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_projects')
+    members = models.ManyToManyField(User, related_name='projects')
+    color = models.CharField(max_length=7, default='#3B82F6')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['tenant', 'owner', 'status']),
+        ]
+
+class ProjectSection(TenantAwareModel, TimestampedModel):
+    """Tags/Secciones dentro de un proyecto"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='sections')
+    name = models.CharField(max_length=100)  # ej: "admin_test", "clonar_angular"
+    description = models.TextField(blank=True)
+    order = models.IntegerField(default=0)  # para ordenamiento
+    color = models.CharField(max_length=7, blank=True)  # hex color opcional
+
+    class Meta:
+        ordering = ['order', 'name']
+        unique_together = [['project', 'name']]
+        indexes = [
+            models.Index(fields=['project', 'order']),
+        ]
+
+class ProjectItem(TenantAwareModel, AuditedModel):
+    """Items dentro de una sección de proyecto"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    section = models.ForeignKey(ProjectSection, on_delete=models.CASCADE, related_name='items')
+    type = models.CharField(max_length=50, choices=[
+        ('credential', 'Credencial'),
+        ('document', 'Documento'),
+        ('link', 'Enlace'),
+        ('note', 'Nota'),
+        ('config', 'Configuración'),
+    ])
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    order = models.IntegerField(default=0)
+    is_favorite = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(null=True, blank=True)  # para credenciales
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        indexes = [
+            models.Index(fields=['section', 'order']),
+            models.Index(fields=['section', 'type']),
+        ]
+
+class ProjectItemField(models.Model):
+    """Campos customizables de un item"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    item = models.ForeignKey(ProjectItem, on_delete=models.CASCADE, related_name='fields')
+    field_name = models.CharField(max_length=50)  # ej: "usuario", "password", "email"
+    field_type = models.CharField(max_length=20, choices=[
+        ('text', 'Texto'),
+        ('password', 'Contraseña'),
+        ('email', 'Email'),
+        ('url', 'URL'),
+        ('date', 'Fecha'),
+        ('number', 'Número'),
+    ])
+    field_value = models.TextField()  # almacenado encriptado si field_type='password'
+    is_encrypted = models.BooleanField(default=False)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'field_name']
+        unique_together = [['item', 'field_name']]
+
+class ProjectMember(TenantAwareModel, TimestampedModel):
+    """Miembros con acceso a un proyecto"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='project_members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=[
+        ('owner', 'Propietario'),
+        ('admin', 'Administrador'),
+        ('editor', 'Editor'),
+        ('viewer', 'Visualizador'),
+    ])
+
+    class Meta:
+        unique_together = [['project', 'user']]
+        indexes = [
+            models.Index(fields=['project', 'role']),
         ]
 ```
 
@@ -1223,49 +2030,247 @@ CREATE TABLE rbac_auditlog_2026_03 PARTITION OF rbac_auditlog
 -- Automatizar creación de particiones con cronjob/function
 ```
 
-### 6.3 Frontend Architecture (Angular + Tailwind)
+### 6.3 Frontend Architecture - Arquitectura Dual (Angular + Tailwind)
 
-#### 6.3.1 Estructura de Módulos
+El sistema implementa **dos proyectos Angular separados** que consumen la misma API Django pero sirven propósitos diferentes.
+
+#### 6.3.1 Frontend Admin - Estructura de Módulos
+
+**Repositorio**: `/frontend-admin`
+
+**Propósito**: Panel de administración para gestión de RBAC, usuarios y suscripciones.
 
 ```
-src/app/
-├── core/                   # Singleton services, guards, interceptors
-│   ├── auth/
-│   │   ├── auth.service.ts
-│   │   ├── token.service.ts
-│   │   └── mfa.service.ts
-│   ├── guards/
-│   │   ├── auth.guard.ts
-│   │   ├── permission.guard.ts
-│   │   └── feature.guard.ts
-│   ├── interceptors/
-│   │   ├── auth.interceptor.ts
-│   │   ├── tenant.interceptor.ts
-│   │   └── error.interceptor.ts
-│   └── models/             # Interfaces/types
-├── shared/                 # Shared components, directives, pipes
-│   ├── components/
-│   │   ├── button/
-│   │   ├── modal/
-│   │   ├── table/
-│   │   └── toast/
-│   ├── directives/
-│   │   └── has-permission.directive.ts
-│   └── pipes/
-│       └── format-date.pipe.ts
-├── features/               # Feature modules (lazy-loaded)
-│   ├── auth/
-│   │   ├── login/
-│   │   ├── register/
-│   │   └── mfa-setup/
-│   ├── dashboard/
-│   ├── users/
-│   ├── roles/
-│   ├── billing/
-│   └── settings/
-└── layouts/
-    ├── main-layout/
-    └── auth-layout/
+frontend-admin/
+└── src/app/
+    ├── core/                   # Singleton services, guards, interceptors
+    │   ├── auth/
+    │   │   ├── auth.service.ts
+    │   │   ├── token.service.ts
+    │   │   └── mfa.service.ts
+    │   ├── guards/
+    │   │   ├── auth.guard.ts
+    │   │   ├── permission.guard.ts
+    │   │   └── admin-role.guard.ts
+    │   ├── interceptors/
+    │   │   ├── auth.interceptor.ts
+    │   │   ├── tenant.interceptor.ts
+    │   │   └── error.interceptor.ts
+    │   └── models/             # Interfaces/types (User, Role, Permission, Subscription)
+    ├── shared/                 # Shared components, directives, pipes
+    │   ├── components/
+    │   │   ├── button/
+    │   │   ├── modal/
+    │   │   ├── table/
+    │   │   ├── toast/
+    │   │   └── stats-card/
+    │   ├── directives/
+    │   │   └── has-permission.directive.ts
+    │   └── pipes/
+    │       └── format-date.pipe.ts
+    ├── features/               # Feature modules (lazy-loaded)
+    │   ├── auth/
+    │   │   ├── login/
+    │   │   ├── register/
+    │   │   └── mfa-setup/
+    │   ├── dashboard-admin/    # Dashboard con métricas de tenants
+    │   ├── user-management/    # CRUD de usuarios
+    │   ├── role-management/    # CRUD de roles
+    │   ├── permission-management/  # Gestión de permisos
+    │   ├── subscription-management/ # Planes y facturación
+    │   ├── audit-logs/         # Timeline de auditoría
+    │   └── settings/           # Branding, integraciones
+    └── layouts/
+        ├── admin-layout/       # Sidebar + Navbar + Footer
+        └── auth-layout/        # Login/Register layout
+
+# Configuración específica
+angular.json:
+  - outputPath: dist/admin
+  - baseHref: /admin/
+  - deployUrl: https://admin.plataforma.com/
+```
+
+**Módulos Principales**:
+- **Dashboard Admin**: Métricas globales (usuarios, roles, planes, storage, API usage)
+- **User Management**: Tabla de usuarios, invitaciones, asignación de roles
+- **Role Management**: Creación de roles personalizados, herencia
+- **Permission Management**: Catálogo de permisos, asignación granular
+- **Subscription Management**: Comparación de planes, upgrade/downgrade, historial facturas
+- **Audit Logs**: Timeline de eventos con filtros y exportación
+
+**Rutas Típicas**:
+```
+/admin/dashboard
+/admin/users
+/admin/roles
+/admin/permissions
+/admin/subscriptions
+/admin/audit-logs
+/admin/settings
+```
+
+#### 6.3.2 Frontend Cliente - Estructura de Módulos
+
+**Repositorio**: `/frontend-cliente`
+
+**Propósito**: Aplicación para usuarios finales con servicios productivos.
+
+```
+frontend-cliente/
+└── src/app/
+    ├── core/                   # Singleton services, guards, interceptors
+    │   ├── auth/
+    │   │   ├── auth.service.ts
+    │   │   ├── token.service.ts
+    │   │   └── mfa.service.ts
+    │   ├── guards/
+    │   │   ├── auth.guard.ts
+    │   │   ├── feature-gate.guard.ts  # Verifica plan de suscripción
+    │   │   └── onboarding.guard.ts
+    │   ├── interceptors/
+    │   │   ├── auth.interceptor.ts
+    │   │   ├── tenant.interceptor.ts
+    │   │   └── error.interceptor.ts
+    │   ├── services/
+    │   │   ├── calendar.service.ts
+    │   │   ├── tasks.service.ts
+    │   │   ├── notifications.service.ts
+    │   │   ├── files.service.ts
+    │   │   └── projects.service.ts
+    │   └── models/             # Interfaces/types (Event, Task, Notification, File)
+    ├── shared/                 # Shared components, directives, pipes
+    │   ├── components/
+    │   │   ├── button/
+    │   │   ├── modal/
+    │   │   ├── file-uploader/
+    │   │   ├── toast/
+    │   │   ├── notification-bell/
+    │   │   └── widget/         # Para dashboard widgets
+    │   ├── directives/
+    │   │   └── feature-gate.directive.ts
+    │   └── pipes/
+    │       ├── format-date.pipe.ts
+    │       └── file-size.pipe.ts
+    ├── features/               # Feature modules (lazy-loaded)
+    │   ├── auth/
+    │   │   ├── login/
+    │   │   ├── register/
+    │   │   └── mfa-setup/
+    │   ├── landing/            # Landing page pública
+    │   ├── dashboard-user/     # Dashboard personalizable
+    │   ├── calendar/           # Gestión de eventos
+    │   │   ├── calendar-view/
+    │   │   ├── event-detail/
+    │   │   └── event-form/
+    │   ├── tasks/              # Gestión de tareas
+    │   │   ├── task-board/     # Kanban
+    │   │   ├── task-list/
+    │   │   └── task-detail/
+    │   ├── notifications/      # Centro de notificaciones
+    │   ├── files/              # Explorador de archivos
+    │   │   ├── file-explorer/
+    │   │   ├── file-preview/
+    │   │   └── file-share/
+    │   ├── projects/           # Portafolio/Proyectos
+    │   │   ├── project-list/
+    │   │   ├── project-detail/
+    │   │   └── project-board/
+    │   └── profile/            # Perfil y configuración usuario
+    └── layouts/
+        ├── main-layout/        # Navbar + Sidebar + Footer
+        ├── auth-layout/        # Login/Register layout
+        └── landing-layout/     # Landing page layout
+
+# Configuración específica
+angular.json:
+  - outputPath: dist/cliente
+  - baseHref: /
+  - deployUrl: https://app.plataforma.com/
+```
+
+**Módulos Principales**:
+- **Landing Page**: Marketing, precios, registro
+- **Dashboard Usuario**: Widgets personalizables (tareas pendientes, eventos próximos, archivos recientes)
+- **Calendario**: Vistas (mes, semana, día), creación de eventos, invitaciones
+- **Tareas**: Tablero Kanban, listas, filtros, asignaciones
+- **Notificaciones**: Centro de notificaciones in-app, preferencias
+- **Archivos**: Upload drag & drop, preview, compartición, carpetas
+- **Proyectos**: Gestión de proyectos, agregación de tareas/archivos/eventos
+
+**Rutas Típicas**:
+```
+/                    # Landing page
+/login
+/register
+/dashboard
+/calendar
+/tasks
+/notifications
+/files
+/projects
+/profile
+```
+
+#### 6.3.3 Compartición de Código Entre Frontends
+
+**Shared Library** (`/frontend-shared`):
+
+Librería Angular compartida entre ambos frontends para reutilizar código común.
+
+```
+frontend-shared/
+└── src/lib/
+    ├── auth/
+    │   ├── auth.service.ts       # Servicio de autenticación compartido
+    │   ├── token.service.ts
+    │   └── auth.interceptor.ts
+    ├── models/
+    │   ├── user.model.ts
+    │   ├── tenant.model.ts
+    │   └── api-response.model.ts
+    ├── utils/
+    │   ├── date.utils.ts
+    │   ├── validation.utils.ts
+    │   └── http.utils.ts
+    └── components/
+        ├── avatar/
+        ├── badge/
+        └── spinner/
+
+# Instalación en ambos proyectos
+npm install @plataforma/shared
+```
+
+**Beneficios**:
+- Evitar duplicación de código de autenticación
+- Compartir modelos/interfaces comunes
+- Componentes UI reutilizables (avatar, badge, spinner)
+- Utilidades compartidas (validaciones, formateo de fechas)
+
+#### 6.3.4 Configuración de Tailwind Compartida
+
+Ambos proyectos usan la misma configuración de Tailwind para consistencia visual.
+
+```javascript
+// tailwind.config.js (mismo en ambos proyectos)
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          // ... paleta completa
+          900: '#1e3a8a'
+        }
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif']
+      }
+    }
+  }
+}
 ```
 
 #### 6.3.2 Guards para Protección de Rutas
@@ -1578,6 +2583,109 @@ Límites por plan:
 - Starter: 100 req/min, 10,000 req/día
 - Professional: 1,000 req/min, 100,000 req/día
 - Enterprise: Custom (contactar sales)
+
+#### 6.4.5 Projects API Endpoints
+
+**Base Path**: `/api/v1/app/projects`
+
+**Autenticación**: JWT Token requerido
+**Tenant Isolation**: Automático vía middleware
+
+**Endpoints:**
+
+1. **GET /api/v1/app/projects**
+   - Listar proyectos del usuario
+   - Query params: `status`, `search`, `page`, `page_size`
+   - Response: Paginado con proyectos + metadata
+
+2. **POST /api/v1/app/projects**
+   - Crear nuevo proyecto
+   - Body: `name`, `description`, `color`, `status`
+   - Response: Proyecto creado
+
+3. **GET /api/v1/app/projects/{project_id}**
+   - Obtener detalles completos del proyecto
+   - Incluye: secciones, items, miembros
+   - Response: Proyecto con nested data
+
+4. **PUT /api/v1/app/projects/{project_id}**
+   - Actualizar proyecto
+   - Body: campos modificables
+   - Response: Proyecto actualizado
+
+5. **DELETE /api/v1/app/projects/{project_id}**
+   - Eliminar proyecto (solo owner)
+   - Response: 204 No Content
+
+6. **GET /api/v1/app/projects/{project_id}/sections**
+   - Listar secciones del proyecto
+   - Response: Array de secciones
+
+7. **POST /api/v1/app/projects/{project_id}/sections**
+   - Crear nueva sección
+   - Body: `name`, `description`, `color`
+   - Response: Sección creada
+
+8. **PUT /api/v1/app/projects/{project_id}/sections/{section_id}/reorder**
+   - Reordenar secciones
+   - Body: `new_order`
+   - Response: Sección actualizada
+
+9. **GET /api/v1/app/projects/{project_id}/sections/{section_id}/items**
+   - Listar items de una sección
+   - Query params: `type`, `search`
+   - Response: Array de items con fields
+
+10. **POST /api/v1/app/projects/{project_id}/sections/{section_id}/items**
+    - Crear nuevo item
+    - Body: `title`, `type`, `fields[]`
+    - Response: Item creado con fields
+
+11. **PUT /api/v1/app/projects/{project_id}/items/{item_id}**
+    - Actualizar item
+    - Body: `title`, `fields[]`
+    - Response: Item actualizado
+
+12. **POST /api/v1/app/projects/{project_id}/items/{item_id}/clone**
+    - Clonar item
+    - Response: Item duplicado
+
+13. **PUT /api/v1/app/projects/{project_id}/items/{item_id}/reorder**
+    - Reordenar item (mover arriba/abajo)
+    - Body: `direction` ('up' | 'down')
+    - Response: Item actualizado
+
+14. **DELETE /api/v1/app/projects/{project_id}/items/{item_id}**
+    - Eliminar item
+    - Response: 204 No Content
+
+15. **POST /api/v1/app/projects/{project_id}/items/batch**
+    - Operaciones batch
+    - Body: `action` ('delete' | 'move' | 'export'), `item_ids[]`, `target_section_id`
+    - Response: Resultado de operación
+
+16. **GET /api/v1/app/projects/{project_id}/export**
+    - Exportar proyecto
+    - Query params: `format` ('csv' | 'json')
+    - Response: Archivo descargable
+
+17. **POST /api/v1/app/projects/import**
+    - Importar proyecto desde archivo
+    - Body: Multipart form con archivo
+    - Response: Proyecto importado
+
+18. **GET /api/v1/app/projects/{project_id}/members**
+    - Listar miembros del proyecto
+    - Response: Array de miembros
+
+19. **POST /api/v1/app/projects/{project_id}/members**
+    - Agregar miembro al proyecto
+    - Body: `user_id`, `role`
+    - Response: Miembro agregado
+
+20. **DELETE /api/v1/app/projects/{project_id}/members/{user_id}**
+    - Remover miembro
+    - Response: 204 No Content
 
 ---
 
@@ -2106,6 +3214,7 @@ Este PRD define un sistema empresarial completo de gestión de roles, permisos y
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-02-09 | Product Team | Initial draft |
+| 2.0.0 | 2026-02-10 | Product Team | **Major Update**: Agregado cuarto pilar "Servicios de Suscripción" con suite de herramientas para clientes finales (Calendario, Tareas, Notificaciones, Archivos, Portafolio). Actualizada arquitectura a sistema dual-frontend (Admin + Cliente) con backend unificado Django. Agregados modelos de datos para servicios. Documentados prototipos React para validación UX. |
 
 ---
 

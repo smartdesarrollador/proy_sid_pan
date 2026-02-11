@@ -40,4 +40,54 @@
   .input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
   }
+
+  /* Status badges */
+  .badge-todo {
+    @apply bg-gray-100 text-gray-700;
+  }
+
+  .badge-in-progress {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .badge-in-review {
+    @apply bg-purple-100 text-purple-700;
+  }
+
+  .badge-done {
+    @apply bg-green-100 text-green-700;
+  }
+
+  /* Priority badges */
+  .priority-alta {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .priority-media {
+    @apply bg-orange-100 text-orange-700;
+  }
+
+  .priority-baja {
+    @apply bg-gray-100 text-gray-700;
+  }
+
+  /* Avatar */
+  .avatar {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-medium;
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-shadow hover:shadow-md cursor-pointer;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
+  }
+
+  /* Drag active state */
+  .drag-active {
+    @apply border-2 border-primary-500 border-dashed bg-primary-50;
+  }
 }

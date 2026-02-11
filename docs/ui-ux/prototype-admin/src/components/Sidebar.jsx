@@ -26,9 +26,7 @@ function Sidebar({ isOpen, activeView, onNavigate }) {
   if (!isOpen) return null;
 
   // Filtrar items según permisos del usuario
-  const visibleMenuItems = menuItems.filter(item =>
-    hasPermission(item.permission)
-  );
+  const visibleMenuItems = menuItems.filter(item => hasPermission(item.permission));
 
   return (
     <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 z-20 overflow-y-auto">

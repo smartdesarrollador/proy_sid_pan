@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { users, getUserPermissions, matchPermission } from '../data/mockData';
+import { users, getUserPermissions, matchPermission, currentTenant } from '../data/mockData';
 
 const AuthContext = createContext(null);
 
@@ -72,6 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
+    currentTenant,
     isAuthenticated,
     userPermissions,
     login,

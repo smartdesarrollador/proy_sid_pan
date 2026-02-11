@@ -20,6 +20,18 @@ export const usePermissions = () => {
 
   const canUpdateSettings = () => hasPermission('settings.update');
 
+  // Tasks permissions
+  const canCreateTasks = () => hasPermission('tasks.create');
+  const canEditTasks = () => hasPermission('tasks.update');
+  const canDeleteTasks = () => hasPermission('tasks.delete');
+  const canAssignTasks = () => hasPermission('tasks.assign');
+
+  // Calendar permissions
+  const canCreateEvents = () => hasPermission('calendar.create');
+  const canEditEvents = () => hasPermission('calendar.update');
+  const canDeleteEvents = () => hasPermission('calendar.delete');
+  const canShareCalendar = () => hasPermission('calendar.share');
+
   // Helper para verificar si es admin completo
   const isOrgAdmin = () => {
     return currentUser?.roles?.includes('OrgAdmin') || false;
@@ -58,6 +70,14 @@ export const usePermissions = () => {
     canUpgradePlan,
     canExportAudit,
     canUpdateSettings,
+    canCreateTasks,
+    canEditTasks,
+    canDeleteTasks,
+    canAssignTasks,
+    canCreateEvents,
+    canEditEvents,
+    canDeleteEvents,
+    canShareCalendar,
     isOrgAdmin,
     getPrimaryRole,
     getRoleColor,

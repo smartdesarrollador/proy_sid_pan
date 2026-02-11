@@ -20,6 +20,7 @@ skinparam class {
     BackgroundColor<<RBAC>> LightYellow
     BackgroundColor<<Subscription>> LightSalmon
     BackgroundColor<<Audit>> LightGray
+    BackgroundColor<<Services>> Lavender
 }
 
 ' ==============================================================================
@@ -376,6 +377,167 @@ entity "PasswordResetToken" as password_reset <<User>> {
 }
 
 ' ==============================================================================
+' CUSTOMER SERVICES ENTITIES - Features por Suscripción
+' ==============================================================================
+
+entity "Event" as event <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    title: VARCHAR(255)
+    description: TEXT
+    start_time: TIMESTAMP
+    end_time: TIMESTAMP
+    location: VARCHAR(255)
+    is_all_day: BOOLEAN
+    recurrence_rule: VARCHAR(255)
+    category: VARCHAR(50)
+    color: VARCHAR(7)
+    FK(organizer_id): UUID
+    reminders: JSONB
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "EventParticipant" as event_participant <<Services>> {
+    PK(id): UUID
+    --
+    FK(event_id): UUID
+    FK(user_id): UUID
+    status: VARCHAR(20)
+    response_at: TIMESTAMP
+    --
+    created_at: TIMESTAMP
+}
+
+entity "Task" as task <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    title: VARCHAR(255)
+    description: TEXT
+    status: VARCHAR(20)
+    priority: VARCHAR(20)
+    due_date: TIMESTAMP
+    FK(assignee_id): UUID
+    FK(creator_id): UUID
+    FK(project_id): UUID
+    FK(parent_task_id): UUID
+    tags: JSONB
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "TaskComment" as task_comment <<Services>> {
+    PK(id): UUID
+    --
+    FK(task_id): UUID
+    FK(user_id): UUID
+    comment: TEXT
+    mentions: JSONB
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "Notification" as notification <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(user_id): UUID
+    type: VARCHAR(50)
+    title: VARCHAR(255)
+    message: TEXT
+    link: VARCHAR(255)
+    is_read: BOOLEAN
+    read_at: TIMESTAMP
+    metadata: JSONB
+    --
+    created_at: TIMESTAMP
+}
+
+entity "File" as file <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    name: VARCHAR(255)
+    original_filename: VARCHAR(255)
+    file_path: VARCHAR(500)
+    file_size: BIGINT
+    mime_type: VARCHAR(100)
+    FK(folder_id): UUID
+    FK(owner_id): UUID
+    tags: JSONB
+    version: INTEGER
+    FK(parent_file_id): UUID
+    is_deleted: BOOLEAN
+    deleted_at: TIMESTAMP
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "Folder" as folder <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    name: VARCHAR(255)
+    FK(parent_folder_id): UUID
+    FK(owner_id): UUID
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "FileShare" as file_share <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(file_id): UUID
+    FK(user_id): UUID
+    permission: VARCHAR(20)
+    FK(shared_by_id): UUID
+    shared_at: TIMESTAMP
+}
+
+entity "Project" as project <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    name: VARCHAR(255)
+    description: TEXT
+    status: VARCHAR(20)
+    start_date: DATE
+    end_date: DATE
+    FK(owner_id): UUID
+    color: VARCHAR(7)
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "ProjectMember" as project_member <<Services>> {
+    PK(id): UUID
+    --
+    FK(project_id): UUID
+    FK(user_id): UUID
+    role: VARCHAR(50)
+    joined_at: TIMESTAMP
+}
+
+' ==============================================================================
 ' AUDIT & LOGGING ENTITIES
 ' ==============================================================================
 
@@ -473,6 +635,43 @@ user ||--o{ audit_log : "performs actions"
 user ||--o{ login_attempt : "attempts login"
 
 ' ==============================================================================
+' RELATIONSHIPS - Customer Services (Calendar, Tasks, Files, Projects)
+' ==============================================================================
+
+tenant ||--o{ event : "has"
+user ||--o{ event : "organizes"
+event ||--o{ event_participant : "has participants"
+user ||--o{ event_participant : "participates in"
+
+tenant ||--o{ task : "has"
+user ||--o{ task : "creates"
+user ||--o{ task : "assigned to"
+task ||--o{ task : "has subtasks (parent)"
+project ||--o{ task : "contains"
+task ||--o{ task_comment : "has comments"
+user ||--o{ task_comment : "comments on"
+
+tenant ||--o{ notification : "has"
+user ||--o{ notification : "receives"
+
+tenant ||--o{ file : "stores"
+user ||--o{ file : "owns"
+folder ||--o{ file : "contains"
+file ||--o{ file : "has versions (parent)"
+file ||--o{ file_share : "shared with"
+user ||--o{ file_share : "has access to"
+user ||--o{ file_share : "shared by"
+
+tenant ||--o{ folder : "has"
+user ||--o{ folder : "owns"
+folder ||--o{ folder : "has subfolders (parent)"
+
+tenant ||--o{ project : "has"
+user ||--o{ project : "owns"
+project ||--o{ project_member : "has members"
+user ||--o{ project_member : "member of"
+
+' ==============================================================================
 ' RELATIONSHIPS - Audit Trail for Created/Updated By
 ' ==============================================================================
 
@@ -565,12 +764,56 @@ note top of usage_tracking
     - Triggers upgrade prompts at 80%
 end note
 
+note top of event
+    **Calendar Service**
+    - Gestión de eventos y reuniones
+    - Soporta recurrencia (iCal RRULE)
+    - Recordatorios multi-canal
+    - Integración con Google/Outlook (Pro+)
+    - Feature gated por plan
+end note
+
+note top of task
+    **Task Management**
+    - Tableros Kanban, listas, filtros
+    - Subtareas y dependencias
+    - Asignación a usuarios
+    - Comentarios con menciones
+    - Feature gated: limits por plan
+end note
+
+note bottom of file
+    **File Storage**
+    - Almacenamiento con versiones
+    - Soft delete (papelera 30 días)
+    - Compartición con permisos
+    - Límites de storage por plan
+    - Preview de archivos (Pro+)
+end note
+
+note bottom of project
+    **Portfolio/Projects**
+    - Gestión de proyectos multi-usuario
+    - Vistas: Lista, Kanban, Gantt
+    - Agregación de tareas y archivos
+    - Milestones y reportes (Pro+)
+end note
+
+note right of notification
+    **Notification Center**
+    - In-app, email, push (por plan)
+    - Preferencias configurables
+    - Agrupación inteligente
+    - Modo "No molestar"
+end note
+
 legend right
     |= Color |= Entity Type |
     | <back:LightBlue>   </back> | Core Multi-Tenancy |
     | <back:LightGreen>  </back> | User & Authentication |
     | <back:LightYellow> </back> | RBAC System |
     | <back:LightSalmon> </back> | Subscription & Billing |
+    | <back:Lavender>    </back> | Customer Services (Calendar, Tasks, Files, Projects) |
     | <back:LightGray>   </back> | Audit & Logging |
 
     **Cardinality:**

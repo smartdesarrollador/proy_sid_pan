@@ -200,6 +200,23 @@ export const permissions = [
   // Audit
   { id: 'perm-027', codename: 'audit.read', name: 'Ver Auditoría', resource: 'audit', action: 'read', category: 'Audit' },
   { id: 'perm-028', codename: 'audit.export', name: 'Exportar Auditoría', resource: 'audit', action: 'export', category: 'Audit' },
+
+  // Dashboard
+  { id: 'perm-029', codename: 'dashboard.read', name: 'Ver Dashboard', resource: 'dashboard', action: 'read', category: 'Dashboard' },
+
+  // Tasks
+  { id: 'perm-030', codename: 'tasks.create', name: 'Crear Tareas', resource: 'tasks', action: 'create', category: 'Tasks' },
+  { id: 'perm-031', codename: 'tasks.read', name: 'Ver Tareas', resource: 'tasks', action: 'read', category: 'Tasks' },
+  { id: 'perm-032', codename: 'tasks.update', name: 'Editar Tareas', resource: 'tasks', action: 'update', category: 'Tasks' },
+  { id: 'perm-033', codename: 'tasks.delete', name: 'Eliminar Tareas', resource: 'tasks', action: 'delete', category: 'Tasks' },
+  { id: 'perm-034', codename: 'tasks.assign', name: 'Asignar Tareas', resource: 'tasks', action: 'assign', category: 'Tasks' },
+
+  // Calendar
+  { id: 'perm-035', codename: 'calendar.create', name: 'Crear Eventos', resource: 'calendar', action: 'create', category: 'Calendar' },
+  { id: 'perm-036', codename: 'calendar.read', name: 'Ver Calendario', resource: 'calendar', action: 'read', category: 'Calendar' },
+  { id: 'perm-037', codename: 'calendar.update', name: 'Editar Eventos', resource: 'calendar', action: 'update', category: 'Calendar' },
+  { id: 'perm-038', codename: 'calendar.delete', name: 'Eliminar Eventos', resource: 'calendar', action: 'delete', category: 'Calendar' },
+  { id: 'perm-039', codename: 'calendar.share', name: 'Compartir Calendario', resource: 'calendar', action: 'share', category: 'Calendar' },
 ];
 
 export const subscriptionPlans = [
@@ -397,32 +414,253 @@ export const invoices = [
   }
 ];
 
+// Tasks mock data
+export const tasks = [
+  {
+    id: 'task-001',
+    title: 'Implementar autenticación JWT',
+    description: 'Desarrollar sistema de autenticación con tokens JWT para la API REST',
+    status: 'in_progress',
+    priority: 'alta',
+    assignee: 'user-003',
+    createdBy: 'user-002',
+    dueDate: '2026-02-15',
+    tags: ['backend', 'security'],
+    comments: 3,
+    subtasks: [
+      { id: 'st-001', title: 'Configurar JWT library', completed: true },
+      { id: 'st-002', title: 'Crear endpoints login/logout', completed: true },
+      { id: 'st-003', title: 'Implementar refresh tokens', completed: false }
+    ],
+    createdAt: '2026-02-01'
+  },
+  {
+    id: 'task-002',
+    title: 'Diseñar wireframes dashboard',
+    description: 'Crear wireframes de baja fidelidad para el nuevo dashboard de analytics',
+    status: 'in_review',
+    priority: 'media',
+    assignee: 'user-004',
+    createdBy: 'user-002',
+    dueDate: '2026-02-12',
+    tags: ['design', 'ux'],
+    comments: 7,
+    subtasks: [],
+    createdAt: '2026-02-05'
+  },
+  {
+    id: 'task-003',
+    title: 'Optimizar queries de base de datos',
+    description: 'Añadir índices y optimizar queries lentos identificados en el análisis de performance',
+    status: 'todo',
+    priority: 'alta',
+    assignee: 'user-003',
+    createdBy: 'user-001',
+    dueDate: '2026-02-20',
+    tags: ['backend', 'performance', 'database'],
+    comments: 1,
+    subtasks: [],
+    createdAt: '2026-02-08'
+  },
+  {
+    id: 'task-004',
+    title: 'Escribir documentación API',
+    description: 'Documentar todos los endpoints REST con ejemplos de request/response',
+    status: 'todo',
+    priority: 'baja',
+    assignee: 'user-003',
+    createdBy: 'user-001',
+    dueDate: '2026-02-28',
+    tags: ['docs'],
+    comments: 0,
+    subtasks: [],
+    createdAt: '2026-02-09'
+  },
+  {
+    id: 'task-005',
+    title: 'Configurar CI/CD pipeline',
+    description: 'Setup GitHub Actions para testing automático y deployment',
+    status: 'done',
+    priority: 'media',
+    assignee: 'user-003',
+    createdBy: 'user-002',
+    dueDate: '2026-02-10',
+    tags: ['devops', 'automation'],
+    comments: 5,
+    subtasks: [
+      { id: 'st-004', title: 'Configurar test runner', completed: true },
+      { id: 'st-005', title: 'Setup staging deployment', completed: true }
+    ],
+    createdAt: '2026-01-28'
+  },
+  {
+    id: 'task-006',
+    title: 'Revisar PR #234',
+    description: 'Code review del nuevo feature de notificaciones en tiempo real',
+    status: 'in_progress',
+    priority: 'media',
+    assignee: 'user-002',
+    createdBy: 'user-003',
+    dueDate: '2026-02-11',
+    tags: ['review', 'backend'],
+    comments: 12,
+    subtasks: [],
+    createdAt: '2026-02-09'
+  }
+];
+
+// Calendar events mock data
+export const events = [
+  {
+    id: 'event-001',
+    title: 'Sprint Planning Q1',
+    description: 'Planificación de sprint para el primer trimestre',
+    startDate: '2026-02-12',
+    startTime: '10:00',
+    endDate: '2026-02-12',
+    endTime: '12:00',
+    location: 'Sala de Conferencias A',
+    category: 'meeting',
+    categoryColor: '#3b82f6',
+    participants: ['user-001', 'user-002', 'user-003'],
+    isRecurring: false,
+    recurrencePattern: null,
+    reminders: [
+      { type: 'email', minutesBefore: 60 },
+      { type: 'notification', minutesBefore: 15 }
+    ],
+    createdBy: 'user-002',
+    createdAt: '2026-02-05'
+  },
+  {
+    id: 'event-002',
+    title: 'Daily Standup',
+    description: 'Reunión diaria del equipo de desarrollo',
+    startDate: '2026-02-11',
+    startTime: '09:15',
+    endDate: '2026-02-11',
+    endTime: '09:30',
+    location: 'Zoom',
+    category: 'standup',
+    categoryColor: '#10b981',
+    participants: ['user-002', 'user-003', 'user-004'],
+    isRecurring: true,
+    recurrencePattern: 'daily',
+    reminders: [
+      { type: 'notification', minutesBefore: 5 }
+    ],
+    createdBy: 'user-002',
+    createdAt: '2026-01-15'
+  },
+  {
+    id: 'event-003',
+    title: 'Presentación Cliente - Dashboard Analytics',
+    description: 'Demo del nuevo dashboard de analytics al cliente',
+    startDate: '2026-02-18',
+    startTime: '14:00',
+    endDate: '2026-02-18',
+    endTime: '15:30',
+    location: 'Google Meet',
+    category: 'client',
+    categoryColor: '#f59e0b',
+    participants: ['user-001', 'user-002', 'user-004'],
+    isRecurring: false,
+    recurrencePattern: null,
+    reminders: [
+      { type: 'email', minutesBefore: 1440 },
+      { type: 'notification', minutesBefore: 30 }
+    ],
+    createdBy: 'user-001',
+    createdAt: '2026-02-07'
+  },
+  {
+    id: 'event-004',
+    title: 'Code Review Session',
+    description: 'Revisión semanal de código y mejores prácticas',
+    startDate: '2026-02-14',
+    startTime: '16:00',
+    endDate: '2026-02-14',
+    endTime: '17:00',
+    location: 'Sala Dev',
+    category: 'review',
+    categoryColor: '#8b5cf6',
+    participants: ['user-002', 'user-003'],
+    isRecurring: true,
+    recurrencePattern: 'weekly',
+    reminders: [
+      { type: 'notification', minutesBefore: 15 }
+    ],
+    createdBy: 'user-002',
+    createdAt: '2026-01-20'
+  }
+];
+
+// User dashboard statistics
+export const userStats = {
+  'user-001': {
+    tasksCompleted: 24,
+    tasksInProgress: 2,
+    upcomingEvents: 3,
+    overdueTasksCount: 0
+  },
+  'user-002': {
+    tasksCompleted: 18,
+    tasksInProgress: 1,
+    upcomingEvents: 5,
+    overdueTasksCount: 0
+  },
+  'user-003': {
+    tasksCompleted: 31,
+    tasksInProgress: 3,
+    upcomingEvents: 4,
+    overdueTasksCount: 1
+  },
+  'user-004': {
+    tasksCompleted: 12,
+    tasksInProgress: 1,
+    upcomingEvents: 2,
+    overdueTasksCount: 0
+  },
+  'user-005': {
+    tasksCompleted: 0,
+    tasksInProgress: 0,
+    upcomingEvents: 0,
+    overdueTasksCount: 0
+  }
+};
+
 // Mapeo de permisos por rol
 export const rolePermissions = {
   'OrgAdmin': [
     'users.*', 'roles.*', 'permissions.*', 'billing.*',
-    'audit.*', 'settings.*', 'dashboard.read', 'content.*', 'projects.*'
+    'audit.*', 'settings.*', 'dashboard.read', 'content.*', 'projects.*',
+    'tasks.*', 'calendar.*'
   ],
   'Manager': [
     'users.read', 'users.update', 'roles.read', 'projects.*', 'audit.read',
-    'dashboard.read', 'content.read'
+    'dashboard.read', 'content.read', 'tasks.*', 'calendar.*'
   ],
   'Member': [
     'dashboard.read', 'projects.read', 'projects.create',
-    'content.read', 'content.create', 'content.edit_own'
+    'content.read', 'content.create', 'content.edit_own',
+    'tasks.read', 'tasks.create', 'tasks.update', 'tasks.assign',
+    'calendar.read', 'calendar.create', 'calendar.update'
   ],
   'Content Editor': [
     'dashboard.read', 'content.create', 'content.edit_own',
-    'content.read', 'content.delete'
+    'content.read', 'content.delete',
+    'tasks.read', 'tasks.create', 'calendar.read', 'calendar.create'
   ],
   'Guest': [
-    'dashboard.read'
+    'dashboard.read', 'tasks.read', 'calendar.read'
   ],
   'HR Access': [
-    'users.read', 'hr.*', 'dashboard.read'
+    'users.read', 'hr.*', 'dashboard.read',
+    'tasks.read', 'tasks.create', 'calendar.*'
   ],
   'Engineering': [
-    'projects.*', 'technical.*', 'content.read', 'dashboard.read'
+    'projects.*', 'technical.*', 'content.read', 'dashboard.read',
+    'tasks.*', 'calendar.*'
   ]
 };
 

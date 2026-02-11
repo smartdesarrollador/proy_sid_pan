@@ -9,7 +9,6 @@ import RoleManagement from './components/RoleManagement';
 import PermissionManagement from './components/PermissionManagement';
 import SubscriptionManagement from './components/SubscriptionManagement';
 import AuditLogs from './components/AuditLogs';
-
 function AppContent() {
   const { isAuthenticated } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');

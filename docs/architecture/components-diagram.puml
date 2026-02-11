@@ -3,7 +3,7 @@
 skinparam componentStyle rectangle
 skinparam linetype ortho
 
-title Sistema de Gestión de Roles, Permisos y Suscripciones\nDiagrama de Componentes - Arquitectura
+title Sistema de Gestión de Roles, Permisos y Suscripciones\nDiagrama de Componentes - Arquitectura Dual Frontend
 
 ' ===============================================
 ' ESTILOS Y COLORES
@@ -12,6 +12,10 @@ title Sistema de Gestión de Roles, Permisos y Suscripciones\nDiagrama de Compon
 skinparam component {
     BackgroundColor<<frontend>> #E3F2FD
     BorderColor<<frontend>> #1976D2
+    BackgroundColor<<frontend_admin>> #FFE0B2
+    BorderColor<<frontend_admin>> #E65100
+    BackgroundColor<<frontend_client>> #E1F5FE
+    BorderColor<<frontend_client>> #0277BD
     BackgroundColor<<backend>> #F3E5F5
     BorderColor<<backend>> #7B1FA2
     BackgroundColor<<database>> #FFF3E0
@@ -25,74 +29,120 @@ skinparam component {
 }
 
 ' ===============================================
-' CAPA DE PRESENTACIÓN (FRONTEND)
+' CAPA DE PRESENTACIÓN (DUAL FRONTEND)
 ' ===============================================
 
-package "Frontend Layer" <<frontend>> {
-    component "Angular App" as Angular {
-        component [Auth Module] as AuthModule
-        component [Dashboard Module] as DashboardModule
-        component [Users Module] as UsersModule
-        component [Roles Module] as RolesModule
-        component [Billing Module] as BillingModule
-        component [Settings Module] as SettingsModule
+package "Frontend Admin\n(admin.plataforma.com)" <<frontend_admin>> {
+    component "Angular Admin App" as AngularAdmin {
+        component [Dashboard Admin] as DashboardAdmin
+        component [User Management] as UserManagement
+        component [Role Management] as RoleManagement
+        component [Permission Management] as PermissionManagement
+        component [Subscription Management] as SubscriptionManagement
+        component [Audit Logs] as AuditLogsModule
+        component [Settings] as SettingsModule
 
-        component [Auth Interceptor] as AuthInterceptor
-        component [Error Interceptor] as ErrorInterceptor
-        component [Loading Interceptor] as LoadingInterceptor
-
-        component [Auth Guard] as AuthGuard
-        component [Permission Guard] as PermissionGuard
-        component [Feature Guard] as FeatureGuard
-
-        component [Auth Service] as FrontendAuthService
-        component [API Service] as ApiService
-        component [Billing Service] as FrontendBillingService
-        component [State Management] as StateManagement
+        component [Admin Auth Service] as AdminAuthService
+        component [Admin API Service] as AdminApiService
+        component [RBAC Service (Frontend)] as FrontendRBACService
     }
 
-    component [Tailwind CSS] as Tailwind
-    component [RxJS] as RxJS
+    component [Shared Guards\nAdmin] as AdminGuards
+    component [Shared Interceptors\nAdmin] as AdminInterceptors
 }
 
-note right of Angular
-  **Tech Stack:**
-  • Angular 17+ (Standalone)
-  • TypeScript 5+
-  • Tailwind CSS 3+
-  • RxJS 7+
-  • Signals API
+package "Frontend Cliente\n(app.plataforma.com)" <<frontend_client>> {
+    component "Angular Client App" as AngularClient {
+        component [Dashboard Usuario] as DashboardUsuario
+        component [Calendario] as CalendarioModule
+        component [Tareas] as TareasModule
+        component [Notificaciones] as NotificacionesModule
+        component [Archivos] as ArchivosModule
+        component [Portafolio/Proyectos] as PortafolioModule
+        component [Perfil Usuario] as PerfilModule
 
-  **Features:**
-  • Lazy loading modules
-  • SSR ready (Angular Universal)
-  • PWA capable
-  • Responsive mobile-first
+        component [Client Auth Service] as ClientAuthService
+        component [Client API Service] as ClientApiService
+        component [Feature Gate Service] as FeatureGateService
+    }
+
+    component [Shared Guards\nClient] as ClientGuards
+    component [Shared Interceptors\nClient] as ClientInterceptors
+}
+
+package "Shared Libraries" <<frontend>> {
+    component [Tailwind CSS Config] as TailwindShared
+    component [Common Components] as CommonComponents
+    component [Common Models/Interfaces] as CommonModels
+    component [RxJS Utils] as RxJSUtils
+}
+
+note right of AngularAdmin
+  **Frontend Admin:**
+  • URL: admin.plataforma.com
+  • Usuarios: OrgAdmin, Manager (con permisos)
+  • Módulos: RBAC, Billing, Audit
+  • Tech: Angular 17+ Standalone
+  • Tailwind CSS + Signals
+end note
+
+note right of AngularClient
+  **Frontend Cliente:**
+  • URL: app.plataforma.com
+  • Usuarios: Todos (Member+)
+  • Módulos: Servicios productivos
+  • Tech: Angular 17+ Standalone
+  • Feature gates por plan
 end note
 
 ' ===============================================
 ' CAPA DE API (BACKEND)
 ' ===============================================
 
-package "API Layer" <<backend>> {
+package "API Layer (Backend Unificado)" <<backend>> {
     component "Django REST Framework" as DRF {
-        component [Auth Endpoints] as AuthAPI
-        component [Users Endpoints] as UsersAPI
-        component [Roles Endpoints] as RolesAPI
-        component [Permissions Endpoints] as PermissionsAPI
-        component [Billing Endpoints] as BillingAPI
-        component [Audit Endpoints] as AuditAPI
-        component [Webhooks Endpoints] as WebhooksAPI
+        package "/api/v1/admin/" {
+            component [Tenants API] as TenantsAPI
+            component [Users API] as UsersAPI
+            component [Roles API] as RolesAPI
+            component [Permissions API] as PermissionsAPI
+            component [Subscriptions API] as SubscriptionsAPI
+            component [Audit Logs API] as AuditAPI
+            component [Analytics API] as AnalyticsAPI
+        }
+
+        package "/api/v1/app/" {
+            component [Calendar API] as CalendarAPI
+            component [Tasks API] as TasksAPI
+            component [Notifications API] as NotificationsAPI
+            component [Files API] as FilesAPI
+            component [Projects API] as ProjectsAPI
+            component [Dashboard API] as DashboardAPI
+        }
+
+        package "/api/v1/auth/" {
+            component [Login/Logout] as AuthAPI
+            component [Register] as RegisterAPI
+            component [Token Refresh] as TokenRefreshAPI
+            component [Password Reset] as PasswordResetAPI
+            component [MFA] as MFAAPI
+        }
+
+        component [Webhooks] as WebhooksAPI
 
         component [JWT Middleware] as JWTMiddleware
         component [Tenant Middleware] as TenantMiddleware
         component [Permission Middleware] as PermissionMiddleware
         component [Rate Limit Middleware] as RateLimitMiddleware
+        component [Feature Gate Middleware] as FeatureGateMiddleware
 
         component [Auth Service] as BackendAuthService
         component [Billing Service] as BackendBillingService
         component [RBAC Service] as RBACService
         component [Notification Service] as NotificationService
+        component [Calendar Service] as CalendarService
+        component [Task Service] as TaskService
+        component [File Service] as FileService
     }
 
     component [Django ORM] as ORM
@@ -265,50 +315,93 @@ interface "Redis\nProtocol" as RedisProtocol
 interface "SMTP/API" as SMTP
 
 ' ===============================================
-' RELACIONES - FRONTEND → BACKEND
+' RELACIONES - FRONTEND ADMIN → BACKEND
 ' ===============================================
 
-Angular --> HTTPS : REST calls
-HTTPS --> DRF
+AngularAdmin --> HTTPS : REST calls /api/v1/admin/*
+DashboardAdmin --> AdminApiService
+UserManagement --> AdminApiService
+RoleManagement --> AdminApiService
+PermissionManagement --> AdminApiService
+SubscriptionManagement --> AdminApiService
+AuditLogsModule --> AdminApiService
 
-AuthModule --> FrontendAuthService
-DashboardModule --> ApiService
-UsersModule --> ApiService
-RolesModule --> ApiService
-BillingModule --> FrontendBillingService
+AdminAuthService --> HTTPS : POST /api/v1/auth/*
+AdminApiService --> HTTPS : /api/v1/admin/*
 
-FrontendAuthService --> HTTPS : POST /auth/login\nPOST /auth/refresh
-ApiService --> HTTPS : CRUD operations
-FrontendBillingService --> HTTPS : POST /billing/upgrade
+AdminGuards ..> AdminAuthService : Check admin permissions
+AdminInterceptors ..> HTTPS : JWT + Error handling
 
-AuthInterceptor ..> HTTPS : Inject JWT token
-ErrorInterceptor ..> HTTPS : Handle errors
-LoadingInterceptor ..> HTTPS : Loading states
-
-AuthGuard ..> FrontendAuthService : Check auth
-PermissionGuard ..> FrontendAuthService : Check permissions
-FeatureGuard ..> ApiService : Check features
-
-Angular ..> Tailwind : Styles
-ApiService ..> RxJS : Observables
-StateManagement ..> RxJS : BehaviorSubject
+AngularAdmin ..> TailwindShared : Styles
+AngularAdmin ..> CommonComponents : UI components
+AdminApiService ..> RxJSUtils : Observables
 
 ' ===============================================
-' RELACIONES - BACKEND → MIDDLEWARE
+' RELACIONES - FRONTEND CLIENTE → BACKEND
 ' ===============================================
 
-HTTPS --> JWTMiddleware : 1. Verify token
+AngularClient --> HTTPS : REST calls /api/v1/app/*
+DashboardUsuario --> ClientApiService
+CalendarioModule --> ClientApiService
+TareasModule --> ClientApiService
+NotificacionesModule --> ClientApiService
+ArchivosModule --> ClientApiService
+PortafolioModule --> ClientApiService
+
+ClientAuthService --> HTTPS : POST /api/v1/auth/*
+ClientApiService --> HTTPS : /api/v1/app/*
+
+ClientGuards ..> ClientAuthService : Check auth
+ClientGuards ..> FeatureGateService : Check plan features
+ClientInterceptors ..> HTTPS : JWT + Error handling
+
+AngularClient ..> TailwindShared : Styles
+AngularClient ..> CommonComponents : UI components
+ClientApiService ..> RxJSUtils : Observables
+
+' ===============================================
+' RELACIONES - SHARED LIBRARIES
+' ===============================================
+
+AngularAdmin ..> CommonModels : Shared interfaces
+AngularClient ..> CommonModels : Shared interfaces
+
+' ===============================================
+' RELACIONES - BACKEND → MIDDLEWARE PIPELINE
+' ===============================================
+
+HTTPS --> JWTMiddleware : 1. Verify JWT token
 JWTMiddleware --> TenantMiddleware : 2. Set tenant context
-TenantMiddleware --> PermissionMiddleware : 3. Load permissions
-PermissionMiddleware --> RateLimitMiddleware : 4. Check rate limit
-RateLimitMiddleware --> AuthAPI : 5. Route to endpoint
+TenantMiddleware --> PermissionMiddleware : 3. Load user permissions
+PermissionMiddleware --> FeatureGateMiddleware : 4. Check plan features
+FeatureGateMiddleware --> RateLimitMiddleware : 5. Rate limit by plan
+RateLimitMiddleware --> TenantsAPI : 6. Route to endpoint
 
-AuthAPI --> BackendAuthService
+' Admin API endpoints
+TenantsAPI --> RBACService
 UsersAPI --> RBACService
 RolesAPI --> RBACService
 PermissionsAPI --> RBACService
-BillingAPI --> BackendBillingService
+SubscriptionsAPI --> BackendBillingService
 AuditAPI --> RBACService
+AnalyticsAPI --> RBACService
+
+' App API endpoints
+CalendarAPI --> CalendarService
+TasksAPI --> TaskService
+NotificationsAPI --> NotificationService
+FilesAPI --> FileService
+ProjectsAPI --> TaskService
+DashboardAPI --> RBACService
+
+' Auth API endpoints
+AuthAPI --> BackendAuthService
+RegisterAPI --> BackendAuthService
+TokenRefreshAPI --> BackendAuthService
+PasswordResetAPI --> BackendAuthService
+MFAAPI --> BackendAuthService
+
+' Webhooks
 WebhooksAPI --> BackendBillingService
 
 ' ===============================================
@@ -421,9 +514,34 @@ SSL ..> LoadBalancer : HTTPS encryption
 ' NOTAS ADICIONALES
 ' ===============================================
 
+note as N0
+  **Arquitectura Dual Frontend**
+
+  **Frontend Admin** (admin.plataforma.com)
+  - Gestión de RBAC, usuarios, roles, permisos
+  - Subscription management y billing
+  - Audit logs y analytics
+  - Solo accesible para OrgAdmin, Manager
+  - Consume: /api/v1/admin/*
+
+  **Frontend Cliente** (app.plataforma.com)
+  - Servicios productivos para usuarios finales
+  - Calendario, Tareas, Archivos, Proyectos
+  - Dashboard personalizado, notificaciones
+  - Accesible para todos (Member+)
+  - Consume: /api/v1/app/*
+  - Feature gates por plan de suscripción
+
+  **Backend Unificado** (Django)
+  - API única que sirve a ambos frontends
+  - Autenticación compartida (/api/v1/auth/)
+  - Mismos JWT tokens para ambos
+  - RLS garantiza aislamiento por tenant
+end note
+
 note as N1
-  **Data Flow Example: Login**
-  1. User enters credentials (Angular)
+  **Data Flow Example: Login (Ambos Frontends)**
+  1. User enters credentials (Admin o Cliente)
   2. POST /api/v1/auth/login (HTTPS)
   3. JWT Middleware validates (skip, no token yet)
   4. Auth Service validates credentials (bcrypt)
@@ -431,12 +549,31 @@ note as N1
   6. Generate JWT tokens (access + refresh)
   7. Store refresh token in PostgreSQL
   8. Cache permissions in Redis (TTL 5min)
-  9. Return tokens to frontend
-  10. Frontend stores in localStorage
-  11. Audit log entry created (async via Signals)
+  9. Cache plan features in Redis (TTL 5min)
+  10. Return tokens to frontend
+  11. Frontend stores in localStorage
+  12. Audit log entry created (async via Signals)
 end note
 
 note as N2
+  **Data Flow Example: Feature Gate Check**
+  (Frontend Cliente accede a feature Premium)
+  1. Usuario click en "Crear Proyecto" (Pro+)
+  2. ClientGuard verifica feature localmente
+  3. POST /api/v1/app/projects (HTTPS)
+  4. JWT Middleware verifica token
+  5. Tenant Middleware carga tenant context
+  6. Feature Gate Middleware:
+     a. Consulta plan del tenant (cache/DB)
+     b. Valida si plan incluye feature "projects"
+     c. Si no: HTTP 403 Forbidden + upgrade prompt
+     d. Si sí: continúa al endpoint
+  7. Projects API crea proyecto (PostgreSQL)
+  8. Retorna proyecto creado
+  9. Frontend actualiza UI
+end note
+
+note as N3
   **Data Flow Example: Billing Renewal**
   1. Celery Beat triggers daily cron (00:00 UTC)
   2. process_renewals() task executes
@@ -450,6 +587,7 @@ note as N2
   5. Stripe webhook confirms payment
   6. Webhook handler updates status
   7. Cache invalidation (Redis)
+  8. Notify admins via notification service
 end note
 
 ' ===============================================
@@ -458,8 +596,10 @@ end note
 
 legend right
   |= Color |= Layer |
-  | <back:#E3F2FD>   </back> | Frontend (Angular) |
-  | <back:#F3E5F5>   </back> | Backend (Django) |
+  | <back:#FFE0B2>   </back> | Frontend Admin (Angular) |
+  | <back:#E1F5FE>   </back> | Frontend Cliente (Angular) |
+  | <back:#E3F2FD>   </back> | Shared Libraries |
+  | <back:#F3E5F5>   </back> | Backend (Django API Unificado) |
   | <back:#FFF3E0>   </back> | Database (PostgreSQL) |
   | <back:#E8F5E9>   </back> | Cache (Redis) |
   | <back:#FFF9C4>   </back> | Queue (Celery) |

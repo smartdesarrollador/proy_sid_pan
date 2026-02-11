@@ -1,19 +1,34 @@
-# Prototipo UI/UX - Sistema RBAC + Suscripciones
+# Prototipo Admin - Sistema RBAC + Suscripciones
 
-Prototipo interactivo del sistema de gestión de roles, permisos y suscripciones multi-tenant construido con **React 18** + **Vite** + **Tailwind CSS**.
+Prototipo de **interfaz administrativa** para la gestión de roles, permisos, usuarios y suscripciones multi-tenant. Construido con **React 18** + **Vite** + **Tailwind CSS**.
 
 ## 🎯 Propósito
 
-Este prototipo permite visualizar y explorar la interfaz de usuario completa del sistema antes de la implementación backend, facilitando:
+Este prototipo simula el **frontend de administración** del sistema, permitiendo a los administradores gestionar la plataforma completa. Está diseñado para validar flujos administrativos antes de la implementación backend.
 
-- ✅ Validación de flujos de usuario
-- ✅ Identificación de mejoras UX/UI
-- ✅ Feedback temprano del equipo y stakeholders
-- ✅ Refinamiento de features a incluir/descartar
+## 🏗️ Arquitectura
+
+En producción, este frontend administrativo será **uno de dos frontends** que consumen la misma API/base de datos:
+
+```
+┌─────────────────────────────────────┐
+│     API / Base de Datos (Django)    │
+│   (Usuarios, Roles, Permisos, etc)  │
+└─────────────────────────────────────┘
+         ↑                    ↑
+         │                    │
+  ┌──────┴─────┐       ┌──────┴─────┐
+  │  Frontend  │       │  Frontend  │
+  │   ADMIN    │       │  CLIENTE   │
+  │ (este)     │       │ (otro)     │
+  └────────────┘       └────────────┘
+```
+
+**Nota importante**: Los datos mock en ambos prototipos son idénticos para simular que ambos están conectados a la misma base de datos.
 
 ## 📋 Features Implementadas
 
-### Dashboard
+### Dashboard Administrativo
 - Vista general con métricas clave (usuarios, roles, storage, API calls)
 - Alertas de límites de plan
 - Actividad reciente (usuarios y audit logs)
@@ -68,7 +83,7 @@ Este prototipo permite visualizar y explorar la interfaz de usuario completa del
 
 ```bash
 # 1. Navegar al directorio del prototipo
-cd docs/ui-ux/prototype-react
+cd docs/ui-ux/prototype-admin
 
 # 2. Instalar dependencias
 npm install
@@ -83,17 +98,23 @@ npm run dev
 ## 🗂️ Estructura del Proyecto
 
 ```
-prototype-react/
+prototype-admin/
 ├── src/
 │   ├── components/
 │   │   ├── Navbar.jsx              # Barra de navegación superior
-│   │   ├── Sidebar.jsx             # Menú lateral
-│   │   ├── Dashboard.jsx           # Vista principal
+│   │   ├── Sidebar.jsx             # Menú lateral administrativo
+│   │   ├── Login.jsx               # Pantalla de login
+│   │   ├── Dashboard.jsx           # Dashboard administrativo
 │   │   ├── UserManagement.jsx      # Gestión de usuarios
 │   │   ├── RoleManagement.jsx      # Gestión de roles
 │   │   ├── PermissionManagement.jsx # Gestión de permisos
 │   │   ├── SubscriptionManagement.jsx # Suscripción y facturación
-│   │   └── AuditLogs.jsx           # Logs de auditoría
+│   │   ├── AuditLogs.jsx           # Logs de auditoría
+│   │   └── shared/                 # Componentes reutilizables
+│   ├── contexts/
+│   │   └── AuthContext.jsx         # Contexto de autenticación
+│   ├── hooks/
+│   │   └── usePermissions.js       # Hook de permisos
 │   ├── data/
 │   │   └── mockData.js             # Datos mock del sistema
 │   ├── App.jsx                     # Componente principal
@@ -113,37 +134,14 @@ Los datos simulados en `src/data/mockData.js` incluyen:
 - **1 Tenant**: Acme Corporation (Plan Professional)
 - **5 Usuarios**: Con diferentes roles y estados
 - **6 Roles**: 4 del sistema + 2 personalizados
-- **28 Permisos**: Organizados en 8 categorías
+- **39 Permisos**: Organizados en múltiples categorías
 - **4 Planes**: Free, Starter, Professional, Enterprise
 - **5 Logs de Auditoría**: Con acciones variadas
 - **3 Facturas**: Historial de pagos
+- **6 Tareas**: Para el sistema de tareas (compartidas con cliente)
+- **4 Eventos**: Para el calendario (compartidos con cliente)
 
-## 🎨 Personalización
-
-### Cambiar colores del tema
-
-Edita `tailwind.config.js`:
-
-```js
-theme: {
-  extend: {
-    colors: {
-      primary: {
-        500: '#TU_COLOR',
-        // ...
-      }
-    }
-  }
-}
-```
-
-### Agregar nuevos datos mock
-
-Edita `src/data/mockData.js` y agrega entradas a los arrays correspondientes.
-
-### Modificar navegación
-
-Edita `src/components/Sidebar.jsx` para agregar/quitar items del menú.
+**Importante**: Estos datos mock son idénticos en `prototype-admin` y `prototype-cliente` para simular que ambos frontends consumen la misma base de datos.
 
 ## 🔧 Comandos Disponibles
 
@@ -180,7 +178,7 @@ npm run preview
 
 ### 4. Flujo de Auditoría
 - Admin navega a "Auditoría"
-- Filtra por acción específica (ej: "assign_role")
+- Filtra por acción específica
 - Expande detalles técnicos
 - Exporta reporte
 
@@ -200,25 +198,12 @@ npm run preview
 - Botones de acción muestran feedback visual
 - Los datos se cargan de `mockData.js`
 
-## 📝 Feedback y Mejoras
+## 🔗 Prototipo Relacionado
 
-Para reportar issues o sugerir mejoras:
-
-1. Documenta el flujo de usuario afectado
-2. Adjunta screenshot si es posible
-3. Indica si es bug UX o feature request
-4. Envía feedback al equipo de producto
-
-## 🚀 Próximos Pasos
-
-Después de validar el prototipo:
-
-1. ✅ Refinamiento de features (agregar/descartar según feedback)
-2. ✅ Ajustes de UX basados en pruebas de usuario
-3. 🔄 Implementación del backend (Django REST Framework)
-4. 🔄 Migración a Angular 16+ standalone components
-5. 🔄 Integración con APIs reales
-6. 🔄 Testing E2E
+**Prototipo Cliente**: `docs/ui-ux/prototype-cliente/`
+- Interfaz de usuario final para servicios (tareas, calendario, dashboard)
+- Usa los mismos datos mock para simular la misma base de datos
+- Puede ejecutarse simultáneamente en puerto 3001
 
 ## 📚 Recursos Relacionados
 
@@ -229,5 +214,7 @@ Después de validar el prototipo:
 ---
 
 **Creado:** 2026-02-09
+**Actualizado:** 2026-02-11
 **Tech Stack:** React 18.2 + Vite 5.1 + Tailwind CSS 3.4
-**Basado en:** PRD v1.0.0 y Diagramas UML del Sistema RBAC + Suscripciones
+**Tipo**: Frontend Administrativo
+**Puerto**: 3000
