@@ -82,7 +82,7 @@ src/
 
 - Skills: `.claude/skills/` (angular-accessibility, angular-api-pagination, angular-api-service-patterns, angular-auth-flow, angular-core-setup, angular-data-table, angular-error-handling, angular-file-upload, angular-form-handling, angular-http-interceptors, angular-performance, angular-real-time, angular-responsive-layout, angular-routing-guards, angular-rxjs-operators, angular-state-management, angular-tailwind-components, angular-testing-patterns, django-db-models, drf-auth, drf-core-api, drf-docs, drf-errors, drf-performance, drf-security, drf-testing, drf-utils, find-skills, skill-creator)
 - Commands: `.claude/commands/` (create-prd, generate-report, onboard, pr-review)
-- Agents: `.claude/agents/` (code-reviewer, planner, researcher)
+- Agents: `.claude/agents/` (api-documenter, billing-validator, code-reviewer, compliance-checker, database-optimizer, frontend-builder, migration-manager, planner, researcher, security-auditor, test-generator)
 - Rules: `.claude/rules/` (ai-development, code-style, security)
 - Hooks: `.claude/hooks/` (detect-doc-changes.sh, sync-claude-md.sh, task-finished-alert.py)
 - See `.claude/README.md` for full configuration reference

@@ -1,0 +1,462 @@
+@startuml Auth-Sequence-Diagram
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 200
+
+title Sistema de Autenticación JWT con MFA\nDiagramas de Secuencia
+
+' ===============================================
+' ACTORS Y PARTICIPANTS
+' ===============================================
+
+actor "Usuario" as User
+participant "Angular\nFrontend" as Frontend
+participant "Auth\nInterceptor" as Interceptor
+participant "Django\nAPI" as API
+participant "Auth\nMiddleware" as Middleware
+participant "Auth\nService" as AuthService
+database "PostgreSQL" as DB
+database "Redis\nCache" as Redis
+participant "Email\nService" as Email
+
+' ===============================================
+' SECUENCIA 1: LOGIN BÁSICO CON JWT
+' ===============================================
+
+== 1. Login Básico con JWT ==
+
+User -> Frontend: Ingresa email y password
+activate Frontend
+
+Frontend -> API: POST /api/v1/auth/login\n{email, password}
+activate API
+
+API -> Middleware: Verificar rate limit
+activate Middleware
+Middleware -> Redis: Incrementar contador\npara IP
+Redis --> Middleware: OK (3/100 intentos)
+Middleware --> API: ✓ Permitir
+deactivate Middleware
+
+API -> AuthService: authenticate(email, password)
+activate AuthService
+
+AuthService -> DB: SELECT * FROM user\nWHERE email = ?
+activate DB
+DB --> AuthService: User record
+deactivate DB
+
+AuthService -> AuthService: verify_password()\n[bcrypt.verify()]
+
+alt Password correcto
+    AuthService -> DB: UPDATE user\nSET last_login = NOW()
+    activate DB
+    DB --> AuthService: OK
+    deactivate DB
+
+    AuthService -> AuthService: generate_access_token()\n[exp: 15 min, claims: user_id,\ntenant_id, roles, permissions]
+
+    AuthService -> AuthService: generate_refresh_token()\n[exp: 7 days]
+
+    AuthService -> DB: INSERT INTO refresh_token\n(user_id, token_hash, expires_at)
+    activate DB
+    DB --> AuthService: Token created
+    deactivate DB
+
+    AuthService -> DB: INSERT INTO audit_log\n(action='login', user_id, ip)
+    activate DB
+    DB --> AuthService: Log created
+    deactivate DB
+
+    AuthService --> API: {access_token, refresh_token,\nuser, tenant, permissions}
+    deactivate AuthService
+
+    API --> Frontend: 200 OK\n{access_token, refresh_token, user}
+    deactivate API
+
+    Frontend -> Frontend: localStorage.setItem(\n'access_token', token)
+    Frontend -> Frontend: localStorage.setItem(\n'refresh_token', token)
+
+    Frontend --> User: ✓ Redirigir a Dashboard
+    deactivate Frontend
+
+else Password incorrecto
+    AuthService -> DB: INSERT INTO audit_log\n(action='login_failed')
+    activate DB
+    DB --> AuthService: OK
+    deactivate DB
+
+    AuthService -> Redis: Incrementar\nfailed_attempts(email)
+    Redis --> AuthService: Count = 3
+
+    alt Intentos >= 5
+        AuthService -> Redis: SET lockout:{email}\nEXPIRE 900 (15 min)
+        AuthService --> API: Account locked
+        API --> Frontend: 429 Too Many Requests\n{error: "Account locked"}
+        Frontend --> User: ✗ Cuenta bloqueada\n15 minutos
+    else Intentos < 5
+        AuthService --> API: Invalid credentials
+        API --> Frontend: 401 Unauthorized\n{error: "Invalid credentials"}
+        Frontend --> User: ✗ Email o password\ninválido
+    end
+
+end
+
+' ===============================================
+' SECUENCIA 2: REQUEST CON ACCESS TOKEN
+' ===============================================
+
+newpage Request con Access Token
+
+== 2. Request Protegido con Access Token ==
+
+User -> Frontend: Navega a /users
+activate Frontend
+
+Frontend -> Interceptor: GET /api/v1/users
+activate Interceptor
+
+Interceptor -> Interceptor: token = localStorage\n.getItem('access_token')
+
+Interceptor -> API: GET /api/v1/users\nAuthorization: Bearer {token}
+deactivate Interceptor
+activate API
+
+API -> Middleware: Validar JWT
+activate Middleware
+
+Middleware -> Middleware: jwt.decode(token)
+
+alt Token válido y no expirado
+    Middleware -> Redis: GET cached_permissions:\n{user_id}:{tenant_id}
+    activate Redis
+
+    alt Cache hit
+        Redis --> Middleware: [permissions list]
+    else Cache miss
+        Middleware -> DB: SELECT permissions\nFROM roles JOIN tenant_membership
+        activate DB
+        DB --> Middleware: [permissions list]
+        deactivate DB
+
+        Middleware -> Redis: SET cached_permissions\nTTL 300 (5 min)
+        Redis --> Middleware: OK
+    end
+    deactivate Redis
+
+    Middleware -> Middleware: request.user = user\nrequest.tenant = tenant\nrequest.permissions = perms
+
+    Middleware --> API: ✓ Usuario autenticado
+    deactivate Middleware
+
+    API -> API: @require_permission('users.read')
+
+    alt Usuario tiene permiso
+        API -> DB: SELECT * FROM user\nWHERE tenant_id = ?\n[RLS enforcement]
+        activate DB
+        DB --> API: Users list
+        deactivate DB
+
+        API --> Frontend: 200 OK\n{users: [...]}
+        Frontend --> User: ✓ Mostrar lista usuarios
+
+    else Usuario NO tiene permiso
+        API --> Frontend: 403 Forbidden\n{error: "Permission denied"}
+        Frontend --> User: ✗ No autorizado
+    end
+
+else Token expirado
+    Middleware --> API: Token expired
+    deactivate Middleware
+    API --> Frontend: 401 Unauthorized\n{error: "token_expired"}
+    deactivate API
+
+    note right of Frontend
+        Frontend detecta token_expired
+        y ejecuta flujo de refresh
+    end note
+
+    Frontend -> Frontend: trigger_token_refresh()
+    ref over Frontend, API, DB
+        Ver: "3. Refresh Token"
+    end ref
+
+else Token inválido (firma incorrecta)
+    Middleware --> API: Invalid token
+    API --> Frontend: 401 Unauthorized\n{error: "invalid_token"}
+    Frontend -> Frontend: logout()
+    Frontend --> User: ✗ Redirigir a Login
+end
+
+deactivate Frontend
+
+' ===============================================
+' SECUENCIA 3: REFRESH TOKEN
+' ===============================================
+
+newpage Refresh Token
+
+== 3. Refresh de Access Token ==
+
+Frontend -> API: POST /api/v1/auth/refresh\n{refresh_token}
+activate Frontend
+activate API
+
+API -> AuthService: validate_refresh_token(token)
+activate AuthService
+
+AuthService -> AuthService: token_hash = SHA256(token)
+
+AuthService -> DB: SELECT * FROM refresh_token\nWHERE token_hash = ?\nAND expires_at > NOW()\nAND revoked_at IS NULL
+activate DB
+DB --> AuthService: RefreshToken record
+deactivate DB
+
+alt Refresh token válido
+    AuthService -> AuthService: generate_new_access_token()\n[exp: 15 min]
+
+    note right of AuthService
+        **Token Rotation (Security Best Practice)**
+        Generar nuevo refresh token y
+        revocar el anterior
+    end note
+
+    AuthService -> AuthService: new_refresh = generate_refresh_token()
+
+    AuthService -> DB: UPDATE refresh_token\nSET revoked_at = NOW()\nWHERE id = old_token_id
+    activate DB
+    DB --> AuthService: OK
+    deactivate DB
+
+    AuthService -> DB: INSERT INTO refresh_token\n(user_id, token_hash, expires_at)
+    activate DB
+    DB --> AuthService: New token created
+    deactivate DB
+
+    AuthService --> API: {new_access_token,\nnew_refresh_token}
+    deactivate AuthService
+
+    API --> Frontend: 200 OK\n{access_token, refresh_token}
+    deactivate API
+
+    Frontend -> Frontend: localStorage.setItem(\n'access_token', new_token)
+    Frontend -> Frontend: localStorage.setItem(\n'refresh_token', new_token)
+
+    Frontend -> Frontend: retry_original_request()
+
+    Frontend --> User: ✓ Request exitoso\n(transparente)
+    deactivate Frontend
+
+else Refresh token inválido/expirado
+    AuthService --> API: Invalid refresh token
+    API --> Frontend: 401 Unauthorized\n{error: "invalid_refresh"}
+    Frontend -> Frontend: logout()
+    Frontend -> Frontend: localStorage.clear()
+    Frontend --> User: ✗ Redirigir a Login
+end
+
+' ===============================================
+' SECUENCIA 4: LOGIN CON MFA (TOTP)
+' ===============================================
+
+newpage Login con MFA
+
+== 4. Login con MFA (Multi-Factor Authentication) ==
+
+User -> Frontend: Ingresa email y password
+activate Frontend
+
+Frontend -> API: POST /api/v1/auth/login\n{email, password}
+activate API
+
+API -> AuthService: authenticate(email, password)
+activate AuthService
+
+AuthService -> DB: SELECT * FROM user\nWHERE email = ?
+activate DB
+DB --> AuthService: User record\n(mfa_enabled = true)
+deactivate DB
+
+AuthService -> AuthService: verify_password()\n[bcrypt.verify()]
+
+alt Password correcto Y MFA enabled
+    note right of AuthService
+        No emitir tokens todavía,
+        esperar código TOTP
+    end note
+
+    AuthService -> AuthService: session_token = generate_temp_session()
+
+    AuthService -> Redis: SET mfa_pending:{session_token}\nVALUE: {user_id}\nEXPIRE 300 (5 min)
+    activate Redis
+    Redis --> AuthService: OK
+    deactivate Redis
+
+    AuthService --> API: MFA required
+    deactivate AuthService
+
+    API --> Frontend: 200 OK\n{mfa_required: true,\nsession_token}
+    deactivate API
+
+    Frontend --> User: Solicitar código TOTP
+    deactivate Frontend
+
+    User -> Frontend: Ingresa código 6 dígitos\n(from Google Authenticator)
+    activate Frontend
+
+    Frontend -> API: POST /api/v1/auth/mfa/verify\n{session_token, totp_code}
+    activate API
+
+    API -> AuthService: verify_totp(session_token, code)
+    activate AuthService
+
+    AuthService -> Redis: GET mfa_pending:{session_token}
+    activate Redis
+    Redis --> AuthService: {user_id}
+    deactivate Redis
+
+    AuthService -> DB: SELECT mfa_secret FROM user\nWHERE id = ?
+    activate DB
+    DB --> AuthService: mfa_secret (encrypted)
+    deactivate DB
+
+    AuthService -> AuthService: decrypt(mfa_secret)
+
+    AuthService -> AuthService: verify_totp_code()\n[pyotp.TOTP(secret).verify(code)]
+
+    alt Código TOTP correcto
+        AuthService -> Redis: DEL mfa_pending:{session_token}
+
+        AuthService -> AuthService: generate_access_token()
+        AuthService -> AuthService: generate_refresh_token()
+
+        AuthService -> DB: INSERT INTO refresh_token
+        activate DB
+        DB --> AuthService: OK
+        deactivate DB
+
+        AuthService -> DB: INSERT INTO audit_log\n(action='login_mfa', user_id)
+        activate DB
+        DB --> AuthService: OK
+        deactivate DB
+
+        AuthService --> API: {access_token,\nrefresh_token, user}
+        deactivate AuthService
+
+        API --> Frontend: 200 OK\n{access_token, refresh_token}
+        deactivate API
+
+        Frontend -> Frontend: localStorage.setItem(tokens)
+        Frontend --> User: ✓ Redirigir a Dashboard
+        deactivate Frontend
+
+    else Código TOTP incorrecto
+        AuthService -> Redis: INCR mfa_attempts:{session_token}
+        Redis --> AuthService: attempts = 2
+
+        alt Intentos >= 3
+            AuthService -> Redis: DEL mfa_pending:{session_token}
+            AuthService --> API: Max attempts exceeded
+            API --> Frontend: 429 Too Many Requests
+            Frontend --> User: ✗ Demasiados intentos,\nvolver a login
+        else Intentos < 3
+            AuthService --> API: Invalid TOTP code
+            API --> Frontend: 401 Unauthorized\n{remaining_attempts: 1}
+            Frontend --> User: ✗ Código incorrecto,\nintentar nuevamente
+        end
+    end
+
+else Password incorrecto
+    AuthService --> API: Invalid credentials
+    API --> Frontend: 401 Unauthorized
+    Frontend --> User: ✗ Credenciales inválidas
+end
+
+' ===============================================
+' SECUENCIA 5: LOGOUT
+' ===============================================
+
+newpage Logout
+
+== 5. Logout ==
+
+User -> Frontend: Click "Logout"
+activate Frontend
+
+Frontend -> API: POST /api/v1/auth/logout\n{refresh_token}\nAuthorization: Bearer {access_token}
+activate API
+
+API -> AuthService: logout(user, refresh_token)
+activate AuthService
+
+AuthService -> DB: UPDATE refresh_token\nSET revoked_at = NOW()\nWHERE token_hash = ?
+activate DB
+DB --> AuthService: Token revoked
+deactivate DB
+
+AuthService -> DB: UPDATE session\nSET is_active = false\nWHERE user_id = ?\nAND is_active = true
+activate DB
+DB --> AuthService: Session terminated
+deactivate DB
+
+AuthService -> Redis: DEL cached_permissions:\n{user_id}:{tenant_id}
+activate Redis
+Redis --> AuthService: OK
+deactivate Redis
+
+AuthService -> DB: INSERT INTO audit_log\n(action='logout', user_id)
+activate DB
+DB --> AuthService: OK
+deactivate DB
+
+AuthService --> API: Logout successful
+deactivate AuthService
+
+API --> Frontend: 200 OK
+deactivate API
+
+Frontend -> Frontend: localStorage.clear()
+Frontend -> Frontend: sessionStorage.clear()
+Frontend -> Frontend: authService.clearState()
+
+Frontend --> User: ✓ Redirigir a Login
+deactivate Frontend
+
+' ===============================================
+' NOTAS Y LEYENDAS
+' ===============================================
+
+note over User, Email
+  **Security Features Implementadas:**
+  • Password hashing con bcrypt (cost 12)
+  • JWT con claims mínimos (no permisos completos)
+  • Refresh token rotation (previene replay attacks)
+  • Rate limiting (100 req/min por IP)
+  • Account lockout tras 5 intentos fallidos (15 min)
+  • MFA con TOTP (Google Authenticator compatible)
+  • Cache de permisos con TTL 5 min
+  • Audit log inmutable de todos los eventos auth
+  • Session tracking con revocación remota
+  • Row-Level Security en PostgreSQL
+end note
+
+legend right
+  |= Status Code |= Significado |
+  | 200 OK | Request exitoso |
+  | 401 Unauthorized | Token inválido/expirado |
+  | 403 Forbidden | Sin permisos |
+  | 429 Too Many Requests | Rate limit excedido |
+
+  **Token Lifetimes:**
+  • Access Token: 15 minutos
+  • Refresh Token: 7 días
+  • MFA Session: 5 minutos
+  • Account Lockout: 15 minutos
+
+  **Cache Strategy:**
+  • Permissions: 5 minutos (Redis)
+  • Failed attempts: 1 hora (Redis)
+  • MFA pending: 5 minutos (Redis)
+endlegend
+
+@enduml

@@ -1,0 +1,323 @@
+@startuml RBAC-Subscription-System-Use-Cases
+!theme plain
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+title Sistema de Gestión de Roles, Permisos y Suscripciones Multi-Tenant\nDiagrama de Casos de Uso
+
+' ===============================================
+' ACTORES
+' ===============================================
+
+:Usuario No Registrado: as Guest
+:Usuario Registrado: as User
+:Member: as Member
+:Manager: as Manager
+:Admin de Organización: as OrgAdmin
+:SuperAdmin: as SuperAdmin
+:Sistema: as System
+
+' Herencias de actores
+User <|-- Member
+Member <|-- Manager
+Manager <|-- OrgAdmin
+User <|-- SuperAdmin
+
+' ===============================================
+' CASOS DE USO - AUTENTICACIÓN
+' ===============================================
+
+package "Autenticación y Onboarding" {
+  usecase (UC-001: Registrar\nNueva Organización) as UC001
+  usecase (UC-002: Login con\nJWT) as UC002
+  usecase (UC-003: Refresh Token) as UC003
+  usecase (UC-004: Verificar Email) as UC004
+  usecase (UC-005: Recuperar\nContraseña) as UC005
+  usecase (UC-006: Configurar MFA) as UC006
+  usecase (UC-007: Login con MFA) as UC007
+  usecase (UC-008: Gestionar\nSesiones Activas) as UC008
+}
+
+' ===============================================
+' CASOS DE USO - GESTIÓN DE USUARIOS
+' ===============================================
+
+package "Gestión de Usuarios" {
+  usecase (UC-009: Invitar\nMiembros) as UC009
+  usecase (UC-010: Aceptar\nInvitación) as UC010
+  usecase (UC-011: Ver Lista\nde Usuarios) as UC011
+  usecase (UC-012: Editar Perfil\nde Usuario) as UC012
+  usecase (UC-013: Desactivar\nUsuario) as UC013
+  usecase (UC-014: Asignar Rol\na Usuario) as UC014
+  usecase (UC-015: Ver Perfil\nPropio) as UC015
+}
+
+' ===============================================
+' CASOS DE USO - RBAC (Roles y Permisos)
+' ===============================================
+
+package "Roles y Permisos (RBAC)" {
+  usecase (UC-016: Crear Rol\nPersonalizado) as UC016
+  usecase (UC-017: Editar Rol) as UC017
+  usecase (UC-018: Eliminar Rol) as UC018
+  usecase (UC-019: Ver Lista\nde Roles) as UC019
+  usecase (UC-020: Asignar\nPermisos a Rol) as UC020
+  usecase (UC-021: Configurar\nHerencia de Roles) as UC021
+  usecase (UC-022: Configurar\nPermisos Condicionales) as UC022
+  usecase (UC-023: Delegar\nPermisos Temporalmente) as UC023
+  usecase (UC-024: Revocar\nDelegación) as UC024
+  usecase (UC-025: Crear Grupo\nde Permisos) as UC025
+}
+
+' ===============================================
+' CASOS DE USO - SUSCRIPCIONES Y FACTURACIÓN
+' ===============================================
+
+package "Suscripciones y Facturación" {
+  usecase (UC-026: Ver Planes\nDisponibles) as UC026
+  usecase (UC-027: Seleccionar Plan\nen Onboarding) as UC027
+  usecase (UC-028: Upgrade de Plan) as UC028
+  usecase (UC-029: Downgrade de Plan) as UC029
+  usecase (UC-030: Agregar Método\nde Pago) as UC030
+  usecase (UC-031: Ver Historial\nde Facturas) as UC031
+  usecase (UC-032: Descargar\nRecibo PDF) as UC032
+  usecase (UC-033: Cancelar\nSuscripción) as UC033
+  usecase (UC-034: Ver Uso y\nLímites del Plan) as UC034
+  usecase (UC-035: Procesar\nRenovación Automática) as UC035
+  usecase (UC-036: Reintentar\nPago Fallido) as UC036
+}
+
+' ===============================================
+' CASOS DE USO - MULTI-TENANCY
+' ===============================================
+
+package "Multi-Tenancy" {
+  usecase (UC-037: Cambiar Entre\nOrganizaciones) as UC037
+  usecase (UC-038: Configurar\nBranding de Tenant) as UC038
+  usecase (UC-039: Configurar\nSubdominio Personalizado) as UC039
+  usecase (UC-040: Ver Métricas\nde Tenant) as UC040
+}
+
+' ===============================================
+' CASOS DE USO - AUDITORÍA Y COMPLIANCE
+' ===============================================
+
+package "Auditoría y Compliance" {
+  usecase (UC-041: Ver Audit Logs) as UC041
+  usecase (UC-042: Filtrar y Buscar\nAudit Logs) as UC042
+  usecase (UC-043: Exportar Audit\nLogs a CSV) as UC043
+  usecase (UC-044: Solicitar Datos\nPersonales (GDPR)) as UC044
+  usecase (UC-045: Eliminar Cuenta\n(Derecho al Olvido)) as UC045
+  usecase (UC-046: Registrar Evento\nen Audit Log) as UC046
+}
+
+' ===============================================
+' CASOS DE USO - ADMINISTRACIÓN DEL SISTEMA
+' ===============================================
+
+package "Administración del Sistema" {
+  usecase (UC-047: Ver Todos\nlos Tenants) as UC047
+  usecase (UC-048: Acceder a\nDatos de Tenant) as UC048
+  usecase (UC-049: Suspender\nTenant) as UC049
+  usecase (UC-050: Ver Métricas\nGlobales) as UC050
+  usecase (UC-051: Configurar\nFeature Flags) as UC051
+}
+
+' ===============================================
+' CASOS DE USO - NOTIFICACIONES
+' ===============================================
+
+package "Notificaciones" {
+  usecase (UC-052: Enviar Email\nde Verificación) as UC052
+  usecase (UC-053: Enviar Email\nde Invitación) as UC053
+  usecase (UC-054: Notificar\nCambio de Rol) as UC054
+  usecase (UC-055: Notificar\nFin de Trial) as UC055
+  usecase (UC-056: Notificar\nFallo de Pago) as UC056
+  usecase (UC-057: Notificar\nLímite de Uso) as UC057
+}
+
+' ===============================================
+' RELACIONES - AUTENTICACIÓN
+' ===============================================
+
+Guest --> UC001
+Guest --> UC002
+Guest --> UC005
+UC001 ..> UC004 : <<include>>
+UC001 ..> UC052 : <<include>>
+UC002 ..> UC003 : <<extend>>
+UC002 <.. UC007 : <<extend>>
+
+User --> UC006
+User --> UC007
+User --> UC008
+User --> UC015
+User --> UC003
+
+' ===============================================
+' RELACIONES - GESTIÓN DE USUARIOS
+' ===============================================
+
+OrgAdmin --> UC009
+OrgAdmin --> UC011
+OrgAdmin --> UC013
+OrgAdmin --> UC014
+
+User --> UC010
+User --> UC012
+
+UC009 ..> UC053 : <<include>>
+UC014 ..> UC054 : <<include>>
+
+' ===============================================
+' RELACIONES - RBAC
+' ===============================================
+
+OrgAdmin --> UC016
+OrgAdmin --> UC017
+OrgAdmin --> UC018
+OrgAdmin --> UC019
+OrgAdmin --> UC020
+OrgAdmin --> UC021
+OrgAdmin --> UC022
+OrgAdmin --> UC025
+
+Manager --> UC023
+Manager --> UC024
+
+UC016 ..> UC046 : <<include>>
+UC017 ..> UC046 : <<include>>
+UC018 ..> UC046 : <<include>>
+UC020 ..> UC046 : <<include>>
+UC014 ..> UC046 : <<include>>
+
+' ===============================================
+' RELACIONES - SUSCRIPCIONES
+' ===============================================
+
+Guest --> UC026
+Guest --> UC027
+OrgAdmin --> UC026
+OrgAdmin --> UC028
+OrgAdmin --> UC029
+OrgAdmin --> UC030
+OrgAdmin --> UC031
+OrgAdmin --> UC032
+OrgAdmin --> UC033
+OrgAdmin --> UC034
+
+System --> UC035
+System --> UC036
+
+UC028 ..> UC030 : <<extend>>
+UC029 ..> UC046 : <<include>>
+UC033 ..> UC046 : <<include>>
+UC035 ..> UC032 : <<include>>
+UC035 ..> UC036 : <<extend>>
+UC036 ..> UC056 : <<include>>
+
+' ===============================================
+' RELACIONES - MULTI-TENANCY
+' ===============================================
+
+User --> UC037
+OrgAdmin --> UC038
+OrgAdmin --> UC039
+OrgAdmin --> UC040
+
+UC037 ..> UC046 : <<include>>
+
+' ===============================================
+' RELACIONES - AUDITORÍA
+' ===============================================
+
+OrgAdmin --> UC041
+OrgAdmin --> UC042
+OrgAdmin --> UC043
+User --> UC044
+User --> UC045
+
+System --> UC046
+
+' ===============================================
+' RELACIONES - ADMINISTRACIÓN SISTEMA
+' ===============================================
+
+SuperAdmin --> UC047
+SuperAdmin --> UC048
+SuperAdmin --> UC049
+SuperAdmin --> UC050
+SuperAdmin --> UC051
+
+UC048 ..> UC046 : <<include>>
+UC049 ..> UC046 : <<include>>
+
+' ===============================================
+' RELACIONES - NOTIFICACIONES
+' ===============================================
+
+System --> UC052
+System --> UC053
+System --> UC054
+System --> UC055
+System --> UC056
+System --> UC057
+
+UC034 ..> UC057 : <<extend>>
+
+' ===============================================
+' NOTAS Y LEYENDAS
+' ===============================================
+
+note right of Guest
+  Usuario no autenticado
+  que visita la plataforma
+end note
+
+note right of OrgAdmin
+  Admin de organización con
+  permisos completos sobre
+  su tenant
+end note
+
+note right of SuperAdmin
+  Admin de plataforma con
+  acceso cross-tenant
+  (auditado)
+end note
+
+note right of System
+  Procesos automáticos:
+  - Cronjobs
+  - Webhooks
+  - Background tasks
+end note
+
+note bottom of UC046
+  Todos los cambios críticos
+  se registran automáticamente
+  en el audit log inmutable
+end note
+
+note bottom of UC035
+  Proceso diario que verifica
+  suscripciones a renovar y
+  procesa pagos automáticos
+end note
+
+legend right
+  |= Símbolo |= Significado |
+  | <<include>> | Caso de uso siempre incluye otro |
+  | <<extend>> | Caso de uso puede extender otro |
+  | Herencia | Actor hereda permisos de otro |
+
+  **Niveles de Acceso:**
+  • Guest: Sin autenticación
+  • User: Autenticado básico
+  • Member: Usuario de organización
+  • Manager: Gestor con permisos elevados
+  • OrgAdmin: Administrador de tenant
+  • SuperAdmin: Administrador de plataforma
+endlegend
+
+@enduml
