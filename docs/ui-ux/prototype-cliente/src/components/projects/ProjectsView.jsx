@@ -7,7 +7,7 @@ import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { usePermissions } from '../../hooks/usePermissions';
 import { projects as initialProjects } from '../../data/mockData';
 
-export const ProjectsView = () => {
+export const ProjectsView = ({ onSelectProject }) => {
   const [projects, setProjects] = useState(initialProjects);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,9 +82,8 @@ export const ProjectsView = () => {
   };
 
   const handleNavigateToProject = (projectId) => {
-    // En producción, esto navegaría a la vista de detalle
-    console.log('Navigate to project:', projectId);
-    alert('Vista de detalle de proyecto - Implementado en Sprint 2');
+    // Navegar a la vista de detalle
+    onSelectProject(projectId);
   };
 
   const handleSearch = () => {

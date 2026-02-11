@@ -7,11 +7,23 @@ import { UserDashboard } from './components/dashboard/UserDashboard';
 import { TaskBoard } from './components/tasks/TaskBoard';
 import { Calendar } from './components/calendar/Calendar';
 import { ProjectsView } from './components/projects/ProjectsView';
+import { ProjectDetail } from './components/projects/ProjectDetail';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
   const [activeView, setActiveView] = useState('user-dashboard');
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleSelectProject = (projectId) => {
+    setSelectedProjectId(projectId);
+    setActiveView('project-detail');
+  };
+
+  const handleBackToProjects = () => {
+    setSelectedProjectId(null);
+    setActiveView('projects');
+  };
 
   const renderView = () => {
     switch (activeView) {
@@ -22,7 +34,14 @@ function AppContent() {
       case 'calendar':
         return <Calendar />;
       case 'projects':
-        return <ProjectsView />;
+        return <ProjectsView onSelectProject={handleSelectProject} />;
+      case 'project-detail':
+        return (
+          <ProjectDetail
+            projectId={selectedProjectId}
+            onBack={handleBackToProjects}
+          />
+        );
       case 'profile':
         return (
           <div className="text-center py-20">
@@ -58,7 +77,7 @@ function AppContent() {
         />
 
         <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-          <div className="p-8 mt-16">
+          <div className={activeView === 'project-detail' ? 'mt-16' : 'p-8 mt-16'}>
             {renderView()}
           </div>
         </main>

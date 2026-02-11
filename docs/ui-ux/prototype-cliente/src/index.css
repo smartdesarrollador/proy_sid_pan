@@ -147,4 +147,26 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* Tree navigation */
+  .tree-item {
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors;
+  }
+
+  .tree-item-section {
+    @apply font-medium text-gray-900 hover:bg-gray-50;
+  }
+
+  .tree-item-child {
+    @apply text-gray-700 hover:bg-gray-50;
+  }
+
+  /* Field card actions hover */
+  .field-action-btn {
+    @apply p-1.5 rounded transition-colors;
+  }
+
+  .field-action-btn:hover {
+    @apply bg-gray-100;
+  }
 }
