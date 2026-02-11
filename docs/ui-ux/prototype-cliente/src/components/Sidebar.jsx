@@ -1,10 +1,11 @@
-import { Home, CheckSquare, Calendar, User, Settings } from 'lucide-react';
+import { Home, CheckSquare, Calendar, Folder, User, Settings } from 'lucide-react';
 import clsx from 'clsx';
 
 const menuItems = [
   { id: 'user-dashboard', label: 'Dashboard', icon: Home },
   { id: 'tasks', label: 'Tareas', icon: CheckSquare },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
+  { id: 'projects', label: 'Proyectos', icon: Folder },
   { id: 'profile', label: 'Mi Perfil', icon: User },
   { id: 'settings', label: 'Configuración', icon: Settings }
 ];

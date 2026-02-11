@@ -90,4 +90,61 @@
   .drag-active {
     @apply border-2 border-primary-500 border-dashed bg-primary-50;
   }
+
+  /* Project type badges */
+  .badge-credential {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .badge-document {
+    @apply bg-blue-100 text-blue-700;
+  }
+
+  .badge-link {
+    @apply bg-purple-100 text-purple-700;
+  }
+
+  .badge-note {
+    @apply bg-amber-100 text-amber-700;
+  }
+
+  .badge-config {
+    @apply bg-green-100 text-green-700;
+  }
+
+  /* Password field */
+  .password-masked {
+    @apply font-mono text-gray-400 select-none;
+  }
+
+  .password-revealed {
+    @apply font-mono text-gray-900;
+  }
+
+  /* Encryption indicator */
+  .encrypted-indicator {
+    @apply inline-flex items-center gap-1 text-xs text-green-600;
+  }
+
+  /* Expiration warning */
+  .expires-soon {
+    @apply inline-flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded;
+  }
+
+  /* Section item */
+  .section-item {
+    @apply flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors;
+  }
+
+  .section-item-active {
+    @apply bg-primary-50 text-primary-700 font-medium;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }

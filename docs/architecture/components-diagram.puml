@@ -143,6 +143,7 @@ package "API Layer (Backend Unificado)" <<backend>> {
         component [Calendar Service] as CalendarService
         component [Task Service] as TaskService
         component [File Service] as FileService
+        component [Project Service] as ProjectService
     }
 
     component [Django ORM] as ORM
@@ -391,7 +392,7 @@ CalendarAPI --> CalendarService
 TasksAPI --> TaskService
 NotificationsAPI --> NotificationService
 FilesAPI --> FileService
-ProjectsAPI --> TaskService
+ProjectsAPI --> ProjectService
 DashboardAPI --> RBACService
 
 ' Auth API endpoints
@@ -526,7 +527,8 @@ note as N0
 
   **Frontend Cliente** (app.plataforma.com)
   - Servicios productivos para usuarios finales
-  - Calendario, Tareas, Archivos, Proyectos
+  - Calendario, Tareas, Archivos
+  - Gestión de Proyectos (secciones, items, credenciales)
   - Dashboard personalizado, notificaciones
   - Accesible para todos (Member+)
   - Consume: /api/v1/app/*
@@ -588,6 +590,30 @@ note as N3
   6. Webhook handler updates status
   7. Cache invalidation (Redis)
   8. Notify admins via notification service
+end note
+
+note as N4
+  **Data Flow Example: Crear Item con Credenciales**
+  (Frontend Cliente crea item tipo "credential")
+  1. Usuario completa form: título, usuario, password, email
+  2. POST /api/v1/app/projects/{id}/sections/{id}/items
+  3. JWT Middleware verifica token
+  4. Tenant Middleware carga tenant context
+  5. Feature Gate Middleware:
+     a. Valida límites del plan (Free: max 50 items)
+     b. Si excede: HTTP 403 + upgrade prompt
+  6. Projects API recibe request
+  7. ProjectService procesa:
+     a. Crea ProjectItem (tenant_id, section_id)
+     b. Crea ProjectItemFields:
+        - field_name='usuario', field_value='admin', field_type='text'
+        - field_name='password', field_value=encrypt('secret123'),
+          field_type='password', is_encrypted=true
+        - field_name='email', field_value='admin@example.com', field_type='email'
+  8. AuditLog registra: action='project_item.create'
+  9. PostgreSQL commit con RLS (tenant_id validado)
+  10. Response 201 Created con item + fields
+  11. Frontend muestra item con password oculto (•••)
 end note
 
 ' ===============================================

@@ -528,13 +528,65 @@ entity "Project" as project <<Services>> {
     updated_at: TIMESTAMP
 }
 
+entity "ProjectSection" as project_section <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(project_id): UUID
+    name: VARCHAR(100)
+    description: TEXT
+    order: INTEGER
+    color: VARCHAR(7)
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    --
+    UK(project_id, name)
+}
+
+entity "ProjectItem" as project_item <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(section_id): UUID
+    type: VARCHAR(50)
+    title: VARCHAR(200)
+    description: TEXT
+    order: INTEGER
+    is_favorite: BOOLEAN
+    expires_at: TIMESTAMP
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "ProjectItemField" as project_item_field <<Services>> {
+    PK(id): UUID
+    --
+    FK(item_id): UUID
+    field_name: VARCHAR(50)
+    field_type: VARCHAR(20)
+    field_value: TEXT
+    is_encrypted: BOOLEAN
+    order: INTEGER
+    --
+    UK(item_id, field_name)
+}
+
 entity "ProjectMember" as project_member <<Services>> {
     PK(id): UUID
     --
+    FK(tenant_id): UUID
     FK(project_id): UUID
     FK(user_id): UUID
-    role: VARCHAR(50)
-    joined_at: TIMESTAMP
+    role: VARCHAR(20)
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    --
+    UK(project_id, user_id)
 }
 
 ' ==============================================================================
@@ -671,6 +723,15 @@ user ||--o{ project : "owns"
 project ||--o{ project_member : "has members"
 user ||--o{ project_member : "member of"
 
+project ||--o{ project_section : "has sections"
+tenant ||--o{ project_section : "scoped to"
+project_section ||--o{ project_item : "contains items"
+tenant ||--o{ project_item : "scoped to"
+project_item ||--o{ project_item_field : "has custom fields"
+user ||--o{ project_item : "creates/updates (created_by)"
+user ||--o{ project_item : "creates/updates (updated_by)"
+tenant ||--o{ project_member : "scoped to"
+
 ' ==============================================================================
 ' RELATIONSHIPS - Audit Trail for Created/Updated By
 ' ==============================================================================
@@ -792,11 +853,44 @@ note bottom of file
 end note
 
 note bottom of project
-    **Portfolio/Projects**
-    - Gestión de proyectos multi-usuario
-    - Vistas: Lista, Kanban, Gantt
-    - Agregación de tareas y archivos
-    - Milestones y reportes (Pro+)
+    **Portfolio/Projects - Gestión Avanzada**
+    - Organización jerárquica por secciones/tags
+    - Items con campos customizables
+    - Tipos: Credenciales, Documentos, Enlaces, Notas, Configs
+    - Passwords encriptados (AES-256)
+    - Operaciones batch (Professional+)
+    - Importación/exportación CSV/JSON
+    - Búsqueda full-text (Professional+)
+    - Roles granulares: Owner, Admin, Editor, Viewer
+    - Auditoría completa de cambios
+    - Límites por plan: Free(2 proj, 50 items), Starter(10, 200),
+      Professional(unlimited), Enterprise(+ webhooks, API)
+end note
+
+note right of project_section
+    **Project Sections/Tags**
+    - Agrupación lógica de items
+    - Orden customizable
+    - Color identificador opcional
+    - Límites: Free(3), Starter(10), Professional+(unlimited)
+end note
+
+note right of project_item
+    **Project Items**
+    - Tipos: credential, document, link, note, config
+    - Campos customizables vía ProjectItemField
+    - Operaciones: editar, clonar, reordenar, eliminar
+    - Expiración para credenciales
+    - Límites: Free(50), Starter(200), Professional+(unlimited)
+end note
+
+note right of project_item_field
+    **Custom Fields per Item**
+    - Campos dinámicos según tipo de item
+    - field_type: text, password, email, url, date, number
+    - Passwords encriptados con AES-256
+    - is_encrypted=true si field_type='password'
+    - Ordenamiento customizable
 end note
 
 note right of notification

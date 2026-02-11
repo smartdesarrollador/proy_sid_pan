@@ -32,6 +32,42 @@ export const usePermissions = () => {
   const canDeleteEvents = () => hasPermission('calendar.delete');
   const canShareCalendar = () => hasPermission('calendar.share');
 
+  // Projects permissions
+  const canCreateProjects = () => hasPermission('projects.create');
+  const canEditProjects = () => hasPermission('projects.update');
+  const canDeleteProjects = () => hasPermission('projects.delete');
+  const canViewProjects = () => hasPermission('projects.read');
+
+  // Project role-based permissions
+  const getProjectRole = (projectId) => {
+    // This would come from project members in real implementation
+    // For prototype, we'll assume current user has access based on projects.* permission
+    if (hasPermission('projects.*') || isOrgAdmin()) return 'owner';
+    if (hasPermission('projects.update')) return 'editor';
+    if (hasPermission('projects.read')) return 'viewer';
+    return null;
+  };
+
+  const canEditProjectItems = (projectId) => {
+    const role = getProjectRole(projectId);
+    return role && ['owner', 'admin', 'editor'].includes(role);
+  };
+
+  const canDeleteProjectItems = (projectId) => {
+    const role = getProjectRole(projectId);
+    return role && ['owner', 'admin'].includes(role);
+  };
+
+  const canManageProjectMembers = (projectId) => {
+    const role = getProjectRole(projectId);
+    return role && ['owner', 'admin'].includes(role);
+  };
+
+  const canRevealPasswords = (projectId) => {
+    const role = getProjectRole(projectId);
+    return role && ['owner', 'admin', 'editor'].includes(role);
+  };
+
   // Helper para verificar si es admin completo
   const isOrgAdmin = () => {
     return currentUser?.roles?.includes('OrgAdmin') || false;
@@ -78,6 +114,15 @@ export const usePermissions = () => {
     canEditEvents,
     canDeleteEvents,
     canShareCalendar,
+    canCreateProjects,
+    canEditProjects,
+    canDeleteProjects,
+    canViewProjects,
+    getProjectRole,
+    canEditProjectItems,
+    canDeleteProjectItems,
+    canManageProjectMembers,
+    canRevealPasswords,
     isOrgAdmin,
     getPrimaryRole,
     getRoleColor,

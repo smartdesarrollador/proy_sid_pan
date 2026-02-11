@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import { UserDashboard } from './components/dashboard/UserDashboard';
 import { TaskBoard } from './components/tasks/TaskBoard';
 import { Calendar } from './components/calendar/Calendar';
+import { ProjectsView } from './components/projects/ProjectsView';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -20,6 +21,8 @@ function AppContent() {
         return <TaskBoard />;
       case 'calendar':
         return <Calendar />;
+      case 'projects':
+        return <ProjectsView />;
       case 'profile':
         return (
           <div className="text-center py-20">

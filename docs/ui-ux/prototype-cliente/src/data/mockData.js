@@ -695,3 +695,407 @@ export const matchPermission = (userPermissions, requiredPermission) => {
 
   return !!resourceMatch;
 };
+
+// ==================== PROJECTS DATA ====================
+
+// Projects mock data
+export const projects = [
+  {
+    id: 'project-001',
+    name: 'Sistema de Autenticación',
+    description: 'Credenciales y configuración del sistema de autenticación JWT',
+    status: 'active',
+    color: '#3b82f6',
+    startDate: '2026-01-15',
+    endDate: '2026-03-30',
+    owner: 'user-001',
+    sectionsCount: 3,
+    itemsCount: 12,
+    membersCount: 4,
+    createdAt: '2026-01-15',
+    updatedAt: '2026-02-09'
+  },
+  {
+    id: 'project-002',
+    name: 'Infraestructura Cloud',
+    description: 'Documentación y credenciales de servicios cloud (AWS, Azure)',
+    status: 'active',
+    color: '#10b981',
+    startDate: '2026-02-01',
+    endDate: null,
+    owner: 'user-002',
+    sectionsCount: 2,
+    itemsCount: 8,
+    membersCount: 3,
+    createdAt: '2026-02-01',
+    updatedAt: '2026-02-10'
+  }
+];
+
+// Project sections mock data
+export const projectSections = [
+  // Project 001 sections
+  {
+    id: 'section-001',
+    projectId: 'project-001',
+    name: 'Credenciales de Producción',
+    description: 'Accesos del ambiente de producción',
+    color: '#ef4444',
+    order: 1,
+    itemsCount: 5,
+    createdAt: '2026-01-15'
+  },
+  {
+    id: 'section-002',
+    projectId: 'project-001',
+    name: 'Configuración JWT',
+    description: 'Secrets y configuración de tokens',
+    color: '#8b5cf6',
+    order: 2,
+    itemsCount: 4,
+    createdAt: '2026-01-15'
+  },
+  {
+    id: 'section-003',
+    projectId: 'project-001',
+    name: 'Documentación',
+    description: 'Documentos y enlaces de referencia',
+    color: '#3b82f6',
+    order: 3,
+    itemsCount: 3,
+    createdAt: '2026-01-16'
+  },
+  // Project 002 sections
+  {
+    id: 'section-004',
+    projectId: 'project-002',
+    name: 'AWS Services',
+    description: 'Credenciales y configuración de AWS',
+    color: '#f59e0b',
+    order: 1,
+    itemsCount: 5,
+    createdAt: '2026-02-01'
+  },
+  {
+    id: 'section-005',
+    projectId: 'project-002',
+    name: 'Azure Services',
+    description: 'Credenciales de Azure',
+    color: '#06b6d4',
+    order: 2,
+    itemsCount: 3,
+    createdAt: '2026-02-01'
+  }
+];
+
+// Project items mock data
+export const projectItems = [
+  // Section 001 items (Credenciales de Producción)
+  {
+    id: 'item-001',
+    sectionId: 'section-001',
+    title: 'Database Admin',
+    type: 'credential',
+    description: 'Acceso admin a PostgreSQL producción',
+    isFavorite: true,
+    expiresAt: '2026-04-15',
+    createdBy: 'user-001',
+    createdAt: '2026-01-15',
+    updatedAt: '2026-01-20'
+  },
+  {
+    id: 'item-002',
+    sectionId: 'section-001',
+    title: 'API Gateway Admin',
+    type: 'credential',
+    description: 'Credenciales del API Gateway',
+    isFavorite: false,
+    expiresAt: '2026-12-31',
+    createdBy: 'user-001',
+    createdAt: '2026-01-15',
+    updatedAt: '2026-01-15'
+  },
+  {
+    id: 'item-003',
+    sectionId: 'section-001',
+    title: 'Redis Cache',
+    type: 'credential',
+    description: 'Acceso a Redis producción',
+    isFavorite: true,
+    expiresAt: '2026-02-28',
+    createdBy: 'user-003',
+    createdAt: '2026-01-20',
+    updatedAt: '2026-02-05'
+  },
+  // Section 002 items (Configuración JWT)
+  {
+    id: 'item-004',
+    sectionId: 'section-002',
+    title: 'JWT Secret Key',
+    type: 'config',
+    description: 'Secret key para firma de tokens JWT',
+    isFavorite: true,
+    expiresAt: null,
+    createdBy: 'user-001',
+    createdAt: '2026-01-15',
+    updatedAt: '2026-01-15'
+  },
+  {
+    id: 'item-005',
+    sectionId: 'section-002',
+    title: 'Refresh Token Config',
+    type: 'config',
+    description: 'Configuración de refresh tokens',
+    isFavorite: false,
+    expiresAt: null,
+    createdBy: 'user-001',
+    createdAt: '2026-01-16',
+    updatedAt: '2026-01-16'
+  },
+  // Section 003 items (Documentación)
+  {
+    id: 'item-006',
+    sectionId: 'section-003',
+    title: 'JWT Best Practices',
+    type: 'link',
+    description: 'Guía de mejores prácticas para JWT',
+    isFavorite: false,
+    expiresAt: null,
+    createdBy: 'user-001',
+    createdAt: '2026-01-16',
+    updatedAt: '2026-01-16'
+  },
+  {
+    id: 'item-007',
+    sectionId: 'section-003',
+    title: 'Architecture Diagram',
+    type: 'document',
+    description: 'Diagrama de arquitectura del sistema',
+    isFavorite: true,
+    expiresAt: null,
+    createdBy: 'user-002',
+    createdAt: '2026-01-18',
+    updatedAt: '2026-02-01'
+  },
+  {
+    id: 'item-008',
+    sectionId: 'section-003',
+    title: 'Notas de Implementación',
+    type: 'note',
+    description: 'Decisiones de diseño y notas técnicas',
+    isFavorite: false,
+    expiresAt: null,
+    createdBy: 'user-003',
+    createdAt: '2026-01-20',
+    updatedAt: '2026-02-05'
+  },
+  // Section 004 items (AWS Services)
+  {
+    id: 'item-009',
+    sectionId: 'section-004',
+    title: 'AWS Root Account',
+    type: 'credential',
+    description: 'Cuenta raíz de AWS',
+    isFavorite: true,
+    expiresAt: '2026-06-30',
+    createdBy: 'user-002',
+    createdAt: '2026-02-01',
+    updatedAt: '2026-02-01'
+  },
+  {
+    id: 'item-010',
+    sectionId: 'section-004',
+    title: 'S3 Configuration',
+    type: 'config',
+    description: 'Configuración de buckets S3',
+    isFavorite: false,
+    expiresAt: null,
+    createdBy: 'user-002',
+    createdAt: '2026-02-02',
+    updatedAt: '2026-02-02'
+  },
+  {
+    id: 'item-011',
+    sectionId: 'section-004',
+    title: 'AWS Console',
+    type: 'link',
+    description: 'Acceso a consola de AWS',
+    isFavorite: true,
+    expiresAt: null,
+    createdBy: 'user-002',
+    createdAt: '2026-02-01',
+    updatedAt: '2026-02-01'
+  },
+  // Section 005 items (Azure Services)
+  {
+    id: 'item-012',
+    sectionId: 'section-005',
+    title: 'Azure AD Admin',
+    type: 'credential',
+    description: 'Administrador de Azure Active Directory',
+    isFavorite: true,
+    expiresAt: '2026-05-15',
+    createdBy: 'user-002',
+    createdAt: '2026-02-01',
+    updatedAt: '2026-02-01'
+  }
+];
+
+// Project item fields mock data (campos dinámicos por item)
+export const projectItemFields = [
+  // Item 001 - Database Admin (credential)
+  { id: 'field-001', itemId: 'item-001', fieldName: 'username', fieldType: 'text', fieldValue: 'db_admin', isEncrypted: false, order: 1 },
+  { id: 'field-002', itemId: 'item-001', fieldName: 'password', fieldType: 'password', fieldValue: '••••••••••••', isEncrypted: true, order: 2 },
+  { id: 'field-003', itemId: 'item-001', fieldName: 'email', fieldType: 'email', fieldValue: 'dba@acme.com', isEncrypted: false, order: 3 },
+  { id: 'field-004', itemId: 'item-001', fieldName: 'url', fieldType: 'url', fieldValue: 'postgresql://prod.acme.com:5432', isEncrypted: false, order: 4 },
+  { id: 'field-005', itemId: 'item-001', fieldName: 'notes', fieldType: 'text', fieldValue: 'Requiere VPN para acceso', isEncrypted: false, order: 5 },
+
+  // Item 002 - API Gateway Admin (credential)
+  { id: 'field-006', itemId: 'item-002', fieldName: 'username', fieldType: 'text', fieldValue: 'api_admin', isEncrypted: false, order: 1 },
+  { id: 'field-007', itemId: 'item-002', fieldName: 'password', fieldType: 'password', fieldValue: '••••••••••••', isEncrypted: true, order: 2 },
+  { id: 'field-008', itemId: 'item-002', fieldName: 'url', fieldType: 'url', fieldValue: 'https://api.acme.com/admin', isEncrypted: false, order: 3 },
+
+  // Item 003 - Redis Cache (credential)
+  { id: 'field-009', itemId: 'item-003', fieldName: 'username', fieldType: 'text', fieldValue: 'redis_user', isEncrypted: false, order: 1 },
+  { id: 'field-010', itemId: 'item-003', fieldName: 'password', fieldType: 'password', fieldValue: '••••••••••••', isEncrypted: true, order: 2 },
+  { id: 'field-011', itemId: 'item-003', fieldName: 'url', fieldType: 'url', fieldValue: 'redis://cache.acme.com:6379', isEncrypted: false, order: 3 },
+  { id: 'field-012', itemId: 'item-003', fieldName: 'notes', fieldType: 'text', fieldValue: 'Expira pronto - renovar', isEncrypted: false, order: 4 },
+
+  // Item 004 - JWT Secret Key (config)
+  { id: 'field-013', itemId: 'item-004', fieldName: 'key', fieldType: 'text', fieldValue: 'JWT_SECRET_KEY', isEncrypted: false, order: 1 },
+  { id: 'field-014', itemId: 'item-004', fieldName: 'value', fieldType: 'password', fieldValue: '••••••••••••', isEncrypted: true, order: 2 },
+  { id: 'field-015', itemId: 'item-004', fieldName: 'environment', fieldType: 'text', fieldValue: 'production', isEncrypted: false, order: 3 },
+
+  // Item 005 - Refresh Token Config (config)
+  { id: 'field-016', itemId: 'item-005', fieldName: 'key', fieldType: 'text', fieldValue: 'REFRESH_TOKEN_EXPIRY', isEncrypted: false, order: 1 },
+  { id: 'field-017', itemId: 'item-005', fieldName: 'value', fieldType: 'text', fieldValue: '7d', isEncrypted: false, order: 2 },
+  { id: 'field-018', itemId: 'item-005', fieldName: 'environment', fieldType: 'text', fieldValue: 'production', isEncrypted: false, order: 3 },
+
+  // Item 006 - JWT Best Practices (link)
+  { id: 'field-019', itemId: 'item-006', fieldName: 'url', fieldType: 'url', fieldValue: 'https://jwt.io/introduction', isEncrypted: false, order: 1 },
+  { id: 'field-020', itemId: 'item-006', fieldName: 'description', fieldType: 'text', fieldValue: 'Guía oficial de JWT.io', isEncrypted: false, order: 2 },
+  { id: 'field-021', itemId: 'item-006', fieldName: 'category', fieldType: 'text', fieldValue: 'documentation', isEncrypted: false, order: 3 },
+
+  // Item 007 - Architecture Diagram (document)
+  { id: 'field-022', itemId: 'item-007', fieldName: 'file_url', fieldType: 'url', fieldValue: 'https://drive.google.com/file/d/abc123', isEncrypted: false, order: 1 },
+  { id: 'field-023', itemId: 'item-007', fieldName: 'version', fieldType: 'text', fieldValue: 'v2.1', isEncrypted: false, order: 2 },
+  { id: 'field-024', itemId: 'item-007', fieldName: 'last_reviewed', fieldType: 'date', fieldValue: '2026-02-01', isEncrypted: false, order: 3 },
+  { id: 'field-025', itemId: 'item-007', fieldName: 'author', fieldType: 'text', fieldValue: 'Sarah Johnson', isEncrypted: false, order: 4 },
+
+  // Item 008 - Notas de Implementación (note)
+  { id: 'field-026', itemId: 'item-008', fieldName: 'content', fieldType: 'text', fieldValue: 'Usar RS256 para firma de tokens. Implementar refresh token rotation.', isEncrypted: false, order: 1 },
+  { id: 'field-027', itemId: 'item-008', fieldName: 'tags', fieldType: 'text', fieldValue: 'security, jwt, implementation', isEncrypted: false, order: 2 },
+
+  // Item 009 - AWS Root Account (credential)
+  { id: 'field-028', itemId: 'item-009', fieldName: 'username', fieldType: 'email', fieldValue: 'aws-root@acme.com', isEncrypted: false, order: 1 },
+  { id: 'field-029', itemId: 'item-009', fieldName: 'password', fieldType: 'password', fieldValue: '••••••••••••', isEncrypted: true, order: 2 },
+  { id: 'field-030', itemId: 'item-009', fieldName: 'url', fieldType: 'url', fieldValue: 'https://console.aws.amazon.com', isEncrypted: false, order: 3 },
+  { id: 'field-031', itemId: 'item-009', fieldName: 'notes', fieldType: 'text', fieldValue: 'MFA habilitado', isEncrypted: false, order: 4 },
+
+  // Item 010 - S3 Configuration (config)
+  { id: 'field-032', itemId: 'item-010', fieldName: 'key', fieldType: 'text', fieldValue: 'S3_BUCKET_NAME', isEncrypted: false, order: 1 },
+  { id: 'field-033', itemId: 'item-010', fieldName: 'value', fieldType: 'text', fieldValue: 'acme-prod-files', isEncrypted: false, order: 2 },
+  { id: 'field-034', itemId: 'item-010', fieldName: 'environment', fieldType: 'text', fieldValue: 'production', isEncrypted: false, order: 3 },
+
+  // Item 011 - AWS Console (link)
+  { id: 'field-035', itemId: 'item-011', fieldName: 'url', fieldType: 'url', fieldValue: 'https://console.aws.amazon.com', isEncrypted: false, order: 1 },
+  { id: 'field-036', itemId: 'item-011', fieldName: 'description', fieldType: 'text', fieldValue: 'Consola de administración AWS', isEncrypted: false, order: 2 },
+
+  // Item 012 - Azure AD Admin (credential)
+  { id: 'field-037', itemId: 'item-012', fieldName: 'username', fieldType: 'email', fieldValue: 'admin@acme.onmicrosoft.com', isEncrypted: false, order: 1 },
+  { id: 'field-038', itemId: 'item-012', fieldName: 'password', fieldType: 'password', fieldValue: '••••••••••••', isEncrypted: true, order: 2 },
+  { id: 'field-039', itemId: 'item-012', fieldName: 'url', fieldType: 'url', fieldValue: 'https://portal.azure.com', isEncrypted: false, order: 3 }
+];
+
+// Project members mock data (roles granulares por proyecto)
+export const projectMembers = [
+  // Project 001 members
+  { id: 'member-001', projectId: 'project-001', userId: 'user-001', role: 'owner', addedAt: '2026-01-15' },
+  { id: 'member-002', projectId: 'project-001', userId: 'user-002', role: 'admin', addedAt: '2026-01-15' },
+  { id: 'member-003', projectId: 'project-001', userId: 'user-003', role: 'editor', addedAt: '2026-01-20' },
+  { id: 'member-004', projectId: 'project-001', userId: 'user-004', role: 'viewer', addedAt: '2026-01-25' },
+
+  // Project 002 members
+  { id: 'member-005', projectId: 'project-002', userId: 'user-002', role: 'owner', addedAt: '2026-02-01' },
+  { id: 'member-006', projectId: 'project-002', userId: 'user-001', role: 'admin', addedAt: '2026-02-01' },
+  { id: 'member-007', projectId: 'project-002', userId: 'user-003', role: 'editor', addedAt: '2026-02-02' }
+];
+
+// Item type field templates (campos predefinidos por tipo de item)
+export const itemTypeFieldTemplates = {
+  credential: [
+    { fieldName: 'username', fieldType: 'text', required: true, placeholder: 'Usuario o email' },
+    { fieldName: 'password', fieldType: 'password', required: true, placeholder: 'Contraseña' },
+    { fieldName: 'email', fieldType: 'email', required: false, placeholder: 'Email asociado' },
+    { fieldName: 'url', fieldType: 'url', required: false, placeholder: 'URL del servicio' },
+    { fieldName: 'notes', fieldType: 'text', required: false, placeholder: 'Notas adicionales' }
+  ],
+  document: [
+    { fieldName: 'file_url', fieldType: 'url', required: true, placeholder: 'URL del documento' },
+    { fieldName: 'version', fieldType: 'text', required: false, placeholder: 'v1.0' },
+    { fieldName: 'last_reviewed', fieldType: 'date', required: false, placeholder: 'Última revisión' },
+    { fieldName: 'author', fieldType: 'text', required: false, placeholder: 'Autor del documento' }
+  ],
+  link: [
+    { fieldName: 'url', fieldType: 'url', required: true, placeholder: 'https://...' },
+    { fieldName: 'description', fieldType: 'text', required: false, placeholder: 'Descripción del enlace' },
+    { fieldName: 'category', fieldType: 'text', required: false, placeholder: 'Categoría' }
+  ],
+  note: [
+    { fieldName: 'content', fieldType: 'text', required: true, placeholder: 'Contenido de la nota' },
+    { fieldName: 'tags', fieldType: 'text', required: false, placeholder: 'tag1, tag2, tag3' }
+  ],
+  config: [
+    { fieldName: 'key', fieldType: 'text', required: true, placeholder: 'CONFIG_KEY' },
+    { fieldName: 'value', fieldType: 'text', required: true, placeholder: 'Valor de configuración' },
+    { fieldName: 'environment', fieldType: 'text', required: false, placeholder: 'production, staging, dev' },
+    { fieldName: 'secret_key', fieldType: 'password', required: false, placeholder: 'Secreto (si aplica)' }
+  ]
+};
+
+// Helper: Get sections by project ID
+export const getSectionsByProject = (projectId) => {
+  return projectSections.filter(section => section.projectId === projectId)
+    .sort((a, b) => a.order - b.order);
+};
+
+// Helper: Get items by section ID
+export const getItemsBySection = (sectionId) => {
+  return projectItems.filter(item => item.sectionId === sectionId)
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+};
+
+// Helper: Get fields by item ID
+export const getFieldsByItem = (itemId) => {
+  return projectItemFields.filter(field => field.itemId === itemId)
+    .sort((a, b) => a.order - b.order);
+};
+
+// Helper: Get members by project ID
+export const getMembersByProject = (projectId) => {
+  return projectMembers.filter(member => member.projectId === projectId);
+};
+
+// Helper: Get user role in project
+export const getUserRoleInProject = (userId, projectId) => {
+  const member = projectMembers.find(m => m.userId === userId && m.projectId === projectId);
+  return member?.role || null;
+};
+
+// Helper: Check if user can access project
+export const canAccessProject = (userId, projectId, requiredRole = 'viewer') => {
+  const roleHierarchy = { viewer: 1, editor: 2, admin: 3, owner: 4 };
+  const userRole = getUserRoleInProject(userId, projectId);
+
+  if (!userRole) return false;
+
+  return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
+};
+
+// Helper: Get total items count for a project
+export const getProjectItemsCount = (projectId) => {
+  const sections = getSectionsByProject(projectId);
+  return sections.reduce((total, section) => {
+    return total + getItemsBySection(section.id).length;
+  }, 0);
+};

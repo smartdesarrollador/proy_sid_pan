@@ -21,6 +21,16 @@ export const featuresByPlan = {
     eventReminders: false,
     calendarSync: false,
 
+    // Proyectos
+    maxProjects: 2,
+    maxSectionsPerProject: 3,
+    maxItemsTotal: 50,
+    projectBatchOperations: false,
+    projectSearch: false,
+    projectExport: false,
+    projectEncryption: true,
+    projectItemTypes: ['credential', 'link', 'note'],
+
     // Dashboard
     dashboardWidgets: 3,
     customWidgets: false,
@@ -43,6 +53,16 @@ export const featuresByPlan = {
     eventCategories: 10,
     eventReminders: true,
     calendarSync: false,
+
+    // Proyectos
+    maxProjects: 10,
+    maxSectionsPerProject: 10,
+    maxItemsTotal: 200,
+    projectBatchOperations: false,
+    projectSearch: false,
+    projectExport: false,
+    projectEncryption: true,
+    projectItemTypes: ['credential', 'document', 'link', 'note', 'config'],
 
     // Dashboard
     dashboardWidgets: 6,
@@ -67,6 +87,16 @@ export const featuresByPlan = {
     eventReminders: true,
     calendarSync: true,
 
+    // Proyectos
+    maxProjects: Infinity,
+    maxSectionsPerProject: Infinity,
+    maxItemsTotal: Infinity,
+    projectBatchOperations: true,
+    projectSearch: true,
+    projectExport: true,
+    projectEncryption: true,
+    projectItemTypes: ['credential', 'document', 'link', 'note', 'config'],
+
     // Dashboard
     dashboardWidgets: 12,
     customWidgets: true,
@@ -89,6 +119,18 @@ export const featuresByPlan = {
     eventCategories: Infinity,
     eventReminders: true,
     calendarSync: true,
+
+    // Proyectos
+    maxProjects: Infinity,
+    maxSectionsPerProject: Infinity,
+    maxItemsTotal: Infinity,
+    projectBatchOperations: true,
+    projectSearch: true,
+    projectExport: true,
+    projectEncryption: true,
+    projectItemTypes: ['credential', 'document', 'link', 'note', 'config'],
+    projectWebhooks: true,
+    projectApiAccess: true,
 
     // Dashboard
     dashboardWidgets: Infinity,
@@ -190,6 +232,56 @@ export const upgradeMessages = {
     title: 'Límite de eventos alcanzado',
     message: 'Has alcanzado el límite de eventos para tu plan.',
     feature: 'Más eventos',
+    requiredPlan: 'starter'
+  },
+
+  // Projects
+  maxProjects: {
+    title: 'Límite de proyectos alcanzado',
+    message: 'Has alcanzado el límite de proyectos para tu plan. Actualiza a Plan Starter.',
+    feature: 'Más proyectos',
+    requiredPlan: 'starter'
+  },
+
+  maxSectionsPerProject: {
+    title: 'Límite de secciones alcanzado',
+    message: 'Has alcanzado el límite de secciones para este proyecto.',
+    feature: 'Más secciones por proyecto',
+    requiredPlan: 'starter'
+  },
+
+  maxItemsTotal: {
+    title: 'Límite de items alcanzado',
+    message: 'Has alcanzado el límite total de items en tus proyectos.',
+    feature: 'Más items en proyectos',
+    requiredPlan: 'starter'
+  },
+
+  projectBatchOperations: {
+    title: 'Operaciones en lote no disponibles',
+    message: 'Realiza operaciones en lote con el Plan Professional.',
+    feature: 'Operaciones en lote',
+    requiredPlan: 'professional'
+  },
+
+  projectSearch: {
+    title: 'Búsqueda avanzada no disponible',
+    message: 'Busca en todos tus proyectos con el Plan Professional.',
+    feature: 'Búsqueda avanzada',
+    requiredPlan: 'professional'
+  },
+
+  projectExport: {
+    title: 'Exportar no disponible',
+    message: 'Exporta tus proyectos con el Plan Professional.',
+    feature: 'Exportar proyectos',
+    requiredPlan: 'professional'
+  },
+
+  projectItemTypes: {
+    title: 'Tipo de item no disponible',
+    message: 'Este tipo de item requiere Plan Starter o superior.',
+    feature: 'Tipos de items adicionales',
     requiredPlan: 'starter'
   }
 };
