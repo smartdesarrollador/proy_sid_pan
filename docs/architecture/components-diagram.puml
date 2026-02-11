@@ -59,6 +59,7 @@ package "Frontend Cliente\n(app.plataforma.com)" <<frontend_client>> {
         component [Notificaciones] as NotificacionesModule
         component [Archivos] as ArchivosModule
         component [Portafolio/Proyectos] as PortafolioModule
+        component [Compartidos Conmigo] as CompartidosModule
         component [Perfil Usuario] as PerfilModule
 
         component [Client Auth Service] as ClientAuthService
@@ -117,6 +118,7 @@ package "API Layer (Backend Unificado)" <<backend>> {
             component [Notifications API] as NotificationsAPI
             component [Files API] as FilesAPI
             component [Projects API] as ProjectsAPI
+            component [Shares API] as SharesAPI
             component [Dashboard API] as DashboardAPI
         }
 
@@ -133,6 +135,7 @@ package "API Layer (Backend Unificado)" <<backend>> {
         component [JWT Middleware] as JWTMiddleware
         component [Tenant Middleware] as TenantMiddleware
         component [Permission Middleware] as PermissionMiddleware
+        component [Share Permission Middleware] as SharePermissionMiddleware
         component [Rate Limit Middleware] as RateLimitMiddleware
         component [Feature Gate Middleware] as FeatureGateMiddleware
 
@@ -144,6 +147,8 @@ package "API Layer (Backend Unificado)" <<backend>> {
         component [Task Service] as TaskService
         component [File Service] as FileService
         component [Project Service] as ProjectService
+        component [Share Service] as ShareService
+        component [Permission Inheritance Engine] as PermissionInheritanceEngine
     }
 
     component [Django ORM] as ORM
@@ -348,6 +353,7 @@ TareasModule --> ClientApiService
 NotificacionesModule --> ClientApiService
 ArchivosModule --> ClientApiService
 PortafolioModule --> ClientApiService
+CompartidosModule --> ClientApiService
 
 ClientAuthService --> HTTPS : POST /api/v1/auth/*
 ClientApiService --> HTTPS : /api/v1/app/*
@@ -374,9 +380,10 @@ AngularClient ..> CommonModels : Shared interfaces
 HTTPS --> JWTMiddleware : 1. Verify JWT token
 JWTMiddleware --> TenantMiddleware : 2. Set tenant context
 TenantMiddleware --> PermissionMiddleware : 3. Load user permissions
-PermissionMiddleware --> FeatureGateMiddleware : 4. Check plan features
-FeatureGateMiddleware --> RateLimitMiddleware : 5. Rate limit by plan
-RateLimitMiddleware --> TenantsAPI : 6. Route to endpoint
+PermissionMiddleware --> SharePermissionMiddleware : 4. Check share access
+SharePermissionMiddleware --> FeatureGateMiddleware : 5. Check plan features
+FeatureGateMiddleware --> RateLimitMiddleware : 6. Rate limit by plan
+RateLimitMiddleware --> TenantsAPI : 7. Route to endpoint
 
 ' Admin API endpoints
 TenantsAPI --> RBACService
@@ -393,6 +400,8 @@ TasksAPI --> TaskService
 NotificationsAPI --> NotificationService
 FilesAPI --> FileService
 ProjectsAPI --> ProjectService
+SharesAPI --> ShareService
+SharesAPI --> PermissionInheritanceEngine
 DashboardAPI --> RBACService
 
 ' Auth API endpoints
@@ -415,6 +424,8 @@ PgBouncer --> PostgreSQL
 
 ORM --> PostgresProtocol : SQL queries
 Signals ..> PostgresProtocol : Trigger actions
+ShareService --> PostgresProtocol : CRUD shares
+PermissionInheritanceEngine --> PostgresProtocol : Recursive permission queries
 
 PostgreSQL --> Tables
 PostgreSQL --> RLS : Tenant isolation
@@ -433,6 +444,8 @@ RedisProtocol --> Redis
 
 JWTMiddleware ..> PermissionsCache : GET cached perms
 TenantMiddleware ..> FeatureFlagsCache : GET features
+SharePermissionMiddleware ..> PermissionsCache : GET effective share permissions
+PermissionInheritanceEngine ..> PermissionsCache : Cache effective permissions
 RateLimitMiddleware ..> RateLimitCounters : INCR counter
 BackendAuthService ..> SessionStore : SET/GET sessions
 BackendAuthService ..> MFAPending : SET/GET mfa state
@@ -529,6 +542,7 @@ note as N0
   - Servicios productivos para usuarios finales
   - Calendario, Tareas, Archivos
   - Gestión de Proyectos (secciones, items, credenciales)
+  - Compartidos Conmigo (shared resources view)
   - Dashboard personalizado, notificaciones
   - Accesible para todos (Member+)
   - Consume: /api/v1/app/*
@@ -614,6 +628,47 @@ note as N4
   9. PostgreSQL commit con RLS (tenant_id validado)
   10. Response 201 Created con item + fields
   11. Frontend muestra item con password oculto (•••)
+end note
+
+note as N5
+  **Data Flow Example: Compartir Proyecto con Herencia**
+  (Usuario comparte proyecto completo con colega como Editor)
+
+  1. Usuario abre proyecto "Sistema Auth"
+  2. Click "Miembros" → "+ Agregar Miembro"
+  3. Selecciona "Alice Chen" → Nivel: "Editor"
+  4. POST /api/v1/app/shares (HTTPS)
+  5. JWT Middleware verifica token
+  6. Tenant Middleware carga tenant context
+  7. Permission Middleware verifica permiso `project.share`
+  8. Share Permission Middleware (skip, creando nueva share)
+  9. Feature Gate Middleware:
+     a. Consulta plan del tenant (Free: max 5 shares)
+     b. Cuenta shares existentes (PostgreSQL)
+     c. Si excede límite: HTTP 402 Payment Required
+     d. Si OK: continúa
+  10. Shares API invoca ShareService.create():
+      a. Crea registro Share (project, Alice, editor)
+      b. Invoca PermissionInheritanceEngine:
+         - Query sections del proyecto (5 sections)
+         - Query items de cada section (23 items total)
+         - Crea Share heredado para cada section/item
+           (resource_type='project_section', is_inherited=true)
+      c. Almacena permisos efectivos en cache Redis:
+         - Key: `share_perms:alice_id:project_id` → {level: editor}
+         - TTL: 5 minutos
+      d. Crea AuditLog: action='share.created'
+      e. Notification Service envía email + in-app a Alice
+  11. Response 201 Created con shares creados
+  12. Frontend actualiza UI:
+      - Proyecto aparece en "Compartidos conmigo" de Alice
+      - Alice puede ver/editar proyecto + sections + items
+
+  **Cambio de permiso posterior:**
+  Usuario cambia permiso Alice: Editor → Viewer
+  - PermissionInheritanceEngine actualiza shares heredados
+  - Flush Redis cache: `share_perms:alice_id:*`
+  - Alice pierde permisos de edición inmediatamente
 end note
 
 ' ===============================================

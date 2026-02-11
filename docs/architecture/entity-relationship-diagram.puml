@@ -581,12 +581,51 @@ entity "ProjectMember" as project_member <<Services>> {
     FK(tenant_id): UUID
     FK(project_id): UUID
     FK(user_id): UUID
-    role: VARCHAR(20)
+    role: VARCHAR(20)  ' choices: viewer, editor, admin, owner
     --
     created_at: TIMESTAMP
     updated_at: TIMESTAMP
     --
     UK(project_id, user_id)
+}
+
+entity "Share" as share <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    ' Polymorphic resource reference
+    resource_type: VARCHAR(50)
+    resource_id: UUID
+    --
+    ' Sharing users
+    FK(shared_by_id): UUID
+    FK(shared_with_id): UUID
+    --
+    ' Access control
+    permission_level: VARCHAR(20)
+    is_inherited: BOOLEAN
+    notify_on_changes: BOOLEAN
+    --
+    ' Temporal sharing
+    shared_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    expires_at: TIMESTAMP
+    --
+    UK(tenant_id, resource_type, resource_id, shared_with_id)
+}
+
+entity "SharePermission" as share_permission <<Services>> {
+    PK(id): UUID
+    --
+    permission_level: VARCHAR(20)
+    resource_type: VARCHAR(50)
+    --
+    ' JSON structure: {read, create, update, delete, share}
+    permissions: JSONB
+    --
+    created_at: TIMESTAMP
+    --
+    UK(permission_level, resource_type)
 }
 
 ' ==============================================================================
@@ -731,6 +770,20 @@ project_item ||--o{ project_item_field : "has custom fields"
 user ||--o{ project_item : "creates/updates (created_by)"
 user ||--o{ project_item : "creates/updates (updated_by)"
 tenant ||--o{ project_member : "scoped to"
+
+' ==============================================================================
+' RELATIONSHIPS - Sharing & Collaboration
+' ==============================================================================
+
+tenant ||--o{ share : "scoped to"
+user ||--o{ share : "shares resources (shared_by)"
+user ||--o{ share : "receives shares (shared_with)"
+
+' Note: Share has polymorphic relationship with Project, ProjectSection,
+'       ProjectItem, Task, File via (resource_type, resource_id)
+'       PlantUML limitation: cannot visualize generic foreign keys
+
+share_permission ||--o{ share : "defines permission level"
 
 ' ==============================================================================
 ' RELATIONSHIPS - Audit Trail for Created/Updated By
@@ -901,13 +954,53 @@ note right of notification
     - Modo "No molestar"
 end note
 
+note top of share
+    **Sharing & Collaboration System**
+    - Polymorphic: Shares any resource type
+    - Supported types: Project, ProjectSection, ProjectItem, Task, File
+    - Permission levels: viewer, commenter, editor, admin
+    - Herencia automática: Project → Sections → Items
+    - Permisos locales sobrescriben heredados
+    - Feature gated: Free(❌), Starter(5 max), Pro(50 max), Enterprise(∞)
+    - Temporal shares con expires_at
+    - Compliance: Audit log registra todas las acciones
+end note
+
+note top of share_permission
+    **Permission Level Definitions**
+    - Lookup table: define qué acciones incluye cada nivel
+    - Ejemplo viewer: {read: true, create: false, update: false, delete: false, share: false}
+    - Ejemplo editor: {read: true, create: true, update: true, delete: true, share: false}
+    - Ejemplo admin: {read: true, create: true, update: true, delete: true, share: true}
+    - Configuración global (no tenant-scoped)
+end note
+
+note bottom of share
+    **Herencia de Permisos (Cascading Permissions)**
+
+    Si compartes Project con Alice como "editor":
+    1. Alice → editor en todas las Sections (heredado)
+    2. Alice → editor en todos los Items (heredado)
+    3. Cambiar Project permission → actualiza heredados
+    4. Configurar permission local en Section X → Alice admin solo en X
+    5. Icon 🔒 en UI indica permiso local (no heredado)
+
+    **Cálculo de permiso efectivo:**
+    Local > Inherited > Default (no access)
+
+    **Implementación:**
+    - Backend: Permission Inheritance Engine calcula permisos recursivamente
+    - Cache: Redis almacena permisos efectivos (TTL 5min)
+    - Invalidación: Al cambiar parent permission → flush cache descendientes
+end note
+
 legend right
     |= Color |= Entity Type |
     | <back:LightBlue>   </back> | Core Multi-Tenancy |
     | <back:LightGreen>  </back> | User & Authentication |
     | <back:LightYellow> </back> | RBAC System |
     | <back:LightSalmon> </back> | Subscription & Billing |
-    | <back:Lavender>    </back> | Customer Services (Calendar, Tasks, Files, Projects) |
+    | <back:Lavender>    </back> | Customer Services (Calendar, Tasks, Files, Projects, Sharing) |
     | <back:LightGray>   </back> | Audit & Logging |
 
     **Cardinality:**
