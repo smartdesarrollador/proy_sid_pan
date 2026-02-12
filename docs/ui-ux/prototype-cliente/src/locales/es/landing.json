@@ -1,0 +1,259 @@
+{
+  "hero": {
+    "trustBadge": "Más de 500 organizaciones confían en nosotros",
+    "heading": {
+      "line1": "Gestiona tu Organización con",
+      "rbac": "RBAC",
+      "and": "y",
+      "subscriptions": "Suscripciones Flexibles"
+    },
+    "subheading": "Control de acceso granular + facturación automatizada para equipos de cualquier tamaño",
+    "cta": {
+      "primary": "Comenzar Gratis",
+      "secondary": "Ver Demo"
+    },
+    "trustIndicators": {
+      "noCard": "Sin tarjeta requerida",
+      "quickSetup": "Configuración en 2 minutos"
+    },
+    "illustration": {
+      "text": "Seguridad y Control Total"
+    },
+    "badges": {
+      "uptime": "Uptime",
+      "activeClients": "Clientes",
+      "activeClientsLine2": "Activos"
+    }
+  },
+  "features": {
+    "title": "Todo lo que necesitas para gestionar tu organización",
+    "subtitle": "Herramientas profesionales diseñadas para equipos que valoran la seguridad y la eficiencia",
+    "items": {
+      "rbac": {
+        "title": "RBAC Granular",
+        "description": "Control de acceso a nivel de recurso con permisos personalizables"
+      },
+      "tasks": {
+        "title": "Gestión de Tareas",
+        "description": "Tableros Kanban con prioridades y asignación de equipo"
+      },
+      "calendar": {
+        "title": "Calendario Inteligente",
+        "description": "Sincronización automática y recordatorios personalizados"
+      },
+      "projects": {
+        "title": "Proyectos Encriptados",
+        "description": "AES-256 para proteger credenciales y datos sensibles"
+      },
+      "sharing": {
+        "title": "Compartición Segura",
+        "description": "Permisos granulares con expiración automática"
+      },
+      "audit": {
+        "title": "Auditoría Completa",
+        "description": "Logs inmutables exportables para cumplimiento normativo"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Planes simples y transparentes",
+    "subtitle": "Elige el plan que mejor se adapte a las necesidades de tu equipo",
+    "billing": {
+      "monthly": "Mensual",
+      "annual": "Anual"
+    },
+    "annualSavings": "Ahorra 20% con pago anual",
+    "plans": {
+      "free": {
+        "name": "Plan Gratuito",
+        "description": "Perfecto para empezar y equipos pequeños"
+      },
+      "starter": {
+        "name": "Plan Inicial",
+        "description": "Para equipos en crecimiento"
+      },
+      "professional": {
+        "name": "Plan Profesional",
+        "description": "Para organizaciones establecidas"
+      },
+      "enterprise": {
+        "name": "Plan Empresarial",
+        "description": "Para grandes organizaciones"
+      }
+    },
+    "features": {
+      "users_5": "Hasta 5 usuarios",
+      "users_10": "Hasta 10 usuarios",
+      "users_50": "Hasta 50 usuarios",
+      "users_unlimited": "Usuarios ilimitados",
+      "storage_1": "1 GB de almacenamiento",
+      "storage_5": "5 GB de almacenamiento",
+      "storage_50": "50 GB de almacenamiento",
+      "storage_unlimited": "Almacenamiento ilimitado",
+      "api_1000": "1,000 llamadas API/mes",
+      "api_10000": "10,000 llamadas API/mes",
+      "api_100000": "100,000 llamadas API/mes",
+      "api_unlimited": "Llamadas API ilimitadas",
+      "predefined_roles": "Roles predefinidos",
+      "custom_roles": "Roles personalizados",
+      "custom_roles_unlimited": "Roles personalizados ilimitados",
+      "mfa": "MFA",
+      "mfa_enforced": "MFA obligatorio",
+      "sso": "SSO/SAML",
+      "email_support": "Soporte por email",
+      "priority_support": "Soporte prioritario",
+      "dedicated_support": "Soporte dedicado 24/7",
+      "custom_branding": "Custom branding",
+      "white_label": "Custom branding + White label"
+    },
+    "cta": {
+      "start": "Iniciar Gratis",
+      "learnMore": "Conocer Más",
+      "upgrade": "Actualizar Plan",
+      "contact": "Contactar Ventas"
+    },
+    "contact": "Contactar",
+    "bottomNote": "¿Necesitas más de 100 usuarios?",
+    "bottomCta": "Contacta a nuestro equipo de ventas"
+  },
+  "howItWorks": {
+    "title": "Comienza en 4 sencillos pasos",
+    "subtitle": "Configura tu organización y empieza a colaborar en minutos",
+    "steps": {
+      "register": {
+        "title": "Registra tu Organización",
+        "description": "Menos de 2 minutos, sin tarjeta de crédito requerida"
+      },
+      "configure": {
+        "title": "Configura Roles y Permisos",
+        "description": "Sistema intuitivo de gestión de accesos"
+      },
+      "invite": {
+        "title": "Invita a tu Equipo",
+        "description": "Envía invitaciones por email con asignación de roles"
+      },
+      "start": {
+        "title": "Comienza a Trabajar",
+        "description": "Colaboración segura desde el primer día"
+      }
+    }
+  },
+  "paymentMethods": {
+    "title": "Métodos de pago seguros",
+    "subtitle": "Aceptamos múltiples formas de pago para tu comodidad",
+    "methods": {
+      "stripe": {
+        "name": "Stripe",
+        "description": "Procesador seguro de pagos"
+      },
+      "cards": {
+        "name": "Tarjetas",
+        "description": "Visa, Mastercard, Amex"
+      },
+      "paypal": {
+        "name": "PayPal",
+        "description": "Paga con tu cuenta PayPal"
+      },
+      "transfer": {
+        "name": "Transferencia",
+        "description": "Para planes Enterprise"
+      }
+    },
+    "securityBadge": "Pagos 100% seguros con encriptación SSL"
+  },
+  "testimonials": {
+    "title": "Lo que dicen nuestros clientes",
+    "subtitle": "Más de 500 organizaciones confían en nuestra plataforma",
+    "items": {
+      "testimonial1": {
+        "quote": "Implementamos RBAC en solo 2 días. El sistema es increíblemente flexible y nos ahorró semanas de desarrollo.",
+        "author": "Carlos Méndez",
+        "role": "CTO",
+        "company": "TechStart"
+      },
+      "testimonial2": {
+        "quote": "La automatización de facturación nos ahorró más de 15 horas al mes. El soporte es excepcional.",
+        "author": "Ana Martínez",
+        "role": "Finance Director",
+        "company": "Retail Solutions"
+      },
+      "testimonial3": {
+        "quote": "Migramos de nuestro sistema legacy sin downtime. La documentación es clara y el equipo muy profesional.",
+        "author": "Roberto Silva",
+        "role": "IT Manager",
+        "company": "Global Logistics"
+      }
+    }
+  },
+  "faq": {
+    "title": "Preguntas Frecuentes",
+    "subtitle": "¿Tienes dudas? Estamos aquí para ayudarte",
+    "items": {
+      "faq1": {
+        "question": "¿Puedo cambiar de plan en cualquier momento?",
+        "answer": "Sí, puedes actualizar o cambiar tu plan en cualquier momento desde el panel de administración. Los cambios se aplican inmediatamente y solo pagas la diferencia prorrateada."
+      },
+      "faq2": {
+        "question": "¿Qué es RBAC y por qué lo necesito?",
+        "answer": "RBAC (Role-Based Access Control) es un sistema de control de acceso que asigna permisos basados en roles. Es esencial para proteger datos sensibles, cumplir con normativas (GDPR, SOC2) y gestionar equipos de forma escalable."
+      },
+      "faq3": {
+        "question": "¿Los datos están encriptados?",
+        "answer": "Sí, todos los datos están encriptados en tránsito (TLS 1.3) y en reposo (AES-256). Los datos sensibles como contraseñas y credenciales tienen una capa adicional de encriptación a nivel de aplicación."
+      },
+      "faq4": {
+        "question": "¿Puedo cancelar mi suscripción?",
+        "answer": "Puedes cancelar tu suscripción en cualquier momento sin penalización. Tendrás acceso completo hasta el final de tu período de facturación actual. Tus datos se mantienen disponibles durante 30 días después de la cancelación."
+      },
+      "faq5": {
+        "question": "¿Ofrecen período de prueba?",
+        "answer": "El plan Free es gratuito para siempre y no requiere tarjeta de crédito. Para planes pagos, ofrecemos garantía de devolución de 30 días sin preguntas."
+      },
+      "faq6": {
+        "question": "¿Qué soporte está incluido?",
+        "answer": "El plan Free incluye documentación completa y comunidad. Starter incluye soporte por email (respuesta en 24h). Professional incluye soporte prioritario (respuesta en 4h). Enterprise incluye soporte dedicado 24/7 con SLA garantizado."
+      }
+    },
+    "contactSupport": "¿No encuentras tu respuesta?",
+    "contactLink": "Contacta a nuestro equipo de soporte"
+  },
+  "cta": {
+    "title": "¿Listo para transformar tu gestión organizacional?",
+    "subtitle": "Únete a 500+ organizaciones que confían en nuestra plataforma",
+    "primary": "Comenzar Gratis - Sin tarjeta de crédito",
+    "secondary": "Agendar Demo con Experto",
+    "trustIndicators": {
+      "freeSetup": "Configuración gratuita",
+      "cancelAnytime": "Cancela cuando quieras",
+      "spanishSupport": "Soporte en español"
+    }
+  },
+  "footer": {
+    "brandDescription": "Control de acceso granular y gestión de suscripciones para organizaciones de cualquier tamaño.",
+    "sections": {
+      "product": "Producto",
+      "company": "Empresa",
+      "legal": "Legal"
+    },
+    "product": {
+      "features": "Características",
+      "pricing": "Precios",
+      "useCases": "Casos de Uso",
+      "integrations": "Integraciones"
+    },
+    "company": {
+      "about": "Sobre Nosotros",
+      "blog": "Blog",
+      "contact": "Contacto",
+      "careers": "Careers"
+    },
+    "legal": {
+      "terms": "Términos de Servicio",
+      "privacy": "Privacidad",
+      "cookies": "Cookies",
+      "compliance": "Cumplimiento"
+    },
+    "copyright": "Portal de Cliente. Todos los derechos reservados.",
+    "language": "Español"
+  }
+}

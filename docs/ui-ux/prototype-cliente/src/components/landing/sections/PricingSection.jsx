@@ -1,9 +1,21 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { subscriptionPlans } from '../../../data/mockData';
 import PricingCard from '../components/PricingCard';
 
 function PricingSection({ onGetStarted }) {
+  const { t } = useTranslation('landing');
   const [isAnnual, setIsAnnual] = useState(false);
+
+  // Translate plan names
+  const getTranslatedPlan = (plan) => {
+    const planKey = plan.name.toLowerCase();
+    return {
+      ...plan,
+      displayName: t(`pricing.plans.${planKey}.name`),
+      description: t(`pricing.plans.${planKey}.description`)
+    };
+  };
 
   return (
     <section id="pricing" className="py-16 md:py-20 lg:py-24 bg-gray-50">
@@ -11,10 +23,10 @@ function PricingSection({ onGetStarted }) {
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Planes simples y transparentes
+            {t('pricing.title')}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-            Elige el plan que mejor se adapte a las necesidades de tu equipo
+            {t('pricing.subtitle')}
           </p>
 
           {/* Billing Toggle */}
@@ -27,7 +39,7 @@ function PricingSection({ onGetStarted }) {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Mensual
+              {t('pricing.billing.monthly')}
             </button>
             <button
               onClick={() => setIsAnnual(true)}
@@ -37,7 +49,7 @@ function PricingSection({ onGetStarted }) {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Anual
+              {t('pricing.billing.annual')}
             </button>
           </div>
 
@@ -46,7 +58,7 @@ function PricingSection({ onGetStarted }) {
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Ahorra 20% con pago anual
+              {t('pricing.annualSavings')}
             </div>
           )}
         </div>
@@ -56,7 +68,7 @@ function PricingSection({ onGetStarted }) {
           {subscriptionPlans.map((plan) => (
             <PricingCard
               key={plan.id}
-              plan={plan}
+              plan={getTranslatedPlan(plan)}
               isAnnual={isAnnual}
               onGetStarted={onGetStarted}
               isPopular={plan.popular}
@@ -67,12 +79,12 @@ function PricingSection({ onGetStarted }) {
         {/* Bottom Note */}
         <div className="mt-12 text-center">
           <p className="text-gray-600">
-            ¿Necesitas más de 100 usuarios?{' '}
+            {t('pricing.bottomNote')}{' '}
             <button
               onClick={onGetStarted}
               className="text-primary-600 font-medium hover:text-primary-700"
             >
-              Contacta a nuestro equipo de ventas
+              {t('pricing.bottomCta')}
             </button>
           </p>
         </div>

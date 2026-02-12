@@ -1,3 +1,4 @@
+import LandingHeader from './LandingHeader';
 import HeroSection from './sections/HeroSection';
 import FeaturesSection from './sections/FeaturesSection';
 import PricingSection from './sections/PricingSection';
@@ -17,6 +18,9 @@ function LandingPage({ onGetStarted }) {
           scroll-behavior: smooth;
         }
       `}</style>
+
+      {/* Language Switcher Header */}
+      <LandingHeader />
 
       {/* All Sections */}
       <HeroSection onGetStarted={onGetStarted} />

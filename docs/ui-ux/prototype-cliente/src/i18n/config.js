@@ -12,6 +12,7 @@ import featuresES from '../locales/es/features.json';
 import tasksES from '../locales/es/tasks.json';
 import calendarES from '../locales/es/calendar.json';
 import projectsES from '../locales/es/projects.json';
+import landingES from '../locales/es/landing.json';
 
 // Import English translations
 import commonEN from '../locales/en/common.json';
@@ -23,6 +24,7 @@ import featuresEN from '../locales/en/features.json';
 import tasksEN from '../locales/en/tasks.json';
 import calendarEN from '../locales/en/calendar.json';
 import projectsEN from '../locales/en/projects.json';
+import landingEN from '../locales/en/landing.json';
 
 i18n
   .use(LanguageDetector)
@@ -39,6 +41,7 @@ i18n
         tasks: tasksES,
         calendar: calendarES,
         projects: projectsES,
+        landing: landingES,
       },
       en: {
         common: commonEN,
@@ -50,6 +53,7 @@ i18n
         tasks: tasksEN,
         calendar: calendarEN,
         projects: projectsEN,
+        landing: landingEN,
       }
     },
     fallbackLng: 'es',

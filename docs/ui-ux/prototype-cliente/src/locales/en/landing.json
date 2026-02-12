@@ -1,0 +1,259 @@
+{
+  "hero": {
+    "trustBadge": "Trusted by 500+ organizations",
+    "heading": {
+      "line1": "Manage Your Organization with",
+      "rbac": "RBAC",
+      "and": "and",
+      "subscriptions": "Flexible Subscriptions"
+    },
+    "subheading": "Granular access control + automated billing for teams of any size",
+    "cta": {
+      "primary": "Get Started Free",
+      "secondary": "Watch Demo"
+    },
+    "trustIndicators": {
+      "noCard": "No credit card required",
+      "quickSetup": "Setup in 2 minutes"
+    },
+    "illustration": {
+      "text": "Security and Total Control"
+    },
+    "badges": {
+      "uptime": "Uptime",
+      "activeClients": "Active",
+      "activeClientsLine2": "Clients"
+    }
+  },
+  "features": {
+    "title": "Everything you need to manage your organization",
+    "subtitle": "Professional tools designed for teams that value security and efficiency",
+    "items": {
+      "rbac": {
+        "title": "Granular RBAC",
+        "description": "Resource-level access control with customizable permissions"
+      },
+      "tasks": {
+        "title": "Task Management",
+        "description": "Kanban boards with priorities and team assignment"
+      },
+      "calendar": {
+        "title": "Smart Calendar",
+        "description": "Automatic synchronization and personalized reminders"
+      },
+      "projects": {
+        "title": "Encrypted Projects",
+        "description": "AES-256 to protect credentials and sensitive data"
+      },
+      "sharing": {
+        "title": "Secure Sharing",
+        "description": "Granular permissions with automatic expiration"
+      },
+      "audit": {
+        "title": "Complete Audit",
+        "description": "Exportable immutable logs for regulatory compliance"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Simple and transparent pricing",
+    "subtitle": "Choose the plan that best suits your team's needs",
+    "billing": {
+      "monthly": "Monthly",
+      "annual": "Annual"
+    },
+    "annualSavings": "Save 20% with annual billing",
+    "plans": {
+      "free": {
+        "name": "Free Plan",
+        "description": "Perfect for getting started and small teams"
+      },
+      "starter": {
+        "name": "Starter Plan",
+        "description": "For growing teams"
+      },
+      "professional": {
+        "name": "Professional Plan",
+        "description": "For established organizations"
+      },
+      "enterprise": {
+        "name": "Enterprise Plan",
+        "description": "For large organizations"
+      }
+    },
+    "features": {
+      "users_5": "Up to 5 users",
+      "users_10": "Up to 10 users",
+      "users_50": "Up to 50 users",
+      "users_unlimited": "Unlimited users",
+      "storage_1": "1 GB storage",
+      "storage_5": "5 GB storage",
+      "storage_50": "50 GB storage",
+      "storage_unlimited": "Unlimited storage",
+      "api_1000": "1,000 API calls/month",
+      "api_10000": "10,000 API calls/month",
+      "api_100000": "100,000 API calls/month",
+      "api_unlimited": "Unlimited API calls",
+      "predefined_roles": "Predefined roles",
+      "custom_roles": "Custom roles",
+      "custom_roles_unlimited": "Unlimited custom roles",
+      "mfa": "MFA",
+      "mfa_enforced": "Enforced MFA",
+      "sso": "SSO/SAML",
+      "email_support": "Email support",
+      "priority_support": "Priority support",
+      "dedicated_support": "Dedicated 24/7 support",
+      "custom_branding": "Custom branding",
+      "white_label": "Custom branding + White label"
+    },
+    "cta": {
+      "start": "Start Free",
+      "learnMore": "Learn More",
+      "upgrade": "Upgrade Plan",
+      "contact": "Contact Sales"
+    },
+    "contact": "Contact",
+    "bottomNote": "Need more than 100 users?",
+    "bottomCta": "Contact our sales team"
+  },
+  "howItWorks": {
+    "title": "Get started in 4 simple steps",
+    "subtitle": "Set up your organization and start collaborating in minutes",
+    "steps": {
+      "register": {
+        "title": "Register Your Organization",
+        "description": "Less than 2 minutes, no credit card required"
+      },
+      "configure": {
+        "title": "Configure Roles and Permissions",
+        "description": "Intuitive access management system"
+      },
+      "invite": {
+        "title": "Invite Your Team",
+        "description": "Send email invitations with role assignment"
+      },
+      "start": {
+        "title": "Start Working",
+        "description": "Secure collaboration from day one"
+      }
+    }
+  },
+  "paymentMethods": {
+    "title": "Secure payment methods",
+    "subtitle": "We accept multiple payment methods for your convenience",
+    "methods": {
+      "stripe": {
+        "name": "Stripe",
+        "description": "Secure payment processor"
+      },
+      "cards": {
+        "name": "Cards",
+        "description": "Visa, Mastercard, Amex"
+      },
+      "paypal": {
+        "name": "PayPal",
+        "description": "Pay with your PayPal account"
+      },
+      "transfer": {
+        "name": "Wire Transfer",
+        "description": "For Enterprise plans"
+      }
+    },
+    "securityBadge": "100% secure payments with SSL encryption"
+  },
+  "testimonials": {
+    "title": "What our customers say",
+    "subtitle": "Over 500 organizations trust our platform",
+    "items": {
+      "testimonial1": {
+        "quote": "We implemented RBAC in just 2 days. The system is incredibly flexible and saved us weeks of development.",
+        "author": "Carlos Méndez",
+        "role": "CTO",
+        "company": "TechStart"
+      },
+      "testimonial2": {
+        "quote": "Billing automation saved us over 15 hours per month. The support is exceptional.",
+        "author": "Ana Martínez",
+        "role": "Finance Director",
+        "company": "Retail Solutions"
+      },
+      "testimonial3": {
+        "quote": "We migrated from our legacy system with zero downtime. The documentation is clear and the team very professional.",
+        "author": "Roberto Silva",
+        "role": "IT Manager",
+        "company": "Global Logistics"
+      }
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Have questions? We're here to help",
+    "items": {
+      "faq1": {
+        "question": "Can I change plans at any time?",
+        "answer": "Yes, you can upgrade or change your plan at any time from the admin panel. Changes apply immediately and you only pay the prorated difference."
+      },
+      "faq2": {
+        "question": "What is RBAC and why do I need it?",
+        "answer": "RBAC (Role-Based Access Control) is an access control system that assigns permissions based on roles. It's essential for protecting sensitive data, complying with regulations (GDPR, SOC2), and managing teams scalably."
+      },
+      "faq3": {
+        "question": "Is data encrypted?",
+        "answer": "Yes, all data is encrypted in transit (TLS 1.3) and at rest (AES-256). Sensitive data like passwords and credentials have an additional layer of application-level encryption."
+      },
+      "faq4": {
+        "question": "Can I cancel my subscription?",
+        "answer": "You can cancel your subscription at any time without penalty. You'll have full access until the end of your current billing period. Your data remains available for 30 days after cancellation."
+      },
+      "faq5": {
+        "question": "Do you offer a trial period?",
+        "answer": "The Free plan is free forever and doesn't require a credit card. For paid plans, we offer a 30-day money-back guarantee with no questions asked."
+      },
+      "faq6": {
+        "question": "What support is included?",
+        "answer": "The Free plan includes complete documentation and community. Starter includes email support (24h response). Professional includes priority support (4h response). Enterprise includes dedicated 24/7 support with guaranteed SLA."
+      }
+    },
+    "contactSupport": "Can't find your answer?",
+    "contactLink": "Contact our support team"
+  },
+  "cta": {
+    "title": "Ready to transform your organizational management?",
+    "subtitle": "Join 500+ organizations that trust our platform",
+    "primary": "Start Free - No credit card required",
+    "secondary": "Schedule Demo with Expert",
+    "trustIndicators": {
+      "freeSetup": "Free setup",
+      "cancelAnytime": "Cancel anytime",
+      "spanishSupport": "Spanish support"
+    }
+  },
+  "footer": {
+    "brandDescription": "Granular access control and subscription management for organizations of any size.",
+    "sections": {
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal"
+    },
+    "product": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "useCases": "Use Cases",
+      "integrations": "Integrations"
+    },
+    "company": {
+      "about": "About Us",
+      "blog": "Blog",
+      "contact": "Contact",
+      "careers": "Careers"
+    },
+    "legal": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy",
+      "cookies": "Cookies",
+      "compliance": "Compliance"
+    },
+    "copyright": "Client Portal. All rights reserved.",
+    "language": "English"
+  }
+}

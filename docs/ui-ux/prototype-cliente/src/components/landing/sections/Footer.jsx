@@ -1,26 +1,28 @@
 import { Calendar, Linkedin, Twitter, Github, Mail, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function Footer() {
+  const { t } = useTranslation('landing');
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     product: [
-      { name: 'Características', href: '#features' },
-      { name: 'Precios', href: '#pricing' },
-      { name: 'Casos de Uso', href: '#' },
-      { name: 'Integraciones', href: '#' }
+      { name: t('footer.product.features'), href: '#features' },
+      { name: t('footer.product.pricing'), href: '#pricing' },
+      { name: t('footer.product.useCases'), href: '#' },
+      { name: t('footer.product.integrations'), href: '#' }
     ],
     company: [
-      { name: 'Sobre Nosotros', href: '#' },
-      { name: 'Blog', href: '#' },
-      { name: 'Contacto', href: '#' },
-      { name: 'Careers', href: '#' }
+      { name: t('footer.company.about'), href: '#' },
+      { name: t('footer.company.blog'), href: '#' },
+      { name: t('footer.company.contact'), href: '#' },
+      { name: t('footer.company.careers'), href: '#' }
     ],
     legal: [
-      { name: 'Términos de Servicio', href: '#' },
-      { name: 'Privacidad', href: '#' },
-      { name: 'Cookies', href: '#' },
-      { name: 'Cumplimiento', href: '#' }
+      { name: t('footer.legal.terms'), href: '#' },
+      { name: t('footer.legal.privacy'), href: '#' },
+      { name: t('footer.legal.cookies'), href: '#' },
+      { name: t('footer.legal.compliance'), href: '#' }
     ]
   };
 
@@ -45,7 +47,7 @@ function Footer() {
               <span className="text-xl font-bold text-white">Portal de Cliente</span>
             </div>
             <p className="text-gray-400 mb-4 text-sm">
-              Control de acceso granular y gestión de suscripciones para organizaciones de cualquier tamaño.
+              {t('footer.brandDescription')}
             </p>
 
             {/* Social Links */}
@@ -68,7 +70,7 @@ function Footer() {
 
           {/* Product Column */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Producto</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.sections.product')}</h3>
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.name}>
@@ -85,7 +87,7 @@ function Footer() {
 
           {/* Company Column */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Empresa</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.sections.company')}</h3>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
@@ -102,7 +104,7 @@ function Footer() {
 
           {/* Legal Column */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Legal</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.sections.legal')}</h3>
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
@@ -121,13 +123,13 @@ function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-400 text-sm">
-            © {currentYear} Portal de Cliente. Todos los derechos reservados.
+            © {currentYear} {t('footer.copyright')}
           </p>
 
           {/* Language Selector */}
           <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
             <Globe className="w-4 h-4" />
-            <span>Español</span>
+            <span>{t('footer.language')}</span>
           </button>
         </div>
       </div>
