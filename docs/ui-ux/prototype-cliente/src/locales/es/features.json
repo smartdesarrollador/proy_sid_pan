@@ -1,0 +1,45 @@
+{
+  "upgrade": {
+    "maxActiveTasks": {
+      "title": "Límite de Tareas Alcanzado",
+      "message": "Tu plan actual permite máximo {{limit}} tareas activas. Actualiza a {{requiredPlan}} para crear más tareas.",
+      "feature": "Tareas Ilimitadas",
+      "action": "Ver Planes"
+    },
+    "kanbanView": {
+      "title": "Vista Kanban No Disponible",
+      "message": "La vista Kanban está disponible en el plan {{requiredPlan}}.",
+      "feature": "Vista Kanban",
+      "action": "Actualizar Plan"
+    },
+    "maxProjects": {
+      "title": "Límite de Proyectos Alcanzado",
+      "message": "Tu plan actual permite máximo {{limit}} proyectos. Actualiza a {{requiredPlan}} para crear más proyectos.",
+      "feature": "Proyectos Adicionales",
+      "action": "Ver Planes"
+    },
+    "maxSectionsPerProject": {
+      "title": "Límite de Secciones Alcanzado",
+      "message": "Tu plan actual permite máximo {{limit}} secciones por proyecto. Actualiza a {{requiredPlan}} para agregar más secciones.",
+      "feature": "Secciones Adicionales",
+      "action": "Ver Planes"
+    },
+    "recurringEvents": {
+      "title": "Eventos Recurrentes No Disponibles",
+      "message": "Los eventos recurrentes están disponibles en el plan {{requiredPlan}}.",
+      "feature": "Eventos Recurrentes",
+      "action": "Actualizar Plan"
+    },
+    "fileStorage": {
+      "title": "Límite de Almacenamiento Alcanzado",
+      "message": "Has alcanzado tu límite de {{limit}}GB. Actualiza a {{requiredPlan}} para más espacio.",
+      "feature": "Almacenamiento Adicional",
+      "action": "Ver Planes"
+    }
+  },
+  "limits": {
+    "reached": "Límite alcanzado",
+    "remaining": "{{count}} disponibles",
+    "unlimited": "Ilimitado"
+  }
+}

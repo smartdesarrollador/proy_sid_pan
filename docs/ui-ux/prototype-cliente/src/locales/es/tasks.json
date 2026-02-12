@@ -1,0 +1,63 @@
+{
+  "title": "Tareas",
+  "newTask": "Nueva Tarea",
+  "editTask": "Editar Tarea",
+  "deleteTask": "Eliminar Tarea",
+  "taskDetails": "Detalles de la Tarea",
+  "views": {
+    "list": "Lista",
+    "kanban": "Kanban",
+    "calendar": "Calendario"
+  },
+  "filters": {
+    "all": "Todas",
+    "active": "Activas",
+    "completed": "Completadas",
+    "myTasks": "Mis Tareas",
+    "assignedToMe": "Asignadas a mí"
+  },
+  "status": {
+    "todo": "Por hacer",
+    "doing": "En progreso",
+    "done": "Completada",
+    "cancelled": "Cancelada"
+  },
+  "priority": {
+    "low": "Baja",
+    "medium": "Media",
+    "high": "Alta",
+    "urgent": "Urgente"
+  },
+  "form": {
+    "title": "Título",
+    "description": "Descripción",
+    "status": "Estado",
+    "priority": "Prioridad",
+    "dueDate": "Fecha de vencimiento",
+    "assignedTo": "Asignado a",
+    "tags": "Etiquetas",
+    "selectStatus": "Seleccionar estado",
+    "selectPriority": "Seleccionar prioridad",
+    "selectUser": "Seleccionar usuario",
+    "addTag": "Agregar etiqueta"
+  },
+  "messages": {
+    "createSuccess": "Tarea creada exitosamente",
+    "updateSuccess": "Tarea actualizada exitosamente",
+    "deleteSuccess": "Tarea eliminada exitosamente",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar la tarea '{{title}}'?",
+    "completeTask": "Marcar como completada",
+    "reopenTask": "Reabrir tarea"
+  },
+  "empty": {
+    "title": "No hay tareas",
+    "description": "Crea tu primera tarea para comenzar",
+    "action": "Crear Tarea"
+  },
+  "stats": {
+    "total": "Total",
+    "completed": "Completadas",
+    "pending": "Pendientes",
+    "overdue": "Vencidas"
+  }
+}

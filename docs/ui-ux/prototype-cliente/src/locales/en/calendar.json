@@ -1,0 +1,70 @@
+{
+  "title": "Calendar",
+  "newEvent": "New Event",
+  "editEvent": "Edit Event",
+  "deleteEvent": "Delete Event",
+  "eventDetails": "Event Details",
+  "views": {
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "agenda": "Agenda"
+  },
+  "types": {
+    "meeting": "Meeting",
+    "deadline": "Deadline",
+    "reminder": "Reminder",
+    "event": "Event",
+    "task": "Task"
+  },
+  "form": {
+    "title": "Title",
+    "description": "Description",
+    "type": "Type",
+    "startDate": "Start date",
+    "startTime": "Start time",
+    "endDate": "End date",
+    "endTime": "End time",
+    "allDay": "All day",
+    "location": "Location",
+    "attendees": "Attendees",
+    "recurring": "Recurring",
+    "reminder": "Reminder",
+    "selectType": "Select type",
+    "addAttendee": "Add attendee",
+    "notes": "Notes"
+  },
+  "recurring": {
+    "none": "Does not repeat",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "custom": "Custom"
+  },
+  "reminders": {
+    "none": "No reminder",
+    "atTime": "At time of event",
+    "5min": "5 minutes before",
+    "15min": "15 minutes before",
+    "30min": "30 minutes before",
+    "1hour": "1 hour before",
+    "1day": "1 day before"
+  },
+  "messages": {
+    "createSuccess": "Event created successfully",
+    "updateSuccess": "Event updated successfully",
+    "deleteSuccess": "Event deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete event '{{title}}'?"
+  },
+  "empty": {
+    "title": "No events",
+    "description": "Create your first event to get started",
+    "action": "Create Event"
+  },
+  "navigation": {
+    "today": "Today",
+    "previous": "Previous",
+    "next": "Next"
+  }
+}

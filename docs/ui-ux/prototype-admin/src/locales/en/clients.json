@@ -1,0 +1,43 @@
+{
+  "title": "Client Management",
+  "addClient": "Add Client",
+  "editClient": "Edit Client",
+  "deleteClient": "Delete Client",
+  "clientDetails": "Client Details",
+  "table": {
+    "name": "Name",
+    "email": "Email",
+    "plan": "Plan",
+    "status": "Status",
+    "created": "Created",
+    "actions": "Actions"
+  },
+  "form": {
+    "name": "Client name",
+    "email": "Email",
+    "plan": "Subscription plan",
+    "status": "Status",
+    "address": "Address",
+    "phone": "Phone",
+    "selectPlan": "Select plan",
+    "selectStatus": "Select status"
+  },
+  "plans": {
+    "free": "Free",
+    "starter": "Starter",
+    "professional": "Professional",
+    "enterprise": "Enterprise"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "trial": "Trial",
+    "suspended": "Suspended"
+  },
+  "messages": {
+    "createSuccess": "Client created successfully",
+    "updateSuccess": "Client updated successfully",
+    "deleteSuccess": "Client deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete client {{name}}?"
+  }
+}

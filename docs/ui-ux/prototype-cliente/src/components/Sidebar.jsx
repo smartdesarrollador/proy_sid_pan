@@ -1,17 +1,20 @@
 import { Home, CheckSquare, Calendar, Folder, Share2, User, Settings } from 'lucide-react';
 import clsx from 'clsx';
-
-const menuItems = [
-  { id: 'user-dashboard', label: 'Dashboard', icon: Home },
-  { id: 'tasks', label: 'Tareas', icon: CheckSquare },
-  { id: 'calendar', label: 'Calendario', icon: Calendar },
-  { id: 'projects', label: 'Proyectos', icon: Folder },
-  { id: 'shared-with-me', label: 'Compartidos conmigo', icon: Share2 },
-  { id: 'profile', label: 'Mi Perfil', icon: User },
-  { id: 'settings', label: 'Configuración', icon: Settings }
-];
+import { useTranslation } from 'react-i18next';
 
 function Sidebar({ isOpen, activeView, onNavigate }) {
+  const { t } = useTranslation('sidebar');
+  const { t: tCommon } = useTranslation('common');
+
+  const menuItems = [
+    { id: 'user-dashboard', label: t('menu.dashboard'), icon: Home },
+    { id: 'tasks', label: t('menu.tasks'), icon: CheckSquare },
+    { id: 'calendar', label: t('menu.calendar'), icon: Calendar },
+    { id: 'projects', label: t('menu.projects'), icon: Folder },
+    { id: 'shared-with-me', label: t('menu.shared'), icon: Share2 },
+    { id: 'profile', label: t('menu.profile'), icon: User },
+    { id: 'settings', label: tCommon('common.settings'), icon: Settings }
+  ];
   if (!isOpen) return null;
 
   return (
@@ -45,12 +48,12 @@ function Sidebar({ isOpen, activeView, onNavigate }) {
       {/* Help section */}
       <div className="p-4 mt-8 border-t border-gray-200 dark:border-gray-700">
         <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-4">
-          <h3 className="font-semibold text-sm text-gray-900 dark:text-white mb-2">¿Necesitas ayuda?</h3>
+          <h3 className="font-semibold text-sm text-gray-900 dark:text-white mb-2">{t('help.title')}</h3>
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-            Consulta nuestra documentación o contacta con soporte
+            {t('help.description')}
           </p>
           <button className="w-full bg-white dark:bg-gray-700 text-primary-700 dark:text-primary-300 text-xs font-medium py-2 px-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-            Ver ayuda
+            {t('help.button')}
           </button>
         </div>
       </div>

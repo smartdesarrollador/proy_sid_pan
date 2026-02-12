@@ -1,0 +1,39 @@
+{
+  "upgrade": {
+    "maxUsers": {
+      "title": "Límite de Usuarios Alcanzado",
+      "message": "Tu plan actual permite máximo {{limit}} usuarios. Actualiza a {{requiredPlan}} para agregar más usuarios.",
+      "feature": "Usuarios Adicionales",
+      "action": "Ver Planes"
+    },
+    "maxClients": {
+      "title": "Límite de Clientes Alcanzado",
+      "message": "Tu plan actual permite máximo {{limit}} clientes. Actualiza a {{requiredPlan}} para agregar más clientes.",
+      "feature": "Clientes Adicionales",
+      "action": "Ver Planes"
+    },
+    "maxRoles": {
+      "title": "Límite de Roles Alcanzado",
+      "message": "Tu plan actual permite máximo {{limit}} roles. Actualiza a {{requiredPlan}} para crear más roles.",
+      "feature": "Roles Adicionales",
+      "action": "Ver Planes"
+    },
+    "auditLogs": {
+      "title": "Auditoría No Disponible",
+      "message": "Los registros de auditoría están disponibles en el plan {{requiredPlan}}.",
+      "feature": "Registros de Auditoría",
+      "action": "Actualizar Plan"
+    },
+    "advancedPermissions": {
+      "title": "Permisos Avanzados No Disponibles",
+      "message": "Los permisos avanzados están disponibles en el plan {{requiredPlan}}.",
+      "feature": "Permisos Avanzados",
+      "action": "Actualizar Plan"
+    }
+  },
+  "limits": {
+    "reached": "Límite alcanzado",
+    "remaining": "{{count}} disponibles",
+    "unlimited": "Ilimitado"
+  }
+}

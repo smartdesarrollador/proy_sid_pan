@@ -1,0 +1,21 @@
+{
+  "orgName": "Portal de Cliente",
+  "subtitle": "Acme Corporation",
+  "userMenu": {
+    "profile": "Mi Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión"
+  },
+  "plan": {
+    "label": "Plan",
+    "free": "Free",
+    "starter": "Starter",
+    "professional": "Professional",
+    "enterprise": "Enterprise"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No tienes notificaciones",
+    "markAllRead": "Marcar todas como leídas"
+  }
+}

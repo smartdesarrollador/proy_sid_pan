@@ -1,0 +1,70 @@
+{
+  "title": "Calendario",
+  "newEvent": "Nuevo Evento",
+  "editEvent": "Editar Evento",
+  "deleteEvent": "Eliminar Evento",
+  "eventDetails": "Detalles del Evento",
+  "views": {
+    "month": "Mes",
+    "week": "Semana",
+    "day": "Día",
+    "agenda": "Agenda"
+  },
+  "types": {
+    "meeting": "Reunión",
+    "deadline": "Fecha límite",
+    "reminder": "Recordatorio",
+    "event": "Evento",
+    "task": "Tarea"
+  },
+  "form": {
+    "title": "Título",
+    "description": "Descripción",
+    "type": "Tipo",
+    "startDate": "Fecha de inicio",
+    "startTime": "Hora de inicio",
+    "endDate": "Fecha de fin",
+    "endTime": "Hora de fin",
+    "allDay": "Todo el día",
+    "location": "Ubicación",
+    "attendees": "Asistentes",
+    "recurring": "Recurrente",
+    "reminder": "Recordatorio",
+    "selectType": "Seleccionar tipo",
+    "addAttendee": "Agregar asistente",
+    "notes": "Notas"
+  },
+  "recurring": {
+    "none": "No repetir",
+    "daily": "Diariamente",
+    "weekly": "Semanalmente",
+    "monthly": "Mensualmente",
+    "yearly": "Anualmente",
+    "custom": "Personalizado"
+  },
+  "reminders": {
+    "none": "Sin recordatorio",
+    "atTime": "A la hora del evento",
+    "5min": "5 minutos antes",
+    "15min": "15 minutos antes",
+    "30min": "30 minutos antes",
+    "1hour": "1 hora antes",
+    "1day": "1 día antes"
+  },
+  "messages": {
+    "createSuccess": "Evento creado exitosamente",
+    "updateSuccess": "Evento actualizado exitosamente",
+    "deleteSuccess": "Evento eliminado exitosamente",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar el evento '{{title}}'?"
+  },
+  "empty": {
+    "title": "No hay eventos",
+    "description": "Crea tu primer evento para comenzar",
+    "action": "Crear Evento"
+  },
+  "navigation": {
+    "today": "Hoy",
+    "previous": "Anterior",
+    "next": "Siguiente"
+  }
+}

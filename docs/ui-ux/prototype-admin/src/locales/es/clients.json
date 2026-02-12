@@ -1,0 +1,43 @@
+{
+  "title": "Gestión de Clientes",
+  "addClient": "Agregar Cliente",
+  "editClient": "Editar Cliente",
+  "deleteClient": "Eliminar Cliente",
+  "clientDetails": "Detalles del Cliente",
+  "table": {
+    "name": "Nombre",
+    "email": "Email",
+    "plan": "Plan",
+    "status": "Estado",
+    "created": "Creado",
+    "actions": "Acciones"
+  },
+  "form": {
+    "name": "Nombre del cliente",
+    "email": "Email",
+    "plan": "Plan de suscripción",
+    "status": "Estado",
+    "address": "Dirección",
+    "phone": "Teléfono",
+    "selectPlan": "Seleccionar plan",
+    "selectStatus": "Seleccionar estado"
+  },
+  "plans": {
+    "free": "Free",
+    "starter": "Starter",
+    "professional": "Professional",
+    "enterprise": "Enterprise"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "trial": "Prueba",
+    "suspended": "Suspendido"
+  },
+  "messages": {
+    "createSuccess": "Cliente creado exitosamente",
+    "updateSuccess": "Cliente actualizado exitosamente",
+    "deleteSuccess": "Cliente eliminado exitosamente",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar al cliente {{name}}?"
+  }
+}

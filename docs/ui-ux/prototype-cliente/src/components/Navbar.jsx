@@ -1,10 +1,13 @@
 import { Menu, Bell, Settings, User, LogOut, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { currentTenant } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
 import ThemeToggle from './shared/ThemeToggle';
+import LanguageSwitcher from './LanguageSwitcher';
 
 function Navbar({ onMenuClick }) {
+  const { t } = useTranslation('navbar');
   const { currentUser, logout } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -35,13 +38,16 @@ function Navbar({ onMenuClick }) {
               <h1 className="text-sm font-semibold text-gray-900 dark:text-white">
                 {currentTenant.name}
               </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Portal de Cliente</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('orgName')}</p>
             </div>
           </div>
         </div>
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+
           {/* Theme Toggle */}
           <ThemeToggle />
 
@@ -80,12 +86,12 @@ function Navbar({ onMenuClick }) {
 
                 <button className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Mi Perfil
+                  {t('userMenu.profile')}
                 </button>
 
                 <button className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                   <Settings className="w-4 h-4" />
-                  Configuración
+                  {t('userMenu.settings')}
                 </button>
 
                 <button
@@ -93,7 +99,7 @@ function Navbar({ onMenuClick }) {
                   className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
-                  Cerrar sesión
+                  {t('userMenu.logout')}
                 </button>
               </div>
             )}

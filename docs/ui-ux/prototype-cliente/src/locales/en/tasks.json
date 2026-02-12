@@ -1,0 +1,63 @@
+{
+  "title": "Tasks",
+  "newTask": "New Task",
+  "editTask": "Edit Task",
+  "deleteTask": "Delete Task",
+  "taskDetails": "Task Details",
+  "views": {
+    "list": "List",
+    "kanban": "Kanban",
+    "calendar": "Calendar"
+  },
+  "filters": {
+    "all": "All",
+    "active": "Active",
+    "completed": "Completed",
+    "myTasks": "My Tasks",
+    "assignedToMe": "Assigned to me"
+  },
+  "status": {
+    "todo": "To Do",
+    "doing": "In Progress",
+    "done": "Done",
+    "cancelled": "Cancelled"
+  },
+  "priority": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "form": {
+    "title": "Title",
+    "description": "Description",
+    "status": "Status",
+    "priority": "Priority",
+    "dueDate": "Due date",
+    "assignedTo": "Assigned to",
+    "tags": "Tags",
+    "selectStatus": "Select status",
+    "selectPriority": "Select priority",
+    "selectUser": "Select user",
+    "addTag": "Add tag"
+  },
+  "messages": {
+    "createSuccess": "Task created successfully",
+    "updateSuccess": "Task updated successfully",
+    "deleteSuccess": "Task deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete task '{{title}}'?",
+    "completeTask": "Mark as complete",
+    "reopenTask": "Reopen task"
+  },
+  "empty": {
+    "title": "No tasks",
+    "description": "Create your first task to get started",
+    "action": "Create Task"
+  },
+  "stats": {
+    "total": "Total",
+    "completed": "Completed",
+    "pending": "Pending",
+    "overdue": "Overdue"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "title": "Proyectos",
+  "newProject": "Nuevo Proyecto",
+  "editProject": "Editar Proyecto",
+  "deleteProject": "Eliminar Proyecto",
+  "projectDetails": "Detalles del Proyecto",
+  "sections": "Secciones",
+  "items": "Elementos",
+  "fields": "Campos",
+  "newSection": "Nueva Sección",
+  "newItem": "Nuevo Elemento",
+  "addField": "Agregar Campo",
+  "form": {
+    "name": "Nombre",
+    "description": "Descripción",
+    "color": "Color",
+    "icon": "Icono",
+    "type": "Tipo",
+    "category": "Categoría",
+    "members": "Miembros",
+    "selectColor": "Seleccionar color",
+    "selectIcon": "Seleccionar icono",
+    "selectType": "Seleccionar tipo",
+    "selectCategory": "Seleccionar categoría",
+    "addMember": "Agregar miembro"
+  },
+  "types": {
+    "login": "Login",
+    "card": "Tarjeta",
+    "note": "Nota",
+    "identity": "Identidad",
+    "database": "Base de datos",
+    "api": "API",
+    "wifi": "WiFi",
+    "custom": "Personalizado"
+  },
+  "fieldTypes": {
+    "text": "Texto",
+    "password": "Contraseña",
+    "email": "Email",
+    "url": "URL",
+    "number": "Número",
+    "date": "Fecha",
+    "textarea": "Área de texto",
+    "select": "Selección"
+  },
+  "actions": {
+    "favorite": "Favorito",
+    "tags": "Etiquetas",
+    "info": "Información",
+    "reveal": "Revelar",
+    "hide": "Ocultar",
+    "collapseAll": "Colapsar todo",
+    "expandAll": "Expandir todo",
+    "search": "Buscar en proyecto",
+    "members": "Miembros"
+  },
+  "messages": {
+    "createSuccess": "Proyecto creado exitosamente",
+    "updateSuccess": "Proyecto actualizado exitosamente",
+    "deleteSuccess": "Proyecto eliminado exitosamente",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar el proyecto '{{name}}'?",
+    "sectionCreateSuccess": "Sección creada exitosamente",
+    "itemCreateSuccess": "Elemento creado exitosamente",
+    "fieldCreateSuccess": "Campo agregado exitosamente",
+    "copied": "Copiado al portapapeles",
+    "passwordRevealed": "Contraseña visible por 30 segundos"
+  },
+  "empty": {
+    "projects": {
+      "title": "No hay proyectos",
+      "description": "Crea tu primer proyecto para comenzar",
+      "action": "Crear Proyecto"
+    },
+    "sections": {
+      "title": "No hay secciones",
+      "description": "Agrega una sección para organizar tus elementos",
+      "action": "Nueva Sección"
+    },
+    "items": {
+      "title": "No hay elementos",
+      "description": "Selecciona una sección para ver sus elementos"
+    },
+    "fields": {
+      "title": "No hay campos",
+      "description": "Selecciona un elemento para ver sus campos"
+    }
+  },
+  "security": {
+    "encrypted": "Encriptado",
+    "revealPassword": "Revelar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "copyPassword": "Copiar contraseña"
+  }
+}

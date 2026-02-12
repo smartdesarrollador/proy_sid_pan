@@ -1,0 +1,34 @@
+{
+  "required": "Este campo es requerido",
+  "minLength": "Debe tener al menos {{min}} caracteres",
+  "maxLength": "No puede exceder {{max}} caracteres",
+  "email": "Email inválido",
+  "emailRequired": "El email es requerido",
+  "password": {
+    "required": "La contraseña es requerida",
+    "minLength": "La contraseña debe tener al menos 8 caracteres",
+    "match": "Las contraseñas no coinciden",
+    "weak": "Contraseña muy débil",
+    "medium": "Contraseña mediana",
+    "strong": "Contraseña fuerte"
+  },
+  "date": {
+    "invalid": "Fecha inválida",
+    "future": "La fecha debe ser futura",
+    "past": "La fecha debe ser pasada",
+    "required": "La fecha es requerida",
+    "endBeforeStart": "La fecha de fin debe ser posterior a la de inicio"
+  },
+  "time": {
+    "invalid": "Hora inválida",
+    "endBeforeStart": "La hora de fin debe ser posterior a la de inicio",
+    "required": "La hora es requerida"
+  },
+  "title": {
+    "required": "El título es requerido",
+    "minLength": "El título debe tener al menos {{min}} caracteres"
+  },
+  "url": {
+    "invalid": "URL inválida"
+  }
+}

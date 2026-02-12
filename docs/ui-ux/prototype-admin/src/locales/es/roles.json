@@ -1,0 +1,40 @@
+{
+  "title": "Gestión de Roles",
+  "addRole": "Agregar Rol",
+  "editRole": "Editar Rol",
+  "deleteRole": "Eliminar Rol",
+  "roleDetails": "Detalles del Rol",
+  "permissions": "Permisos",
+  "assignPermissions": "Asignar Permisos",
+  "table": {
+    "name": "Nombre",
+    "description": "Descripción",
+    "users": "Usuarios",
+    "permissions": "Permisos",
+    "actions": "Acciones"
+  },
+  "form": {
+    "name": "Nombre del rol",
+    "description": "Descripción",
+    "selectPermissions": "Seleccionar permisos"
+  },
+  "categories": {
+    "users": "Usuarios",
+    "roles": "Roles",
+    "clients": "Clientes",
+    "system": "Sistema",
+    "reports": "Reportes"
+  },
+  "actions": {
+    "create": "Crear",
+    "read": "Leer",
+    "update": "Actualizar",
+    "delete": "Eliminar"
+  },
+  "messages": {
+    "createSuccess": "Rol creado exitosamente",
+    "updateSuccess": "Rol actualizado exitosamente",
+    "deleteSuccess": "Rol eliminado exitosamente",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar el rol {{name}}?"
+  }
+}

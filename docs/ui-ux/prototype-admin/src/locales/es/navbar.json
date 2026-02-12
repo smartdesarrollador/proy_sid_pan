@@ -1,0 +1,20 @@
+{
+  "orgName": "Acme Corporation",
+  "subtitle": "Portal de Administración",
+  "userMenu": {
+    "profile": "Mi Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión"
+  },
+  "plan": {
+    "label": "Plan",
+    "free": "Free",
+    "starter": "Starter",
+    "professional": "Professional",
+    "enterprise": "Enterprise"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No tienes notificaciones"
+  }
+}

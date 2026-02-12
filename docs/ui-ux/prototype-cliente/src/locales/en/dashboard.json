@@ -1,0 +1,33 @@
+{
+  "title": "Dashboard",
+  "welcome": "Welcome back",
+  "widgets": {
+    "myTasks": "My Tasks",
+    "upcomingEvents": "Upcoming Events",
+    "recentProjects": "Recent Projects",
+    "quickStats": "Quick Stats",
+    "recentActivity": "Recent Activity",
+    "notifications": "Notifications"
+  },
+  "stats": {
+    "totalTasks": "Total Tasks",
+    "completedTasks": "Completed Tasks",
+    "pendingTasks": "Pending Tasks",
+    "totalProjects": "Total Projects",
+    "activeProjects": "Active Projects",
+    "upcomingEvents": "Upcoming Events",
+    "completionRate": "Completion Rate"
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "newTask": "New Task",
+    "newProject": "New Project",
+    "newEvent": "New Event",
+    "viewAll": "View all"
+  },
+  "empty": {
+    "tasks": "You have no pending tasks",
+    "events": "You have no upcoming events",
+    "projects": "You have no active projects"
+  }
+}

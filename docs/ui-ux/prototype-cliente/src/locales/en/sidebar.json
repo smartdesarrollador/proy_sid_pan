@@ -1,0 +1,22 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "calendar": "Calendar",
+    "projects": "Projects",
+    "files": "Files",
+    "shared": "Shared With Me",
+    "profile": "My Profile",
+    "notifications": "Notifications"
+  },
+  "help": {
+    "title": "Need help?",
+    "description": "Visit our support center",
+    "button": "Go to support"
+  },
+  "sections": {
+    "main": "Main",
+    "workspace": "Workspace",
+    "account": "Account"
+  }
+}

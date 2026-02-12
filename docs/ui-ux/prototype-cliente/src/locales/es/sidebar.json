@@ -1,0 +1,22 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "tasks": "Tareas",
+    "calendar": "Calendario",
+    "projects": "Proyectos",
+    "files": "Archivos",
+    "shared": "Compartidos conmigo",
+    "profile": "Mi Perfil",
+    "notifications": "Notificaciones"
+  },
+  "help": {
+    "title": "¿Necesitas ayuda?",
+    "description": "Visita nuestro centro de soporte",
+    "button": "Ir a soporte"
+  },
+  "sections": {
+    "main": "Principal",
+    "workspace": "Espacio de trabajo",
+    "account": "Cuenta"
+  }
+}

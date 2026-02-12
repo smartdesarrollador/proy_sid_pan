@@ -1,0 +1,33 @@
+{
+  "title": "Dashboard",
+  "widgets": {
+    "activeUsers": "Active Users",
+    "totalClients": "Total Clients",
+    "activeRoles": "Active Roles",
+    "systemHealth": "System Health",
+    "recentActivity": "Recent Activity",
+    "userGrowth": "User Growth",
+    "roleDistribution": "Role Distribution",
+    "permissions": "Permissions"
+  },
+  "stats": {
+    "users": "users",
+    "clients": "clients",
+    "roles": "roles",
+    "healthy": "healthy",
+    "warning": "warning",
+    "critical": "critical",
+    "thisMonth": "this month",
+    "lastMonth": "last month",
+    "growth": "growth",
+    "decline": "decline"
+  },
+  "activity": {
+    "title": "Recent Activity",
+    "userCreated": "User created",
+    "roleAssigned": "Role assigned",
+    "permissionGranted": "Permission granted",
+    "clientAdded": "Client added",
+    "viewAll": "View all"
+  }
+}

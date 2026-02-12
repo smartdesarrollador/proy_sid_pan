@@ -1,0 +1,22 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "users": "Usuarios",
+    "clients": "Clientes",
+    "roles": "Roles",
+    "permissions": "Permisos",
+    "subscription": "Suscripción",
+    "audit": "Auditoría",
+    "settings": "Configuración"
+  },
+  "upgrade": {
+    "title": "¿Necesitas más usuarios?",
+    "description": "Actualiza a Enterprise para usuarios ilimitados",
+    "button": "Ver planes"
+  },
+  "sections": {
+    "main": "Principal",
+    "management": "Gestión",
+    "system": "Sistema"
+  }
+}

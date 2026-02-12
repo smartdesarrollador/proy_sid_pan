@@ -1,0 +1,37 @@
+{
+  "title": "Gestión de Usuarios",
+  "addUser": "Agregar Usuario",
+  "editUser": "Editar Usuario",
+  "deleteUser": "Eliminar Usuario",
+  "userDetails": "Detalles del Usuario",
+  "table": {
+    "name": "Nombre",
+    "email": "Email",
+    "role": "Rol",
+    "status": "Estado",
+    "lastLogin": "Último acceso",
+    "actions": "Acciones"
+  },
+  "form": {
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Email",
+    "role": "Rol",
+    "status": "Estado",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "selectRole": "Seleccionar rol",
+    "selectStatus": "Seleccionar estado"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "suspended": "Suspendido"
+  },
+  "messages": {
+    "createSuccess": "Usuario creado exitosamente",
+    "updateSuccess": "Usuario actualizado exitosamente",
+    "deleteSuccess": "Usuario eliminado exitosamente",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar al usuario {{name}}?"
+  }
+}

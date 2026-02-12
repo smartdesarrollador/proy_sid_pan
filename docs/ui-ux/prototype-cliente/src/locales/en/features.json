@@ -1,0 +1,45 @@
+{
+  "upgrade": {
+    "maxActiveTasks": {
+      "title": "Task Limit Reached",
+      "message": "Your current plan allows up to {{limit}} active tasks. Upgrade to {{requiredPlan}} to create more tasks.",
+      "feature": "Unlimited Tasks",
+      "action": "View Plans"
+    },
+    "kanbanView": {
+      "title": "Kanban View Not Available",
+      "message": "Kanban view is available on the {{requiredPlan}} plan.",
+      "feature": "Kanban View",
+      "action": "Upgrade Plan"
+    },
+    "maxProjects": {
+      "title": "Project Limit Reached",
+      "message": "Your current plan allows up to {{limit}} projects. Upgrade to {{requiredPlan}} to create more projects.",
+      "feature": "Additional Projects",
+      "action": "View Plans"
+    },
+    "maxSectionsPerProject": {
+      "title": "Section Limit Reached",
+      "message": "Your current plan allows up to {{limit}} sections per project. Upgrade to {{requiredPlan}} to add more sections.",
+      "feature": "Additional Sections",
+      "action": "View Plans"
+    },
+    "recurringEvents": {
+      "title": "Recurring Events Not Available",
+      "message": "Recurring events are available on the {{requiredPlan}} plan.",
+      "feature": "Recurring Events",
+      "action": "Upgrade Plan"
+    },
+    "fileStorage": {
+      "title": "Storage Limit Reached",
+      "message": "You've reached your {{limit}}GB limit. Upgrade to {{requiredPlan}} for more space.",
+      "feature": "Additional Storage",
+      "action": "View Plans"
+    }
+  },
+  "limits": {
+    "reached": "Limit reached",
+    "remaining": "{{count}} available",
+    "unlimited": "Unlimited"
+  }
+}

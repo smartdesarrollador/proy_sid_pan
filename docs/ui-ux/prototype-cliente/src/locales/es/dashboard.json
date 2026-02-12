@@ -1,0 +1,33 @@
+{
+  "title": "Dashboard",
+  "welcome": "Bienvenido de nuevo",
+  "widgets": {
+    "myTasks": "Mis Tareas",
+    "upcomingEvents": "Próximos Eventos",
+    "recentProjects": "Proyectos Recientes",
+    "quickStats": "Estadísticas Rápidas",
+    "recentActivity": "Actividad Reciente",
+    "notifications": "Notificaciones"
+  },
+  "stats": {
+    "totalTasks": "Total de Tareas",
+    "completedTasks": "Tareas Completadas",
+    "pendingTasks": "Tareas Pendientes",
+    "totalProjects": "Total de Proyectos",
+    "activeProjects": "Proyectos Activos",
+    "upcomingEvents": "Próximos Eventos",
+    "completionRate": "Tasa de Completitud"
+  },
+  "quickActions": {
+    "title": "Acciones Rápidas",
+    "newTask": "Nueva Tarea",
+    "newProject": "Nuevo Proyecto",
+    "newEvent": "Nuevo Evento",
+    "viewAll": "Ver todo"
+  },
+  "empty": {
+    "tasks": "No tienes tareas pendientes",
+    "events": "No tienes eventos próximos",
+    "projects": "No tienes proyectos activos"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "title": "Role Management",
+  "addRole": "Add Role",
+  "editRole": "Edit Role",
+  "deleteRole": "Delete Role",
+  "roleDetails": "Role Details",
+  "permissions": "Permissions",
+  "assignPermissions": "Assign Permissions",
+  "table": {
+    "name": "Name",
+    "description": "Description",
+    "users": "Users",
+    "permissions": "Permissions",
+    "actions": "Actions"
+  },
+  "form": {
+    "name": "Role name",
+    "description": "Description",
+    "selectPermissions": "Select permissions"
+  },
+  "categories": {
+    "users": "Users",
+    "roles": "Roles",
+    "clients": "Clients",
+    "system": "System",
+    "reports": "Reports"
+  },
+  "actions": {
+    "create": "Create",
+    "read": "Read",
+    "update": "Update",
+    "delete": "Delete"
+  },
+  "messages": {
+    "createSuccess": "Role created successfully",
+    "updateSuccess": "Role updated successfully",
+    "deleteSuccess": "Role deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete role {{name}}?"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "upgrade": {
+    "maxUsers": {
+      "title": "User Limit Reached",
+      "message": "Your current plan allows up to {{limit}} users. Upgrade to {{requiredPlan}} to add more users.",
+      "feature": "Additional Users",
+      "action": "View Plans"
+    },
+    "maxClients": {
+      "title": "Client Limit Reached",
+      "message": "Your current plan allows up to {{limit}} clients. Upgrade to {{requiredPlan}} to add more clients.",
+      "feature": "Additional Clients",
+      "action": "View Plans"
+    },
+    "maxRoles": {
+      "title": "Role Limit Reached",
+      "message": "Your current plan allows up to {{limit}} roles. Upgrade to {{requiredPlan}} to create more roles.",
+      "feature": "Additional Roles",
+      "action": "View Plans"
+    },
+    "auditLogs": {
+      "title": "Audit Logs Not Available",
+      "message": "Audit logs are available on the {{requiredPlan}} plan.",
+      "feature": "Audit Logs",
+      "action": "Upgrade Plan"
+    },
+    "advancedPermissions": {
+      "title": "Advanced Permissions Not Available",
+      "message": "Advanced permissions are available on the {{requiredPlan}} plan.",
+      "feature": "Advanced Permissions",
+      "action": "Upgrade Plan"
+    }
+  },
+  "limits": {
+    "reached": "Limit reached",
+    "remaining": "{{count}} available",
+    "unlimited": "Unlimited"
+  }
+}

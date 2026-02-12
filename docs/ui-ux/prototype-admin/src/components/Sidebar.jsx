@@ -9,21 +9,23 @@ import {
   Building2
 } from 'lucide-react';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { usePermissions } from '../hooks/usePermissions';
 
-const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard.read' },
-  { id: 'users', label: 'Usuarios', icon: Users, permission: 'users.read' },
-  { id: 'clients', label: 'Clientes', icon: Building2, permission: 'customers.read' },
-  { id: 'roles', label: 'Roles', icon: Shield, permission: 'roles.read' },
-  { id: 'permissions', label: 'Permisos', icon: Key, permission: 'permissions.read' },
-  { id: 'subscription', label: 'Suscripción', icon: CreditCard, permission: 'billing.read' },
-  { id: 'audit', label: 'Auditoría', icon: FileText, permission: 'audit.read' },
-  { id: 'settings', label: 'Configuración', icon: Settings, permission: 'settings.read' },
-];
-
 function Sidebar({ isOpen, activeView, onNavigate }) {
+  const { t } = useTranslation('sidebar');
   const { hasPermission, canUpgradePlan } = usePermissions();
+
+  const menuItems = [
+    { id: 'dashboard', label: t('menu.dashboard'), icon: LayoutDashboard, permission: 'dashboard.read' },
+    { id: 'users', label: t('menu.users'), icon: Users, permission: 'users.read' },
+    { id: 'clients', label: t('menu.clients'), icon: Building2, permission: 'customers.read' },
+    { id: 'roles', label: t('menu.roles'), icon: Shield, permission: 'roles.read' },
+    { id: 'permissions', label: t('menu.permissions'), icon: Key, permission: 'permissions.read' },
+    { id: 'subscription', label: t('menu.subscription'), icon: CreditCard, permission: 'billing.read' },
+    { id: 'audit', label: t('menu.audit'), icon: FileText, permission: 'audit.read' },
+    { id: 'settings', label: t('menu.settings'), icon: Settings, permission: 'settings.read' },
+  ];
 
   if (!isOpen) return null;
 

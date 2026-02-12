@@ -1,0 +1,95 @@
+{
+  "title": "Projects",
+  "newProject": "New Project",
+  "editProject": "Edit Project",
+  "deleteProject": "Delete Project",
+  "projectDetails": "Project Details",
+  "sections": "Sections",
+  "items": "Items",
+  "fields": "Fields",
+  "newSection": "New Section",
+  "newItem": "New Item",
+  "addField": "Add Field",
+  "form": {
+    "name": "Name",
+    "description": "Description",
+    "color": "Color",
+    "icon": "Icon",
+    "type": "Type",
+    "category": "Category",
+    "members": "Members",
+    "selectColor": "Select color",
+    "selectIcon": "Select icon",
+    "selectType": "Select type",
+    "selectCategory": "Select category",
+    "addMember": "Add member"
+  },
+  "types": {
+    "login": "Login",
+    "card": "Card",
+    "note": "Note",
+    "identity": "Identity",
+    "database": "Database",
+    "api": "API",
+    "wifi": "WiFi",
+    "custom": "Custom"
+  },
+  "fieldTypes": {
+    "text": "Text",
+    "password": "Password",
+    "email": "Email",
+    "url": "URL",
+    "number": "Number",
+    "date": "Date",
+    "textarea": "Text Area",
+    "select": "Select"
+  },
+  "actions": {
+    "favorite": "Favorite",
+    "tags": "Tags",
+    "info": "Info",
+    "reveal": "Reveal",
+    "hide": "Hide",
+    "collapseAll": "Collapse all",
+    "expandAll": "Expand all",
+    "search": "Search in project",
+    "members": "Members"
+  },
+  "messages": {
+    "createSuccess": "Project created successfully",
+    "updateSuccess": "Project updated successfully",
+    "deleteSuccess": "Project deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete project '{{name}}'?",
+    "sectionCreateSuccess": "Section created successfully",
+    "itemCreateSuccess": "Item created successfully",
+    "fieldCreateSuccess": "Field added successfully",
+    "copied": "Copied to clipboard",
+    "passwordRevealed": "Password visible for 30 seconds"
+  },
+  "empty": {
+    "projects": {
+      "title": "No projects",
+      "description": "Create your first project to get started",
+      "action": "Create Project"
+    },
+    "sections": {
+      "title": "No sections",
+      "description": "Add a section to organize your items",
+      "action": "New Section"
+    },
+    "items": {
+      "title": "No items",
+      "description": "Select a section to view its items"
+    },
+    "fields": {
+      "title": "No fields",
+      "description": "Select an item to view its fields"
+    }
+  },
+  "security": {
+    "encrypted": "Encrypted",
+    "revealPassword": "Reveal password",
+    "hidePassword": "Hide password",
+    "copyPassword": "Copy password"
+  }
+}

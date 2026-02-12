@@ -1,11 +1,14 @@
 import { Menu, Bell, Settings, User, LogOut, ChevronDown, Shield } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { currentTenant } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import ThemeToggle from './shared/ThemeToggle';
+import LanguageSwitcher from './LanguageSwitcher';
 
 function Navbar({ onMenuClick }) {
+  const { t } = useTranslation('navbar');
   const { currentUser, logout } = useAuth();
   const { getPrimaryRole, getRoleColor } = usePermissions();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -62,8 +65,11 @@ function Navbar({ onMenuClick }) {
           {/* Plan badge */}
           <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg text-sm font-medium">
             <span className="w-2 h-2 bg-primary-500 dark:bg-primary-400 rounded-full"></span>
-            Plan Professional
+            {t('plan.label')} {t('plan.professional')}
           </div>
+
+          {/* Language Switcher */}
+          <LanguageSwitcher />
 
           {/* Theme Toggle */}
           <ThemeToggle />
@@ -117,7 +123,7 @@ function Navbar({ onMenuClick }) {
 
                 <button className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                   <Settings className="w-4 h-4" />
-                  Configuración
+                  {t('userMenu.settings')}
                 </button>
 
                 <button
@@ -125,7 +131,7 @@ function Navbar({ onMenuClick }) {
                   className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
-                  Cerrar sesión
+                  {t('userMenu.logout')}
                 </button>
               </div>
             )}
