@@ -36,7 +36,7 @@ export const TasksWidget = ({ onNavigate }) => {
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Mis Tareas</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Mis Tareas</h3>
         <button
           onClick={() => onNavigate ? onNavigate('tasks') : alert('Navegar a TaskBoard')}
           className="text-sm text-primary-600 hover:text-primary-700 font-medium"
@@ -57,10 +57,10 @@ export const TasksWidget = ({ onNavigate }) => {
             <div
               key={task.id}
               onClick={() => handleTaskClick(task)}
-              className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+              className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
             >
               <div className="flex items-start justify-between mb-2">
-                <h4 className="font-medium text-gray-900 text-sm flex-1">
+                <h4 className="font-medium text-gray-900 dark:text-white text-sm flex-1">
                   {task.title}
                 </h4>
               </div>
@@ -71,7 +71,7 @@ export const TasksWidget = ({ onNavigate }) => {
               </div>
 
               {task.dueDate && (
-                <div className="flex items-center gap-1 text-xs text-gray-600">
+                <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
                   <Calendar className="w-3 h-3" />
                   Vence: {task.dueDate}
                 </div>

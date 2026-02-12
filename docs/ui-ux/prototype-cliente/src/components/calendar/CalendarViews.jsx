@@ -66,9 +66,9 @@ const MonthView = ({ currentDate, events, onEventClick, onDateClick }) => {
   return (
     <div className="card overflow-hidden">
       {/* Días de la semana */}
-      <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+      <div className="grid grid-cols-7 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
         {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(day => (
-          <div key={day} className="p-2 text-center text-sm font-semibold text-gray-700">
+          <div key={day} className="p-2 text-center text-sm font-semibold text-gray-700 dark:text-gray-200">
             {day}
           </div>
         ))}
@@ -83,8 +83,8 @@ const MonthView = ({ currentDate, events, onEventClick, onDateClick }) => {
           return (
             <div
               key={index}
-              className={`min-h-[120px] p-2 border-r border-b border-gray-200 hover:bg-gray-50 cursor-pointer ${
-                !dayObj.isCurrentMonth ? 'bg-gray-50' : ''
+              className={`min-h-[120px] p-2 border-r border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
+                !dayObj.isCurrentMonth ? 'bg-gray-50 dark:bg-gray-700' : ''
               }`}
               onClick={() => {
                 if (dayObj.isCurrentMonth) {
@@ -94,7 +94,7 @@ const MonthView = ({ currentDate, events, onEventClick, onDateClick }) => {
               }}
             >
               <div className={`text-sm font-medium mb-1 ${
-                !dayObj.isCurrentMonth ? 'text-gray-400' : isTodayDate ? 'text-primary-600 font-bold' : 'text-gray-900'
+                !dayObj.isCurrentMonth ? 'text-gray-400 dark:text-gray-500' : isTodayDate ? 'text-primary-600 font-bold' : 'text-gray-900 dark:text-white'
               }`}>
                 {isTodayDate && (
                   <span className="inline-flex items-center justify-center w-6 h-6 bg-primary-600 text-white rounded-full text-xs">
@@ -116,7 +116,7 @@ const MonthView = ({ currentDate, events, onEventClick, onDateClick }) => {
                   </div>
                 ))}
                 {dayEvents.length > 3 && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     +{dayEvents.length - 3} más
                   </div>
                 )}
@@ -163,16 +163,16 @@ const WeekView = ({ currentDate, events, onEventClick, onDeleteEvent }) => {
     <div className="card overflow-x-auto">
       <div className="min-w-[800px]">
         {/* Header con días */}
-        <div className="grid grid-cols-8 bg-gray-50 border-b border-gray-200 sticky top-0">
-          <div className="p-2 text-sm font-semibold text-gray-700 border-r border-gray-200">
+        <div className="grid grid-cols-8 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 sticky top-0">
+          <div className="p-2 text-sm font-semibold text-gray-700 dark:text-gray-200 border-r border-gray-200 dark:border-gray-700">
             Hora
           </div>
           {weekDays.map((date, index) => (
-            <div key={index} className={`p-2 text-center border-r border-gray-200 ${isToday(date) ? 'bg-primary-50' : ''}`}>
-              <div className="text-xs text-gray-600">
+            <div key={index} className={`p-2 text-center border-r border-gray-200 dark:border-gray-700 ${isToday(date) ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}>
+              <div className="text-xs text-gray-600 dark:text-gray-300">
                 {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][index]}
               </div>
-              <div className={`text-sm font-semibold ${isToday(date) ? 'text-primary-600' : 'text-gray-900'}`}>
+              <div className={`text-sm font-semibold ${isToday(date) ? 'text-primary-600' : 'text-gray-900 dark:text-white'}`}>
                 {date.getDate()}
               </div>
             </div>
@@ -181,14 +181,14 @@ const WeekView = ({ currentDate, events, onEventClick, onDeleteEvent }) => {
 
         {/* Grid de horas */}
         {hours.map(hour => (
-          <div key={hour} className="grid grid-cols-8 border-b border-gray-200">
-            <div className="p-2 text-sm text-gray-600 border-r border-gray-200">
+          <div key={hour} className="grid grid-cols-8 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-2 text-sm text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
               {hour}:00
             </div>
             {weekDays.map((date, index) => {
               const hourEvents = getEventsForDateTime(date, hour);
               return (
-                <div key={index} className="min-h-[60px] p-1 border-r border-gray-200 hover:bg-gray-50">
+                <div key={index} className="min-h-[60px] p-1 border-r border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                   {hourEvents.map(event => (
                     <EventCard
                       key={event.id}
@@ -223,8 +223,8 @@ const DayView = ({ currentDate, events, onEventClick, onDeleteEvent }) => {
 
   return (
     <div className="card">
-      <div className="bg-gray-50 border-b border-gray-200 p-4">
-        <h3 className="text-lg font-semibold text-gray-900">
+      <div className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 p-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           {currentDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </h3>
       </div>
@@ -233,8 +233,8 @@ const DayView = ({ currentDate, events, onEventClick, onDeleteEvent }) => {
         {hours.map(hour => {
           const hourEvents = getEventsForHour(hour);
           return (
-            <div key={hour} className="flex border-b border-gray-200">
-              <div className="w-24 p-3 text-sm text-gray-600 border-r border-gray-200">
+            <div key={hour} className="flex border-b border-gray-200 dark:border-gray-700">
+              <div className="w-24 p-3 text-sm text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
                 {hour}:00
               </div>
               <div className="flex-1 min-h-[80px] p-3 space-y-2">

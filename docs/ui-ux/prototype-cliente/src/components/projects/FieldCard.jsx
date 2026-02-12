@@ -35,12 +35,12 @@ export const FieldCard = ({
       if (isPasswordRevealed) {
         return (
           <div className="flex items-center gap-2">
-            <p className="text-base text-gray-900 break-words font-mono">
+            <p className="text-base text-gray-900 dark:text-white break-words font-mono">
               {field.fieldValue === '••••••••••••' ? 'P@ssw0rd123!' : field.fieldValue}
             </p>
             <button
               onClick={() => setIsPasswordRevealed(false)}
-              className="p-1 text-gray-500 hover:text-gray-700"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               title="Ocultar"
             >
               <EyeOff className="w-4 h-4" />
@@ -50,13 +50,13 @@ export const FieldCard = ({
       }
       return (
         <div className="flex items-center gap-2">
-          <p className="text-base text-gray-900 font-mono tracking-wider">
+          <p className="text-base text-gray-900 dark:text-white font-mono tracking-wider">
             ••••••••••••
           </p>
           {canRevealPasswords() && (
             <button
               onClick={handleRevealPassword}
-              className="p-1 text-gray-500 hover:text-gray-700"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               title="Revelar contraseña"
             >
               <Eye className="w-4 h-4" />
@@ -72,7 +72,7 @@ export const FieldCard = ({
           href={field.fieldValue}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary-600 hover:underline break-all text-sm"
+          className="text-primary-600 dark:text-primary-400 hover:underline break-all text-sm"
         >
           {field.fieldValue}
         </a>
@@ -83,7 +83,7 @@ export const FieldCard = ({
       return (
         <a
           href={`mailto:${field.fieldValue}`}
-          className="text-primary-600 hover:underline text-sm"
+          className="text-primary-600 dark:text-primary-400 hover:underline text-sm"
         >
           {field.fieldValue}
         </a>
@@ -92,7 +92,7 @@ export const FieldCard = ({
 
     if (field.fieldType === 'date') {
       return (
-        <p className="text-base text-gray-900">
+        <p className="text-base text-gray-900 dark:text-white">
           {new Date(field.fieldValue).toLocaleDateString('es-ES', {
             year: 'numeric',
             month: 'long',
@@ -104,7 +104,7 @@ export const FieldCard = ({
 
     // Default: text
     return (
-      <p className="text-base text-gray-900 break-words">
+      <p className="text-base text-gray-900 dark:text-white break-words">
         {field.fieldValue}
       </p>
     );
@@ -114,11 +114,11 @@ export const FieldCard = ({
     <div className="card p-4 hover:shadow-md transition-shadow">
       {/* Label del campo */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm font-medium text-gray-600">
+        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
           • {field.fieldName}
         </span>
         {field.isEncrypted && (
-          <Lock className="w-3 h-3 text-green-600" title="Encriptado AES-256" />
+          <Lock className="w-3 h-3 text-green-600 dark:text-green-400" title="Encriptado AES-256" />
         )}
       </div>
 
@@ -128,18 +128,18 @@ export const FieldCard = ({
       </div>
 
       {/* Actions bar */}
-      <div className="flex items-center justify-end gap-1 pt-3 border-t">
+      <div className="flex items-center justify-end gap-1 pt-3 border-t dark:border-gray-700">
         {/* Favorito */}
         <button
           onClick={() => onToggleFavorite(field.id)}
-          className="p-1.5 rounded hover:bg-yellow-50 transition-colors"
+          className="p-1.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors"
           title="Favorito"
         >
           <Star
             className={`w-4 h-4 ${
               isFavorite
                 ? 'fill-yellow-500 text-yellow-500'
-                : 'text-gray-400'
+                : 'text-gray-400 dark:text-gray-500'
             }`}
           />
         </button>
@@ -147,20 +147,20 @@ export const FieldCard = ({
         {/* Tags */}
         <button
           onClick={() => onTags(field.id)}
-          className="p-1.5 rounded hover:bg-orange-50 transition-colors"
+          className="p-1.5 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
           title="Tags"
         >
-          <Tag className="w-4 h-4 text-gray-600" />
+          <Tag className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         </button>
 
         {/* Editar */}
         {canEditProjectItems() && (
           <button
             onClick={() => onEdit(field)}
-            className="p-1.5 rounded hover:bg-blue-50 transition-colors"
+            className="p-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
             title="Editar"
           >
-            <Edit2 className="w-4 h-4 text-gray-600" />
+            <Edit2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           </button>
         )}
 
@@ -172,29 +172,29 @@ export const FieldCard = ({
               : field.fieldValue;
             onCopy(valueToCopy);
           }}
-          className="p-1.5 rounded hover:bg-gray-50 transition-colors"
+          className="p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           title="Copiar"
         >
-          <Copy className="w-4 h-4 text-gray-600" />
+          <Copy className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         </button>
 
         {/* Info */}
         <button
           onClick={() => onShowInfo(field)}
-          className="p-1.5 rounded hover:bg-blue-50 transition-colors"
+          className="p-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
           title="Información"
         >
-          <Info className="w-4 h-4 text-gray-600" />
+          <Info className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         </button>
 
         {/* Eliminar */}
         {canDeleteProjectItems() && (
           <button
             onClick={() => onDelete(field.id)}
-            className="p-1.5 rounded hover:bg-red-50 transition-colors"
+            className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             title="Eliminar"
           >
-            <Trash2 className="w-4 h-4 text-red-600" />
+            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
           </button>
         )}
       </div>

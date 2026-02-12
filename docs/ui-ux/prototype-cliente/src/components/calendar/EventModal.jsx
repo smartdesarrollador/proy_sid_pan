@@ -123,13 +123,13 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {event ? 'Editar Evento' : 'Nuevo Evento'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -138,7 +138,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Título */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Título <span className="text-red-500">*</span>
             </label>
             <input
@@ -153,7 +153,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
 
           {/* Descripción */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Descripción
             </label>
             <textarea
@@ -175,7 +175,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Hora inicio <span className="text-red-500">*</span>
               </label>
               <input
@@ -198,7 +198,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Hora fin <span className="text-red-500">*</span>
               </label>
               <input
@@ -213,7 +213,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
 
           {/* Ubicación */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Ubicación
             </label>
             <input
@@ -235,7 +235,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
 
           {/* Categoría */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Categoría
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -247,7 +247,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
                   className={`p-2 rounded-lg border-2 text-sm font-medium transition-all ${
                     formData.category === cat.id
                       ? 'border-current shadow-sm'
-                      : 'border-gray-200 hover:border-gray-300'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                   style={{
                     color: formData.category === cat.id ? cat.color : '#6b7280',
@@ -262,7 +262,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
 
           {/* Participantes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Participantes
             </label>
             <select
@@ -281,17 +281,17 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples
             </p>
           </div>
 
           {/* Recurrencia */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Recurrencia
               {!hasFeature('recurringEvents') && (
-                <span className="ml-2 text-xs text-gray-500">(Plan Professional)</span>
+                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(Plan Professional)</span>
               )}
             </label>
             <select
@@ -313,7 +313,7 @@ export const EventModal = ({ isOpen, onClose, onSave, event, preselectedDate }) 
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancelar
             </button>

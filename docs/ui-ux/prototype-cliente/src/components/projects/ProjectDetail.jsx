@@ -4,6 +4,7 @@ import { ProjectTree } from './ProjectTree';
 import { FieldCardsGrid } from './FieldCardsGrid';
 import { SectionModal } from './SectionModal';
 import { EmptyState } from '../shared/EmptyState';
+import ShareButton from '../sharing/ShareButton';
 import {
   projects,
   getSectionsByProject,
@@ -130,15 +131,15 @@ export const ProjectDetail = ({ projectId, onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white border-b px-6 py-4 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           {/* Left: Breadcrumb */}
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Volver a proyectos"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -152,8 +153,8 @@ export const ProjectDetail = ({ projectId, onBack }) => {
                 {project.name.charAt(0)}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">{project.name}</h1>
-                <p className="text-sm text-gray-600">{project.description}</p>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{project.description}</p>
               </div>
             </div>
           </div>
@@ -183,6 +184,16 @@ export const ProjectDetail = ({ projectId, onBack }) => {
               <Users className="w-4 h-4" />
               Miembros ({project.membersCount})
             </button>
+
+            <ShareButton
+              resourceType="project"
+              resourceId={project.id}
+              resourceName={project.name}
+              currentUserRole="owner"
+              size="md"
+              variant="secondary"
+              currentPlan="professional"
+            />
           </div>
         </div>
       </div>

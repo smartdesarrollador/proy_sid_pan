@@ -31,32 +31,32 @@ export const MetricsWidget = () => {
       label: 'Tareas Completadas',
       value: stats.tasksCompleted,
       icon: CheckCircle,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
+      color: 'text-green-600 dark:text-green-400',
+      bgColor: 'bg-green-100 dark:bg-green-900/30',
       trend: '+12% vs mes anterior'
     },
     {
       label: 'Tareas en Progreso',
       value: myTasksInProgress,
       icon: Clock,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-100 dark:bg-blue-900/30',
       trend: null
     },
     {
       label: 'Eventos Próximos',
       value: upcomingEventsCount,
       icon: Calendar,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
+      color: 'text-purple-600 dark:text-purple-400',
+      bgColor: 'bg-purple-100 dark:bg-purple-900/30',
       trend: 'Próximos 7 días'
     },
     {
       label: 'Productividad',
       value: '94%',
       icon: TrendingUp,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
+      color: 'text-orange-600 dark:text-orange-400',
+      bgColor: 'bg-orange-100 dark:bg-orange-900/30',
       trend: '+5% esta semana'
     }
   ];
@@ -72,16 +72,16 @@ export const MetricsWidget = () => {
           </div>
 
           <div className="mb-1">
-            <div className="text-3xl font-bold text-gray-900">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white">
               {metric.value}
             </div>
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
               {metric.label}
             </div>
           </div>
 
           {metric.trend && (
-            <div className="text-xs text-gray-500 mt-2">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               {metric.trend}
             </div>
           )}

@@ -188,6 +188,101 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 6. Exporta y entrega a auditor
 **Criterio de éxito**: Reporte generado en <30 segundos, inmutable (no modificable retroactivamente)
 
+#### CU-006: Compartir Proyecto con Control de Permisos
+
+**Actor**: Project Owner / Admin
+**Flujo principal**:
+1. Usuario abre proyecto "Sistema de Autenticación"
+2. Click en botón "Miembros" (header superior derecho)
+3. Modal muestra:
+   - Lista de miembros actuales con sus roles
+   - Botón "+ Agregar Miembro"
+4. Click "+ Agregar Miembro"
+5. Selector muestra usuarios de la organización
+6. Selecciona "Mike Chen"
+7. Dropdown de nivel de acceso: Viewer, Commenter, Editor, Admin
+8. Selecciona "Editor"
+9. Toggle "Notificar por email" (checked por default)
+10. Click "Compartir"
+11. Sistema valida:
+    - Usuario tiene permiso `project.share`
+    - No excede límite de plan (Professional: max 50 usuarios)
+    - Mike Chen pertenece a misma organización
+12. Backend crea registro en tabla `shares`
+13. Mike Chen recibe notificación email + in-app
+14. Proyecto aparece en "Compartidos conmigo" de Mike
+15. Audit log registra: `share.created` con metadatos
+
+**Tiempo objetivo**: <2 minutos desde inicio hasta compartición exitosa
+
+**Flujos alternativos**:
+- **Alt-1**: Límite de plan alcanzado → UpgradePrompt con comparación de planes
+- **Alt-2**: Usuario sin permiso → Error "No tienes permiso para compartir este proyecto"
+- **Alt-3**: Usuario ya tiene acceso → Actualizar nivel de acceso existente
+
+#### CU-007: Revocar Acceso a Elemento Compartido
+
+**Actor**: Project Admin / Owner
+**Flujo principal**:
+1. Usuario abre proyecto compartido
+2. Click en "Miembros" → Lista usuarios con acceso
+3. Click en menú de opciones (•••) junto a "Mike Chen"
+4. Selecciona "Remover acceso"
+5. Modal de confirmación:
+   - "¿Remover acceso de Mike Chen?"
+   - "Mike perderá acceso inmediato al proyecto y todos sus elementos"
+   - Checkbox "Notificar a Mike por email"
+   - Botones: [Cancelar] [Remover Acceso]
+6. Click "Remover Acceso"
+7. Backend:
+   - Valida permiso `project.share_admin`
+   - Elimina registro de tabla `shares`
+   - Invalida sesiones activas de Mike en ese proyecto
+8. Mike recibe notificación (si checkbox checked)
+9. Proyecto desaparece de "Compartidos conmigo" de Mike
+10. Audit log registra: `share.revoked` con motivo
+
+**Tiempo objetivo**: <1 minuto desde inicio hasta revocación
+
+**Validaciones críticas**:
+- No permitir remover último usuario admin (sistema previene)
+- No permitir remover owner (solo transferir ownership)
+
+#### CU-008: Gestionar Herencia de Permisos en Proyecto
+
+**Actor**: Project Owner
+**Flujo principal**:
+1. Usuario comparte proyecto "Sistema Autenticación" con Alice: Editor
+2. Proyecto tiene 3 secciones:
+   - "Credenciales Prod" (5 items)
+   - "Configuración JWT" (4 items)
+   - "Documentación" (3 items)
+3. Permisos se heredan automáticamente:
+   - Alice → Editor en todas las secciones e items
+4. Usuario quiere que Alice sea Admin solo en "Documentación"
+5. Click en sección "Documentación" → Menú → "Permisos"
+6. Modal muestra permisos de sección:
+   - Alice: Editor (heredado de proyecto)
+7. Click "Cambiar permiso local"
+8. Selecciona "Admin"
+9. Icon "🔒" indica permiso local (no heredado)
+10. Ahora Alice tiene:
+    - Editor en "Credenciales Prod" (heredado)
+    - Editor en "Configuración JWT" (heredado)
+    - Admin en "Documentación" (local) ← Puede compartir esta sección
+11. Usuario cambia permiso del proyecto Alice: Editor → Viewer
+12. Permisos heredados actualizan:
+    - Viewer en "Credenciales Prod"
+    - Viewer en "Configuración JWT"
+    - Admin en "Documentación" (local, no cambia)
+
+**Tiempo objetivo**: Cambios aplicados en <5 segundos
+
+**Criterios de éxito**:
+- UI muestra claramente permisos heredados vs locales
+- Permisos locales no se sobrescriben al cambiar padre
+- Usuario entiende jerarquía de permisos sin confusión
+
 ### 2.4 Alcance del MVP y Fases Futuras
 
 #### MVP (12 semanas) - Core Features
@@ -1083,6 +1178,116 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
+### 3.6 Compartición y Colaboración
+
+**US-032: Compartir Elemento Individual**
+
+**Como** usuario con permisos de administración en un elemento,
+**Quiero** compartir ese elemento con otros usuarios de mi organización y asignar niveles de acceso,
+**Para** colaborar eficientemente sin duplicar información.
+
+**Criterios de aceptación:**
+- [ ] Puedo acceder a opción "Compartir" desde elemento (proyecto, tarea, archivo, etc.)
+- [ ] Modal muestra lista de usuarios de mi organización
+- [ ] Puedo seleccionar 1+ usuarios y asignar nivel de acceso (Viewer, Editor, etc.)
+- [ ] Sistema valida que tengo permisos de compartición antes de permitirlo
+- [ ] Usuarios receptores reciben notificación de compartición
+- [ ] Elemento aparece en su sección "Compartidos conmigo"
+- [ ] Puedo ver lista de usuarios con acceso y sus niveles
+- [ ] Feature gate verifica límites de mi plan antes de compartir
+
+**Escenarios de prueba:**
+- Compartir proyecto con colega como Editor → Colega puede editar
+- Compartir archivo como Viewer → Colega solo puede ver
+- Intentar compartir sin permisos → Sistema muestra error
+- Alcanzar límite de plan → Mostrar UpgradePrompt
+
+---
+
+**US-033: Gestionar Permisos de Compartición**
+
+**Como** usuario admin de un elemento compartido,
+**Quiero** cambiar niveles de acceso y revocar acceso de usuarios,
+**Para** mantener control sobre quién puede hacer qué.
+
+**Criterios de aceptación:**
+- [ ] Puedo acceder a lista de usuarios con acceso al elemento
+- [ ] Puedo cambiar nivel de acceso de cualquier usuario (excepto owner)
+- [ ] Puedo revocar acceso de usuario con confirmación
+- [ ] Cambios se aplican inmediatamente
+- [ ] Sistema notifica usuarios afectados por cambios
+- [ ] Audit log registra cambios con timestamp y autor
+- [ ] No puedo remover último usuario admin (prevención)
+
+**Escenarios de prueba:**
+- Cambiar Editor → Viewer → Usuario pierde permisos de edición
+- Revocar acceso → Usuario pierde acceso inmediatamente
+- Intentar remover último admin → Sistema previene
+
+---
+
+**US-034: Compartir Grupo de Elementos con Herencia**
+
+**Como** usuario owner de un proyecto,
+**Quiero** compartir el proyecto completo (secciones + items) en 1 acción,
+**Para** no tener que compartir cada elemento individualmente.
+
+**Criterios de aceptación:**
+- [ ] Opción "Compartir proyecto completo" comparte todas sus secciones e items
+- [ ] Permisos se heredan automáticamente a elementos hijos
+- [ ] Puedo configurar permisos locales en elementos específicos
+- [ ] UI muestra claramente qué permisos son heredados vs locales
+- [ ] Cambiar permiso del padre actualiza permisos heredados de hijos
+- [ ] Feature gate verifica que mi plan permite compartir grupos
+
+**Escenarios de prueba:**
+- Compartir proyecto → Todos los items heredan permisos
+- Configurar permiso local → Sobrescribe heredado
+- Cambiar permiso del padre → Hijos actualizan
+
+---
+
+**US-035: Acceder a Elementos Compartidos Conmigo**
+
+**Como** usuario,
+**Quiero** ver lista de elementos que otros compartieron conmigo,
+**Para** acceder rápidamente a información colaborativa.
+
+**Criterios de aceptación:**
+- [ ] Sección "Compartidos conmigo" lista todos los elementos compartidos
+- [ ] Puedo filtrar por tipo de elemento (proyectos, tareas, archivos, etc.)
+- [ ] Puedo ver quién compartió cada elemento y con qué nivel
+- [ ] Puedo aceptar/rechazar compartición (opcional)
+- [ ] Notificaciones me alertan cuando alguien comparte algo conmigo
+
+**Escenarios de prueba:**
+- Colega comparte proyecto → Aparece en "Compartidos conmigo"
+- Filtrar por tareas → Solo muestra tareas compartidas
+- Click en elemento compartido → Accedo con permisos correctos
+
+---
+
+**US-036: Auditar Compartición para Compliance**
+
+**Como** Security Officer,
+**Quiero** generar reportes de quién tiene acceso a qué recursos,
+**Para** cumplir con auditorías de seguridad y compliance.
+
+**Criterios de aceptación:**
+- [ ] Puedo acceder a "Audit Logs → Shares"
+- [ ] Puedo filtrar por: recurso, usuario, fecha, tipo de evento
+- [ ] Puedo generar reporte CSV con: timestamp, actor, recurso, acción, nivel
+- [ ] Reporte incluye comparticiones activas + históricas
+- [ ] Reporte se genera en <30 segundos
+- [ ] Logs son inmutables (no modificables)
+
+**Escenarios de prueba:**
+- Generar reporte de proyecto sensible → Lista todos los accesos
+- Filtrar por usuario → Muestra todo lo compartido con ese usuario
+- Exportar CSV → Descarga correctamente
+
+---
+
 ## 4. Functional Requirements
 
 ### 4.1 Gestión de Usuarios
@@ -1309,6 +1514,261 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 - El sistema DEBE almacenar: usuario, acción, timestamp, IP, detalles del cambio
 - El sistema DEBE permitir consultar auditoría con filtros (usuario, fecha, acción)
 - El sistema DEBE permitir exportar logs de auditoría (Enterprise only)
+
+---
+
+### 4.6 Gestión de Permisos y Compartición de Elementos
+
+#### FR-032: Compartición de Elementos Individuales
+
+**Descripción:**
+Los usuarios pueden compartir elementos individuales (proyectos, tareas, eventos, archivos) con otros usuarios de su organización, asignando niveles de acceso específicos.
+
+**Elementos compartibles:**
+- Proyectos (project)
+- Secciones de proyecto (project_section)
+- Items de proyecto (project_item)
+- Tareas (task)
+- Eventos de calendario (event)
+- Archivos (file)
+- Documentos (document)
+- Notas (note)
+
+**Niveles de acceso:**
+- **Viewer**: Solo lectura, no puede editar ni comentar
+- **Commenter**: Ver + comentar/reaccionar (no editar contenido)
+- **Editor**: Ver + editar contenido (no cambiar permisos)
+- **Admin**: Todas las acciones + gestionar permisos de compartición
+
+**Tabla de permisos por nivel:**
+
+| Acción | Viewer | Commenter | Editor | Admin |
+|--------|--------|-----------|--------|-------|
+| Ver elemento | ✅ | ✅ | ✅ | ✅ |
+| Comentar | ❌ | ✅ | ✅ | ✅ |
+| Editar contenido | ❌ | ❌ | ✅ | ✅ |
+| Eliminar elemento | ❌ | ❌ | ❌ | ✅* |
+| Compartir con otros | ❌ | ❌ | ❌ | ✅ |
+| Cambiar permisos | ❌ | ❌ | ❌ | ✅ |
+| Revocar acceso | ❌ | ❌ | ❌ | ✅ |
+
+*Solo si el owner original lo permite
+
+**Validaciones:**
+- Usuario compartidor debe tener nivel `admin` o ser owner del elemento
+- Usuario receptor debe pertenecer a la misma organización (tenant)
+- No se puede compartir con uno mismo
+- No se puede asignar nivel superior al que tiene el compartidor
+- Backend valida permisos en cada operación (no confiar solo en UI)
+
+**Criterios de aceptación:**
+- Usuario puede compartir elemento con 1+ usuarios internos
+- Sistema valida permisos del compartidor antes de permitir compartición
+- Usuario receptor recibe notificación de compartición
+- Elemento aparece en sección "Compartidos conmigo" del receptor
+- Permisos se aplican inmediatamente sin reiniciar sesión
+- Audit log registra evento de compartición con timestamp, compartidor, receptor, nivel
+
+---
+
+#### FR-033: Compartición de Grupos de Elementos
+
+**Descripción:**
+Los usuarios pueden compartir grupos/colecciones de elementos con herencia de permisos en cascada.
+
+**Grupos compartibles:**
+- Proyecto completo → incluye todas sus secciones e items
+- Sección de proyecto → incluye todos sus items
+- Carpeta de archivos → incluye todos los archivos
+- Colección de tareas → incluye todas las tareas
+- Calendario completo → incluye todos los eventos
+
+**Herencia de permisos:**
+- **Permisos heredados**: Aplicados automáticamente desde el grupo padre
+- **Permisos locales**: Configurados específicamente en un elemento hijo
+- **Precedencia**: Permisos locales sobrescriben permisos heredados
+
+**Ejemplo de herencia:**
+```
+Proyecto "Sistema de Autenticación" (shared con Alice: Editor)
+  ├─ Sección "Credenciales Prod" (heredado: Editor)
+  │   ├─ Item "Database Admin" (heredado: Editor)
+  │   └─ Item "Redis Cache" (local: Admin) ← Alice tiene Admin aquí
+  └─ Sección "Documentación" (local: Viewer) ← Alice tiene Viewer aquí
+      └─ Item "Architecture Diagram" (heredado: Viewer)
+```
+
+**Conflictos de permisos:**
+- Si usuario tiene acceso directo + heredado, se aplica el **más permisivo**
+- Ejemplo: Usuario A tiene Viewer heredado + Editor local → Editor gana
+
+**Validaciones:**
+- Compartir grupo requiere permiso `element.share` + ser owner/admin
+- Herencia se recalcula al cambiar permisos del padre
+- Remover acceso al padre remueve acceso heredado a hijos (excepto locales)
+- Backend indexa shares para performance en queries jerárquicos
+
+**Criterios de aceptación:**
+- Usuario puede compartir proyecto completo en 1 acción
+- Permisos heredados se aplican automáticamente a elementos hijos
+- Permisos locales sobrescriben heredados correctamente
+- UI muestra claramente qué permisos son heredados vs locales
+- Cambiar permisos del padre actualiza hijos en <2 segundos
+
+---
+
+#### FR-034: Límites de Compartición por Plan de Suscripción
+
+**Descripción:**
+Cada plan de suscripción define límites sobre compartición de elementos.
+
+**Límites por plan:**
+
+| Feature | Free | Starter | Professional | Enterprise |
+|---------|------|---------|--------------|------------|
+| **Compartir elementos** | ❌ No disponible | ✅ Sí | ✅ Sí | ✅ Sí |
+| **Niveles de acceso** | - | Viewer, Editor | Todos | Todos |
+| **Max usuarios por elemento** | - | 5 | 50 | Ilimitado |
+| **Compartir grupos** | ❌ | ❌ | ✅ Sí | ✅ Sí |
+| **Permisos heredados** | ❌ | ❌ | ✅ Sí | ✅ Sí |
+| **Compartición externa** | ❌ | ❌ | ❌ | ✅ Read-only links |
+| **Expiración de acceso** | ❌ | ❌ | ✅ Manual | ✅ Automática |
+| **Delegación de derechos** | ❌ | ❌ | ❌ | ✅ Sí |
+
+**Feature gates a implementar:**
+```python
+# featuresByPlan
+'free': {
+    'canShareElements': False,
+    'maxSharedUsersPerElement': 0,
+    'shareAccessLevels': [],
+    'canShareGroups': False,
+    'canCreateExternalLinks': False
+},
+'starter': {
+    'canShareElements': True,
+    'maxSharedUsersPerElement': 5,
+    'shareAccessLevels': ['viewer', 'editor'],
+    'canShareGroups': False,
+    'canCreateExternalLinks': False
+},
+'professional': {
+    'canShareElements': True,
+    'maxSharedUsersPerElement': 50,
+    'shareAccessLevels': ['viewer', 'commenter', 'editor', 'admin'],
+    'canShareGroups': True,
+    'canCreateExternalLinks': False,
+    'canSetExpirationDate': True
+},
+'enterprise': {
+    'canShareElements': True,
+    'maxSharedUsersPerElement': Infinity,
+    'shareAccessLevels': ['viewer', 'commenter', 'editor', 'admin'],
+    'canShareGroups': True,
+    'canCreateExternalLinks': True,
+    'canSetExpirationDate': True,
+    'canDelegateShareRights': True
+}
+```
+
+**Validaciones:**
+- Backend verifica límites antes de permitir compartición
+- Si límite alcanzado, mostrar UpgradePrompt con mensaje contextual
+- Downgrade de plan revoca shares que excedan nuevos límites
+- Sistema notifica usuarios afectados por revocación
+
+**Criterios de aceptación:**
+- Free plan no puede compartir elementos (feature disabled)
+- Starter plan puede compartir con máx 5 usuarios por elemento
+- Professional+ puede compartir grupos con herencia
+- Enterprise puede crear links externos read-only
+- UI muestra límites claramente antes de intentar compartir
+
+---
+
+#### FR-035: Auditoría de Compartición
+
+**Descripción:**
+Sistema registra todos los eventos de compartición en audit log inmutable para compliance.
+
+**Eventos auditables:**
+- `share.created`: Usuario compartió elemento con otro usuario
+- `share.permission_changed`: Cambió nivel de acceso de share existente
+- `share.revoked`: Revocó acceso a elemento compartido
+- `share.accessed`: Usuario accedió a elemento compartido
+- `share.group_inherited`: Permiso heredado desde grupo padre
+
+**Metadatos en audit log:**
+```json
+{
+  "event_type": "share.created",
+  "timestamp": "2026-02-11T15:30:00Z",
+  "actor_id": "user-001",
+  "actor_name": "John Smith",
+  "recipient_id": "user-003",
+  "recipient_name": "Mike Chen",
+  "resource_type": "project",
+  "resource_id": "project-001",
+  "resource_name": "Sistema de Autenticación",
+  "access_level": "editor",
+  "is_inherited": false,
+  "parent_share_id": null,
+  "ip_address": "192.168.1.100",
+  "user_agent": "Mozilla/5.0...",
+  "tenant_id": "tenant-001"
+}
+```
+
+**Reportes de auditoría:**
+- **Reporte de acceso**: Quién tiene acceso a qué elementos y con qué nivel
+- **Reporte de actividad**: Historial de comparticiones en período de tiempo
+- **Reporte de revocaciones**: Accesos removidos y motivos
+- **Reporte de usuarios**: Todos los elementos compartidos con usuario X
+
+**Criterios de aceptación:**
+- Todos los eventos de compartición se registran inmutablemente
+- Audit logs incluyen timestamp, actor, acción, recurso, metadatos
+- Security Officer puede generar reportes CSV para compliance
+- Reportes se generan en <30 segundos para 100k+ eventos
+- Logs son append-only (no se pueden modificar retroactivamente)
+
+---
+
+#### FR-036: Revocación de Acceso
+
+**Descripción:**
+Usuarios con nivel `admin` o owners pueden revocar acceso a elementos compartidos.
+
+**Métodos de revocación:**
+- **Revocación individual**: Remover acceso de 1 usuario específico
+- **Revocación en lote**: Remover acceso de múltiples usuarios
+- **Revocación en cascada**: Remover acceso de grupo + heredados
+- **Expiración automática**: Acceso expira tras fecha/hora configurada
+
+**Efectos de revocación:**
+- Usuario removido pierde acceso inmediatamente
+- Sesiones activas del usuario se invalidan para ese recurso
+- Elemento desaparece de "Compartidos conmigo" del usuario
+- Notificación enviada al usuario revocado (opcional)
+- Audit log registra evento de revocación
+
+**Casos especiales:**
+- **Revocar acceso heredado**: Requiere cambiar permiso del padre o agregar denegación explícita
+- **Owner del elemento**: No se puede revocar (solo transferir ownership)
+- **Último admin**: Sistema previene revocar último usuario con nivel admin
+
+**Validaciones:**
+- Solo owner/admin puede revocar acceso
+- No se puede revocar propio acceso si es último admin
+- Backend invalida tokens de acceso al recurso
+- UI confirma antes de revocar acceso
+
+**Criterios de aceptación:**
+- Usuario admin puede revocar acceso de otro usuario
+- Revocación es efectiva en <5 segundos
+- Usuario revocado recibe notificación (si configurado)
+- Elemento desaparece de lista "Compartidos conmigo"
+- Audit log registra revocación con timestamp y motivo
 
 ---
 
@@ -1752,6 +2212,119 @@ class ProjectMember(TenantAwareModel, TimestampedModel):
         unique_together = [['project', 'user']]
         indexes = [
             models.Index(fields=['project', 'role']),
+        ]
+
+# sharing/models.py
+class Share(TenantAwareModel):
+    """
+    Representa compartición de un elemento con un usuario.
+    Soporta herencia de permisos desde padres.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+
+    # GenericForeignKey para cualquier tipo de elemento
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=255)
+    shared_object = GenericForeignKey('content_type', 'object_id')
+
+    # Usuario con quien se comparte
+    shared_with = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shared_with_me'
+    )
+
+    # Usuario que compartió
+    shared_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shared_by_me'
+    )
+
+    # Nivel de acceso
+    access_level = models.CharField(
+        max_length=20,
+        choices=[
+            ('viewer', 'Viewer'),
+            ('commenter', 'Commenter'),
+            ('editor', 'Editor'),
+            ('admin', 'Admin')
+        ]
+    )
+
+    # Herencia
+    is_inherited = models.BooleanField(default=False)
+    parent_share = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='child_shares'
+    )
+
+    # Expiración
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    # Metadatos
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'shares'
+        indexes = [
+            models.Index(fields=['tenant', 'shared_with']),
+            models.Index(fields=['tenant', 'content_type', 'object_id']),
+            models.Index(fields=['expires_at'])
+        ]
+        unique_together = [
+            ('tenant', 'content_type', 'object_id', 'shared_with')
+        ]
+
+    def has_permission(self, action: str) -> bool:
+        """Verifica si nivel de acceso permite acción."""
+        permissions_map = {
+            'viewer': ['read'],
+            'commenter': ['read', 'comment'],
+            'editor': ['read', 'comment', 'update'],
+            'admin': ['read', 'comment', 'update', 'delete', 'share']
+        }
+        return action in permissions_map.get(self.access_level, [])
+
+    def is_expired(self) -> bool:
+        """Verifica si share expiró."""
+        if not self.expires_at:
+            return False
+        return timezone.now() > self.expires_at
+
+class SharePermission(models.Model):
+    """
+    Cache desnormalizado para performance en checks de permisos.
+    Regenerado al cambiar shares.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    # Elemento
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=255)
+
+    # Permisos computados (incluyendo heredados)
+    effective_access_level = models.CharField(max_length=20)
+    can_read = models.BooleanField(default=False)
+    can_comment = models.BooleanField(default=False)
+    can_update = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=False)
+    can_share = models.BooleanField(default=False)
+
+    # Cache metadata
+    computed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'share_permissions_cache'
+        indexes = [
+            models.Index(fields=['tenant', 'user', 'content_type', 'object_id'])
         ]
 ```
 
@@ -2687,6 +3260,155 @@ Límites por plan:
     - Remover miembro
     - Response: 204 No Content
 
+#### 6.4.6 Sharing API Endpoints
+
+**Base Path**: `/api/v1/{resource_type}/{resource_id}/share`
+
+**Autenticación**: JWT Token requerido
+**Permisos**: Usuario debe tener nivel `admin` o ser owner del elemento
+
+**Endpoints:**
+
+1. **POST /api/v1/{resource_type}/{resource_id}/share**
+   - **Descripción**: Compartir elemento con usuario(s)
+   - **Permisos requeridos**: `{resource}.share` o ser owner
+
+   **Request Body**:
+   ```json
+   {
+     "user_ids": ["user-003", "user-004"],
+     "access_level": "editor",
+     "notify_users": true,
+     "message": "Te compartí este proyecto para que colabores",
+     "expires_at": "2026-12-31T23:59:59Z"
+   }
+   ```
+
+   **Response 200**:
+   ```json
+   {
+     "shares_created": 2,
+     "shares": [
+       {
+         "id": "share-001",
+         "shared_with": {
+           "id": "user-003",
+           "name": "Mike Chen",
+           "email": "mike@acme.com"
+         },
+         "access_level": "editor",
+         "is_inherited": false,
+         "created_at": "2026-02-11T15:30:00Z"
+       }
+     ]
+   }
+   ```
+
+   **Errores**:
+   - `403`: Usuario sin permiso de compartición
+   - `400`: Límite de plan alcanzado
+   - `404`: Recurso no encontrado
+
+2. **GET /api/v1/{resource_type}/{resource_id}/shares**
+   - **Descripción**: Listar usuarios con acceso al elemento
+   - **Permisos requeridos**: `{resource}.read` + tener acceso al elemento
+
+   **Response 200**:
+   ```json
+   {
+     "shares": [
+       {
+         "id": "share-001",
+         "user": {
+           "id": "user-003",
+           "name": "Mike Chen",
+           "avatar_url": "https://..."
+         },
+         "access_level": "editor",
+         "is_inherited": false,
+         "shared_by": {
+           "id": "user-001",
+           "name": "John Smith"
+         },
+         "created_at": "2026-02-11T15:30:00Z",
+         "expires_at": null
+       }
+     ],
+     "total": 1,
+     "owner": {
+       "id": "user-001",
+       "name": "John Smith"
+     }
+   }
+   ```
+
+3. **PATCH /api/v1/shares/{share_id}**
+   - **Descripción**: Cambiar nivel de acceso de share existente
+   - **Permisos requeridos**: `{resource}.share` o ser owner
+
+   **Request Body**:
+   ```json
+   {
+     "access_level": "viewer",
+     "notify_user": true
+   }
+   ```
+
+   **Response 200**:
+   ```json
+   {
+     "id": "share-001",
+     "access_level": "viewer",
+     "updated_at": "2026-02-11T16:00:00Z"
+   }
+   ```
+
+4. **DELETE /api/v1/shares/{share_id}**
+   - **Descripción**: Revocar acceso compartido
+   - **Permisos requeridos**: `{resource}.share` o ser owner
+
+   **Response 204**: No content
+
+   **Errores**:
+   - `403`: No puedes remover último admin
+   - `409`: No puedes remover owner (usa transferencia)
+
+5. **GET /api/v1/shared-with-me**
+   - **Descripción**: Listar elementos compartidos conmigo
+
+   **Query params**:
+   - `?type=project,task,file` - Filtrar por tipo
+   - `?access_level=editor,admin` - Filtrar por nivel
+   - `?page=1&per_page=20` - Paginación
+
+   **Response 200**:
+   ```json
+   {
+     "items": [
+       {
+         "share_id": "share-001",
+         "resource_type": "project",
+         "resource_id": "project-001",
+         "resource": {
+           "id": "project-001",
+           "name": "Sistema de Autenticación",
+           "description": "...",
+           "color": "#3b82f6"
+         },
+         "access_level": "editor",
+         "shared_by": {
+           "id": "user-001",
+           "name": "John Smith"
+         },
+         "shared_at": "2026-02-11T15:30:00Z"
+       }
+     ],
+     "total": 12,
+     "page": 1,
+     "per_page": 20
+   }
+   ```
+
 ---
 
 ## 7. Phases & Implementation Timeline
@@ -2807,6 +3529,60 @@ Límites por plan:
 - [ ] Tests: login con MFA, recovery codes
 
 **Deliverables:** RBAC completo con todas las features avanzadas. Sistema production-ready para MVP launch.
+
+---
+
+### Phase 4: Sharing & Collaboration (Weeks 13-19)
+
+**Milestone:** Sistema de compartición de elementos con permisos granulares y herencia
+
+**Week 13-14: Modelos Backend + Endpoints API**
+- [ ] Modelos Django: Share, SharePermission (cache)
+- [ ] GenericForeignKey para compartir cualquier tipo de elemento
+- [ ] Índices compuestos para performance en queries jerárquicos
+- [ ] Endpoints API: POST/GET/PATCH/DELETE /api/v1/{resource}/share
+- [ ] Endpoint GET /api/v1/shared-with-me con filtros
+- [ ] Tests unitarios de compartición
+
+**Week 15: UI Compartición Individual**
+- [ ] Modal "Compartir" con selector de usuarios
+- [ ] Dropdown niveles de acceso (Viewer, Commenter, Editor, Admin)
+- [ ] Tabla de permisos por nivel de acceso
+- [ ] Notificaciones email + in-app al compartir
+- [ ] Sección "Compartidos conmigo" en sidebar
+- [ ] Feature gates: validar límites de plan antes de compartir
+
+**Week 16: Herencia de Permisos en Grupos**
+- [ ] Backend: lógica de propagación de permisos en cascada
+- [ ] Backend: resolver conflictos (permisos locales vs heredados)
+- [ ] Backend: recalcular permisos al cambiar padre
+- [ ] Frontend: UI mostrar permisos heredados vs locales
+- [ ] Frontend: Icon 🔒 para permisos locales
+- [ ] Tests: herencia multi-nivel, precedencia correcta
+
+**Week 17: Auditoría + Revocación + Expiración**
+- [ ] Audit log eventos: share.created, share.permission_changed, share.revoked
+- [ ] Backend: invalidar sesiones al revocar acceso
+- [ ] Backend: cronjob para expirar shares automáticamente
+- [ ] Frontend: modal confirmación al revocar acceso
+- [ ] Frontend: reportes CSV de compartición para compliance
+- [ ] Validación: prevenir remover último admin
+
+**Week 18-19: Testing E2E + Ajustes**
+- [ ] Tests E2E: compartir proyecto → herencia → revocar
+- [ ] Tests: feature gates por plan (Free no puede, Starter 5 max)
+- [ ] Tests: performance con 100k+ shares activos
+- [ ] Ajustes UI/UX según feedback QA
+- [ ] Documentación API endpoints de compartición
+- [ ] Release notes y changelog
+
+**Feature Gates por Plan**:
+- **Free**: ❌ No puede compartir elementos
+- **Starter**: ✅ Compartir con max 5 usuarios, niveles Viewer/Editor
+- **Professional**: ✅ Compartir con max 50 usuarios, todos los niveles, grupos con herencia
+- **Enterprise**: ✅ Ilimitado, links externos read-only, expiración automática
+
+**Deliverables:** Sistema completo de compartición y colaboración. Usuarios pueden compartir proyectos, tareas, archivos con control granular de permisos.
 
 ---
 

@@ -115,8 +115,8 @@ export const ProjectsView = ({ onSelectProject }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Proyectos</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Proyectos</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">
             {projects.length} {projects.length === 1 ? 'proyecto' : 'proyectos'}
           </p>
         </div>
@@ -134,7 +134,7 @@ export const ProjectsView = ({ onSelectProject }) => {
       <div className="flex items-center gap-4">
         {/* Search */}
         <div className="flex-1 relative">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder={hasFeature('projectSearch') ? 'Buscar proyectos...' : 'Búsqueda disponible en Plan Professional'}
@@ -142,21 +142,21 @@ export const ProjectsView = ({ onSelectProject }) => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={handleSearch}
             disabled={!hasFeature('projectSearch')}
-            className="input pl-10 w-full disabled:bg-gray-50 disabled:cursor-not-allowed"
+            className="input pl-10 w-full disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
           />
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center gap-2 border rounded-lg p-1">
+        <div className="flex items-center gap-2 border dark:border-gray-700 rounded-lg p-1">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
           >
             <Grid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded ${viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`p-2 rounded ${viewMode === 'list' ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
           >
             <List className="w-4 h-4" />
           </button>

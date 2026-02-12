@@ -31,6 +31,15 @@ export const featuresByPlan = {
     projectEncryption: true,
     projectItemTypes: ['credential', 'link', 'note'],
 
+    // Sharing & Collaboration
+    canShareElements: false,
+    maxSharedUsersPerElement: 0,
+    shareAccessLevels: [],
+    canShareGroups: false,
+    canCreateExternalLinks: false,
+    canSetExpirationDate: false,
+    canDelegateShareRights: false,
+
     // Dashboard
     dashboardWidgets: 3,
     customWidgets: false,
@@ -64,6 +73,15 @@ export const featuresByPlan = {
     projectEncryption: true,
     projectItemTypes: ['credential', 'document', 'link', 'note', 'config'],
 
+    // Sharing & Collaboration
+    canShareElements: true,
+    maxSharedUsersPerElement: 5,
+    shareAccessLevels: ['viewer', 'editor'],
+    canShareGroups: false,
+    canCreateExternalLinks: false,
+    canSetExpirationDate: false,
+    canDelegateShareRights: false,
+
     // Dashboard
     dashboardWidgets: 6,
     customWidgets: false,
@@ -96,6 +114,15 @@ export const featuresByPlan = {
     projectExport: true,
     projectEncryption: true,
     projectItemTypes: ['credential', 'document', 'link', 'note', 'config'],
+
+    // Sharing & Collaboration
+    canShareElements: true,
+    maxSharedUsersPerElement: 50,
+    shareAccessLevels: ['viewer', 'commenter', 'editor', 'admin'],
+    canShareGroups: true,
+    canCreateExternalLinks: true,
+    canSetExpirationDate: true,
+    canDelegateShareRights: false,
 
     // Dashboard
     dashboardWidgets: 12,
@@ -131,6 +158,15 @@ export const featuresByPlan = {
     projectItemTypes: ['credential', 'document', 'link', 'note', 'config'],
     projectWebhooks: true,
     projectApiAccess: true,
+
+    // Sharing & Collaboration
+    canShareElements: true,
+    maxSharedUsersPerElement: Infinity,
+    shareAccessLevels: ['viewer', 'commenter', 'editor', 'admin'],
+    canShareGroups: true,
+    canCreateExternalLinks: true,
+    canSetExpirationDate: true,
+    canDelegateShareRights: true,
 
     // Dashboard
     dashboardWidgets: Infinity,
@@ -283,6 +319,49 @@ export const upgradeMessages = {
     message: 'Este tipo de item requiere Plan Starter o superior.',
     feature: 'Tipos de items adicionales',
     requiredPlan: 'starter'
+  },
+
+  // Sharing & Collaboration
+  canShareElements: {
+    title: 'Compartir elementos no disponible',
+    message: 'Comparte proyectos, tareas y archivos con tu equipo con el Plan Starter o superior.',
+    feature: 'Compartir elementos',
+    requiredPlan: 'starter'
+  },
+
+  maxSharedUsersPerElement: {
+    title: 'Límite de usuarios compartidos alcanzado',
+    message: 'Has alcanzado el límite de usuarios con los que puedes compartir este elemento.',
+    feature: 'Más usuarios compartidos por elemento',
+    requiredPlan: 'professional'
+  },
+
+  canShareGroups: {
+    title: 'Compartir grupos no disponible',
+    message: 'Comparte grupos completos con herencia de permisos con el Plan Professional.',
+    feature: 'Compartir grupos',
+    requiredPlan: 'professional'
+  },
+
+  canCreateExternalLinks: {
+    title: 'Enlaces externos no disponibles',
+    message: 'Crea enlaces de acceso público con el Plan Professional.',
+    feature: 'Enlaces de compartición externos',
+    requiredPlan: 'professional'
+  },
+
+  canSetExpirationDate: {
+    title: 'Expiración de shares no disponible',
+    message: 'Establece fechas de expiración para comparticiones con el Plan Professional.',
+    feature: 'Expiración automática de shares',
+    requiredPlan: 'professional'
+  },
+
+  canDelegateShareRights: {
+    title: 'Delegación de permisos no disponible',
+    message: 'Permite a otros usuarios compartir elementos con el Plan Enterprise.',
+    feature: 'Delegación de derechos de compartición',
+    requiredPlan: 'enterprise'
   }
 };
 

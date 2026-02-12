@@ -116,9 +116,9 @@ export const TaskBoard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {columns.map(column => (
           <div key={column.id} className="flex flex-col">
-            <div className="card p-3 mb-3 bg-gray-50">
-              <h3 className="font-semibold text-gray-900">{column.label}</h3>
-              <span className="text-sm text-gray-600">{column.tasks.length}</span>
+            <div className="card p-3 mb-3 bg-gray-50 dark:bg-gray-700">
+              <h3 className="font-semibold text-gray-900 dark:text-white">{column.label}</h3>
+              <span className="text-sm text-gray-600 dark:text-gray-300">{column.tasks.length}</span>
             </div>
             <div className="space-y-3">
               {column.tasks.map(task => (
@@ -141,8 +141,8 @@ export const TaskBoard = () => {
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Tareas</h1>
-        <p className="text-gray-600">Gestiona tus tareas y proyectos</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Tareas</h1>
+        <p className="text-gray-600 dark:text-gray-300">Gestiona tus tareas y proyectos</p>
       </div>
 
       {/* Toolbar */}
@@ -207,7 +207,7 @@ export const TaskBoard = () => {
         </div>
 
         {/* Usage info */}
-        <div className="mt-3 text-sm text-gray-600">
+        <div className="mt-3 text-sm text-gray-600 dark:text-gray-300">
           Tareas activas: {activeTasks.length} / {hasFeature('maxActiveTasks') ?
             (canPerformAction('maxActiveTasks', Infinity) ? '∞' : hasFeature('maxActiveTasks')) :
             '10'
@@ -255,17 +255,17 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, compact = false }) =
   return (
     <div className="card p-4 card-hover" onClick={() => onEdit(task)}>
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-semibold text-gray-900 flex-1">{task.title}</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-white flex-1">{task.title}</h3>
         <div className="flex items-center gap-2 ml-2">
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <Edit2 className="w-4 h-4" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-            className="text-gray-400 hover:text-red-600"
+            className="text-gray-400 dark:text-gray-500 hover:text-red-600"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -277,7 +277,7 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, compact = false }) =
         <StatusBadge status={task.status} />
       </div>
 
-      <div className="flex items-center gap-3 text-sm text-gray-600">
+      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
         <div className="avatar">{initials}</div>
         {task.dueDate && (
           <div className="flex items-center gap-1">
@@ -296,7 +296,7 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, compact = false }) =
       {task.tags && task.tags.length > 0 && (
         <div className="flex items-center gap-2 mt-3">
           {task.tags.slice(0, 2).map(tag => (
-            <span key={tag} className="badge bg-blue-100 text-blue-700 text-xs">
+            <span key={tag} className="badge bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
               {tag}
             </span>
           ))}

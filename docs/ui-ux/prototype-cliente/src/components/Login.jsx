@@ -1,19 +1,33 @@
 import { useState } from 'react';
 import { users } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, CheckSquare, ChevronRight, User } from 'lucide-react';
+import { Calendar, CheckSquare, ChevronRight, User, ArrowLeft } from 'lucide-react';
 
-function Login() {
+function Login({ onBack, onLoginSuccess }) {
   const { login } = useAuth();
   const [selectedUser, setSelectedUser] = useState(null);
 
   const handleLogin = (userId) => {
     login(userId);
+    if (onLoginSuccess) {
+      onLoginSuccess();
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50 flex items-center justify-center p-8">
       <div className="max-w-5xl w-full">
+        {/* Back Button */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Volver</span>
+          </button>
+        )}
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">

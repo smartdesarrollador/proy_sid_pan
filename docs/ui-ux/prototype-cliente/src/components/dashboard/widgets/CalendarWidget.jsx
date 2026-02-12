@@ -45,7 +45,7 @@ export const CalendarWidget = ({ onNavigate }) => {
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Próximos Eventos</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Próximos Eventos</h3>
         <button
           onClick={() => onNavigate ? onNavigate('calendar') : alert('Navegar a Calendar')}
           className="text-sm text-primary-600 hover:text-primary-700 font-medium"
@@ -66,11 +66,11 @@ export const CalendarWidget = ({ onNavigate }) => {
             <div
               key={event.id}
               onClick={() => handleEventClick(event)}
-              className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors border-l-4"
+              className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors border-l-4"
               style={{ borderColor: event.categoryColor }}
             >
               <div className="flex items-start justify-between mb-1">
-                <h4 className="font-medium text-gray-900 text-sm flex-1">
+                <h4 className="font-medium text-gray-900 dark:text-white text-sm flex-1">
                   {event.title}
                 </h4>
                 <span
@@ -81,7 +81,7 @@ export const CalendarWidget = ({ onNavigate }) => {
                 </span>
               </div>
 
-              <div className="text-xs text-gray-600 space-y-1">
+              <div className="text-xs text-gray-600 dark:text-gray-300 space-y-1">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   {formatDate(event.startDate)} - {event.startTime}

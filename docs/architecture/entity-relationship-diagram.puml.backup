@@ -1,0 +1,925 @@
+@startuml entity-relationship-diagram
+' ==============================================================================
+' Entity-Relationship Diagram (ERD)
+' Sistema Avanzado de Gestión de Roles, Permisos y Suscripciones Multi-Tenant
+' ==============================================================================
+' Tech Stack: Django REST Framework + PostgreSQL
+' Version: 1.0.0
+' Date: 2026-02-09
+' ==============================================================================
+
+!define TABLE(x) class x << (T,#FFAAAA) >>
+!define PK(x) <b><color:red>PK:</color> x</b>
+!define FK(x) <color:blue>FK:</color> x
+!define UK(x) <color:green>UK:</color> x
+
+skinparam linetype ortho
+skinparam class {
+    BackgroundColor<<Tenant>> LightBlue
+    BackgroundColor<<User>> LightGreen
+    BackgroundColor<<RBAC>> LightYellow
+    BackgroundColor<<Subscription>> LightSalmon
+    BackgroundColor<<Audit>> LightGray
+    BackgroundColor<<Services>> Lavender
+}
+
+' ==============================================================================
+' CORE ENTITIES - Multi-Tenancy
+' ==============================================================================
+
+entity "Tenant" as tenant <<Tenant>> {
+    PK(id): UUID
+    --
+    UK(subdomain): VARCHAR(255)
+    name: VARCHAR(255)
+    logo: VARCHAR(500)
+    primary_color: VARCHAR(7)
+    settings: JSONB
+    --
+    ' Subscription fields
+    subscription_plan: VARCHAR(50)
+    subscription_status: VARCHAR(20)
+    trial_ends_at: TIMESTAMP
+    subscription_current_period_end: TIMESTAMP
+    stripe_customer_id: VARCHAR(255)
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "User" as user <<User>> {
+    PK(id): UUID
+    --
+    UK(email): VARCHAR(255)
+    password: VARCHAR(255)
+    first_name: VARCHAR(150)
+    last_name: VARCHAR(150)
+    is_active: BOOLEAN
+    is_staff: BOOLEAN
+    is_superuser: BOOLEAN
+    email_verified_at: TIMESTAMP
+    --
+    ' MFA fields
+    mfa_enabled: BOOLEAN
+    mfa_secret: VARCHAR(32)
+    --
+    last_login: TIMESTAMP
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "TenantMembership" as membership <<User>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(user_id): UUID
+    is_active: BOOLEAN
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    --
+    UK(tenant_id, user_id)
+}
+
+' ==============================================================================
+' RBAC ENTITIES - Roles & Permissions
+' ==============================================================================
+
+entity "Role" as role <<RBAC>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    name: VARCHAR(100)
+    description: TEXT
+    is_system_role: BOOLEAN
+    FK(parent_role_id): UUID
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    --
+    UK(tenant_id, name)
+}
+
+entity "Permission" as permission <<RBAC>> {
+    PK(id): UUID
+    --
+    UK(codename): VARCHAR(100)
+    name: VARCHAR(255)
+    resource: VARCHAR(50)
+    action: VARCHAR(50)
+    description: TEXT
+    --
+    created_at: TIMESTAMP
+}
+
+entity "PermissionGrant" as permission_grant <<RBAC>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(role_id): UUID
+    FK(permission_id): UUID
+    scope: VARCHAR(20)
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    --
+    UK(role_id, permission_id, scope)
+}
+
+entity "MembershipRole" as membership_role <<RBAC>> {
+    PK(id): UUID
+    --
+    FK(tenant_membership_id): UUID
+    FK(role_id): UUID
+    --
+    created_at: TIMESTAMP
+    --
+    UK(tenant_membership_id, role_id)
+}
+
+entity "PermissionGroup" as permission_group <<RBAC>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    name: VARCHAR(100)
+    description: TEXT
+    is_system_group: BOOLEAN
+    --
+    FK(created_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    --
+    UK(tenant_id, name)
+}
+
+entity "PermissionGroupMembership" as group_membership <<RBAC>> {
+    PK(id): UUID
+    --
+    FK(permission_group_id): UUID
+    FK(permission_id): UUID
+    --
+    created_at: TIMESTAMP
+    --
+    UK(permission_group_id, permission_id)
+}
+
+entity "DelegatedPermission" as delegated_permission <<RBAC>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(delegator_user_id): UUID
+    FK(delegatee_user_id): UUID
+    FK(permission_id): UUID
+    scope: VARCHAR(20)
+    starts_at: TIMESTAMP
+    expires_at: TIMESTAMP
+    is_revoked: BOOLEAN
+    --
+    FK(created_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+' ==============================================================================
+' SUBSCRIPTION & BILLING ENTITIES
+' ==============================================================================
+
+entity "Plan" as plan <<Subscription>> {
+    PK(id): UUID
+    --
+    UK(code): VARCHAR(50)
+    name: VARCHAR(100)
+    description: TEXT
+    price_monthly: DECIMAL(10,2)
+    price_annual: DECIMAL(10,2)
+    --
+    ' Limits
+    max_users: INTEGER
+    max_storage_gb: INTEGER
+    max_api_calls_per_month: INTEGER
+    --
+    ' Features flags
+    features: JSONB
+    --
+    is_active: BOOLEAN
+    display_order: INTEGER
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "Subscription" as subscription <<Subscription>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(plan_id): UUID
+    status: VARCHAR(20)
+    billing_cycle: VARCHAR(20)
+    --
+    trial_starts_at: TIMESTAMP
+    trial_ends_at: TIMESTAMP
+    current_period_start: TIMESTAMP
+    current_period_end: TIMESTAMP
+    canceled_at: TIMESTAMP
+    cancellation_reason: TEXT
+    --
+    stripe_subscription_id: VARCHAR(255)
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "PaymentMethod" as payment_method <<Subscription>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    stripe_payment_method_id: VARCHAR(255)
+    type: VARCHAR(50)
+    last4: VARCHAR(4)
+    brand: VARCHAR(50)
+    exp_month: INTEGER
+    exp_year: INTEGER
+    is_default: BOOLEAN
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "Invoice" as invoice <<Subscription>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(subscription_id): UUID
+    invoice_number: VARCHAR(100)
+    status: VARCHAR(20)
+    --
+    subtotal: DECIMAL(10,2)
+    tax: DECIMAL(10,2)
+    total: DECIMAL(10,2)
+    currency: VARCHAR(3)
+    --
+    invoice_date: DATE
+    due_date: DATE
+    paid_at: TIMESTAMP
+    --
+    stripe_invoice_id: VARCHAR(255)
+    stripe_charge_id: VARCHAR(255)
+    pdf_url: VARCHAR(500)
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "UsageTracking" as usage_tracking <<Subscription>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    metric_type: VARCHAR(50)
+    metric_value: INTEGER
+    recorded_date: DATE
+    --
+    created_at: TIMESTAMP
+    --
+    UK(tenant_id, metric_type, recorded_date)
+}
+
+' ==============================================================================
+' AUTHENTICATION & SESSION ENTITIES
+' ==============================================================================
+
+entity "RefreshToken" as refresh_token <<User>> {
+    PK(id): UUID
+    --
+    FK(user_id): UUID
+    FK(tenant_id): UUID
+    token: VARCHAR(500)
+    expires_at: TIMESTAMP
+    is_revoked: BOOLEAN
+    --
+    created_at: TIMESTAMP
+}
+
+entity "Session" as session <<User>> {
+    PK(id): UUID
+    --
+    FK(user_id): UUID
+    FK(tenant_id): UUID
+    FK(refresh_token_id): UUID
+    --
+    device_name: VARCHAR(255)
+    browser: VARCHAR(100)
+    os: VARCHAR(100)
+    ip_address: INET
+    last_activity: TIMESTAMP
+    is_current: BOOLEAN
+    --
+    created_at: TIMESTAMP
+}
+
+entity "Invitation" as invitation <<User>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    email: VARCHAR(255)
+    FK(invited_by_id): UUID
+    token: VARCHAR(255)
+    status: VARCHAR(20)
+    expires_at: TIMESTAMP
+    accepted_at: TIMESTAMP
+    --
+    created_at: TIMESTAMP
+}
+
+entity "InvitationRole" as invitation_role <<User>> {
+    PK(id): UUID
+    --
+    FK(invitation_id): UUID
+    FK(role_id): UUID
+    --
+    created_at: TIMESTAMP
+}
+
+entity "MFARecoveryCode" as mfa_recovery <<User>> {
+    PK(id): UUID
+    --
+    FK(user_id): UUID
+    code_hash: VARCHAR(255)
+    used_at: TIMESTAMP
+    --
+    created_at: TIMESTAMP
+}
+
+entity "EmailVerificationToken" as email_verification <<User>> {
+    PK(id): UUID
+    --
+    FK(user_id): UUID
+    token: VARCHAR(255)
+    expires_at: TIMESTAMP
+    verified_at: TIMESTAMP
+    --
+    created_at: TIMESTAMP
+}
+
+entity "PasswordResetToken" as password_reset <<User>> {
+    PK(id): UUID
+    --
+    FK(user_id): UUID
+    token: VARCHAR(255)
+    expires_at: TIMESTAMP
+    used_at: TIMESTAMP
+    --
+    created_at: TIMESTAMP
+}
+
+' ==============================================================================
+' CUSTOMER SERVICES ENTITIES - Features por Suscripción
+' ==============================================================================
+
+entity "Event" as event <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    title: VARCHAR(255)
+    description: TEXT
+    start_time: TIMESTAMP
+    end_time: TIMESTAMP
+    location: VARCHAR(255)
+    is_all_day: BOOLEAN
+    recurrence_rule: VARCHAR(255)
+    category: VARCHAR(50)
+    color: VARCHAR(7)
+    FK(organizer_id): UUID
+    reminders: JSONB
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "EventParticipant" as event_participant <<Services>> {
+    PK(id): UUID
+    --
+    FK(event_id): UUID
+    FK(user_id): UUID
+    status: VARCHAR(20)
+    response_at: TIMESTAMP
+    --
+    created_at: TIMESTAMP
+}
+
+entity "Task" as task <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    title: VARCHAR(255)
+    description: TEXT
+    status: VARCHAR(20)
+    priority: VARCHAR(20)
+    due_date: TIMESTAMP
+    FK(assignee_id): UUID
+    FK(creator_id): UUID
+    FK(project_id): UUID
+    FK(parent_task_id): UUID
+    tags: JSONB
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "TaskComment" as task_comment <<Services>> {
+    PK(id): UUID
+    --
+    FK(task_id): UUID
+    FK(user_id): UUID
+    comment: TEXT
+    mentions: JSONB
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "Notification" as notification <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(user_id): UUID
+    type: VARCHAR(50)
+    title: VARCHAR(255)
+    message: TEXT
+    link: VARCHAR(255)
+    is_read: BOOLEAN
+    read_at: TIMESTAMP
+    metadata: JSONB
+    --
+    created_at: TIMESTAMP
+}
+
+entity "File" as file <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    name: VARCHAR(255)
+    original_filename: VARCHAR(255)
+    file_path: VARCHAR(500)
+    file_size: BIGINT
+    mime_type: VARCHAR(100)
+    FK(folder_id): UUID
+    FK(owner_id): UUID
+    tags: JSONB
+    version: INTEGER
+    FK(parent_file_id): UUID
+    is_deleted: BOOLEAN
+    deleted_at: TIMESTAMP
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "Folder" as folder <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    name: VARCHAR(255)
+    FK(parent_folder_id): UUID
+    FK(owner_id): UUID
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "FileShare" as file_share <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(file_id): UUID
+    FK(user_id): UUID
+    permission: VARCHAR(20)
+    FK(shared_by_id): UUID
+    shared_at: TIMESTAMP
+}
+
+entity "Project" as project <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    name: VARCHAR(255)
+    description: TEXT
+    status: VARCHAR(20)
+    start_date: DATE
+    end_date: DATE
+    FK(owner_id): UUID
+    color: VARCHAR(7)
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "ProjectSection" as project_section <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(project_id): UUID
+    name: VARCHAR(100)
+    description: TEXT
+    order: INTEGER
+    color: VARCHAR(7)
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    --
+    UK(project_id, name)
+}
+
+entity "ProjectItem" as project_item <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(section_id): UUID
+    type: VARCHAR(50)
+    title: VARCHAR(200)
+    description: TEXT
+    order: INTEGER
+    is_favorite: BOOLEAN
+    expires_at: TIMESTAMP
+    --
+    FK(created_by_id): UUID
+    FK(updated_by_id): UUID
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity "ProjectItemField" as project_item_field <<Services>> {
+    PK(id): UUID
+    --
+    FK(item_id): UUID
+    field_name: VARCHAR(50)
+    field_type: VARCHAR(20)
+    field_value: TEXT
+    is_encrypted: BOOLEAN
+    order: INTEGER
+    --
+    UK(item_id, field_name)
+}
+
+entity "ProjectMember" as project_member <<Services>> {
+    PK(id): UUID
+    --
+    FK(tenant_id): UUID
+    FK(project_id): UUID
+    FK(user_id): UUID
+    role: VARCHAR(20)
+    --
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    --
+    UK(project_id, user_id)
+}
+
+' ==============================================================================
+' AUDIT & LOGGING ENTITIES
+' ==============================================================================
+
+entity "AuditLog" as audit_log <<Audit>> {
+    PK(id): BIGSERIAL
+    --
+    FK(tenant_id): UUID
+    FK(actor_user_id): UUID
+    action: VARCHAR(50)
+    resource_type: VARCHAR(50)
+    resource_id: UUID
+    changes: JSONB
+    --
+    ip_address: INET
+    user_agent: TEXT
+    --
+    timestamp: TIMESTAMP
+}
+
+entity "LoginAttempt" as login_attempt <<Audit>> {
+    PK(id): UUID
+    --
+    email: VARCHAR(255)
+    ip_address: INET
+    user_agent: TEXT
+    success: BOOLEAN
+    failure_reason: VARCHAR(255)
+    --
+    timestamp: TIMESTAMP
+}
+
+' ==============================================================================
+' RELATIONSHIPS - Core Multi-Tenancy
+' ==============================================================================
+
+tenant ||--o{ membership : "has members"
+user ||--o{ membership : "belongs to tenants"
+membership ||--o{ membership_role : "has roles"
+
+' ==============================================================================
+' RELATIONSHIPS - RBAC
+' ==============================================================================
+
+tenant ||--o{ role : "has"
+role ||--o{ role : "inherits from (parent)"
+role ||--o{ permission_grant : "has permissions"
+permission ||--o{ permission_grant : "granted to roles"
+role ||--o{ membership_role : "assigned to memberships"
+
+tenant ||--o{ permission_group : "has"
+permission_group ||--o{ group_membership : "contains"
+permission ||--o{ group_membership : "in groups"
+
+tenant ||--o{ delegated_permission : "has"
+user ||--o{ delegated_permission : "delegates (delegator)"
+user ||--o{ delegated_permission : "receives (delegatee)"
+permission ||--o{ delegated_permission : "can be delegated"
+
+' ==============================================================================
+' RELATIONSHIPS - Subscription & Billing
+' ==============================================================================
+
+tenant ||--o| subscription : "has active"
+plan ||--o{ subscription : "subscribed by tenants"
+tenant ||--o{ payment_method : "has"
+tenant ||--o{ invoice : "billed"
+subscription ||--o{ invoice : "generates"
+tenant ||--o{ usage_tracking : "tracks usage"
+
+' ==============================================================================
+' RELATIONSHIPS - Authentication & Sessions
+' ==============================================================================
+
+user ||--o{ refresh_token : "has"
+tenant ||--o{ refresh_token : "scoped to"
+user ||--o{ session : "has active"
+tenant ||--o{ session : "scoped to"
+refresh_token ||--o| session : "associated with"
+
+tenant ||--o{ invitation : "sends"
+user ||--o{ invitation : "invited by"
+invitation ||--o{ invitation_role : "assigns roles"
+role ||--o{ invitation_role : "pre-assigned to invitations"
+
+user ||--o{ mfa_recovery : "has recovery codes"
+user ||--o| email_verification : "has verification"
+user ||--o{ password_reset : "requests password reset"
+
+' ==============================================================================
+' RELATIONSHIPS - Audit
+' ==============================================================================
+
+tenant ||--o{ audit_log : "has logs"
+user ||--o{ audit_log : "performs actions"
+user ||--o{ login_attempt : "attempts login"
+
+' ==============================================================================
+' RELATIONSHIPS - Customer Services (Calendar, Tasks, Files, Projects)
+' ==============================================================================
+
+tenant ||--o{ event : "has"
+user ||--o{ event : "organizes"
+event ||--o{ event_participant : "has participants"
+user ||--o{ event_participant : "participates in"
+
+tenant ||--o{ task : "has"
+user ||--o{ task : "creates"
+user ||--o{ task : "assigned to"
+task ||--o{ task : "has subtasks (parent)"
+project ||--o{ task : "contains"
+task ||--o{ task_comment : "has comments"
+user ||--o{ task_comment : "comments on"
+
+tenant ||--o{ notification : "has"
+user ||--o{ notification : "receives"
+
+tenant ||--o{ file : "stores"
+user ||--o{ file : "owns"
+folder ||--o{ file : "contains"
+file ||--o{ file : "has versions (parent)"
+file ||--o{ file_share : "shared with"
+user ||--o{ file_share : "has access to"
+user ||--o{ file_share : "shared by"
+
+tenant ||--o{ folder : "has"
+user ||--o{ folder : "owns"
+folder ||--o{ folder : "has subfolders (parent)"
+
+tenant ||--o{ project : "has"
+user ||--o{ project : "owns"
+project ||--o{ project_member : "has members"
+user ||--o{ project_member : "member of"
+
+project ||--o{ project_section : "has sections"
+tenant ||--o{ project_section : "scoped to"
+project_section ||--o{ project_item : "contains items"
+tenant ||--o{ project_item : "scoped to"
+project_item ||--o{ project_item_field : "has custom fields"
+user ||--o{ project_item : "creates/updates (created_by)"
+user ||--o{ project_item : "creates/updates (updated_by)"
+tenant ||--o{ project_member : "scoped to"
+
+' ==============================================================================
+' RELATIONSHIPS - Audit Trail for Created/Updated By
+' ==============================================================================
+
+user ||--o{ membership : "creates/updates (created_by)"
+user ||--o{ membership : "creates/updates (updated_by)"
+user ||--o{ role : "creates/updates (created_by)"
+user ||--o{ role : "creates/updates (updated_by)"
+user ||--o{ permission_grant : "creates/updates"
+user ||--o{ permission_group : "creates"
+user ||--o{ delegated_permission : "creates"
+
+' ==============================================================================
+' NOTES
+' ==============================================================================
+
+note top of tenant
+    **Multi-Tenant Root Entity**
+    - Each tenant is isolated via RLS
+    - Subdomain must be unique globally
+    - Tracks subscription and billing info
+    - Settings stored as JSONB for flexibility
+end note
+
+note top of user
+    **Global User Entity**
+    - Users can belong to multiple tenants
+    - Email is globally unique
+    - MFA settings at user level
+    - Password hashed with bcrypt (cost 12)
+end note
+
+note top of membership
+    **User-Tenant Junction**
+    - Links users to tenants with roles
+    - Supports multi-tenant access
+    - Can be deactivated without deletion
+end note
+
+note top of role
+    **Hierarchical Role System**
+    - Roles can inherit from parent role
+    - System roles (predefined) vs custom roles
+    - Scoped per tenant
+    - Max 3 levels of inheritance
+end note
+
+note top of permission
+    **Global Permission Registry**
+    - Format: resource.action (e.g., users.create)
+    - Not tenant-scoped (reusable)
+    - Granted to roles via PermissionGrant
+end note
+
+note top of permission_grant
+    **Context-Aware Permissions**
+    - Links role to permission with scope
+    - Scopes: all, own, department, custom
+    - Enables conditional permissions
+end note
+
+note top of delegated_permission
+    **Temporary Permission Delegation**
+    - Manager delegates to colleague temporarily
+    - Auto-expires via cronjob
+    - Can be revoked before expiry
+    - Audit log tracks delegated actions
+end note
+
+note top of audit_log
+    **Immutable Audit Trail**
+    - Insert-only (no updates/deletes)
+    - 7-year retention for compliance
+    - Tracks all permission/role changes
+    - Critical for SOC2/GDPR compliance
+end note
+
+note top of subscription
+    **Subscription Lifecycle**
+    - Tracks trial period and billing cycles
+    - Integrates with Stripe
+    - Handles upgrades/downgrades/cancellations
+    - Enforces plan limits via feature gates
+end note
+
+note top of usage_tracking
+    **Usage Metrics for Billing**
+    - Daily snapshots of usage
+    - Tracks: active users, storage, API calls
+    - Enforces plan limits
+    - Triggers upgrade prompts at 80%
+end note
+
+note top of event
+    **Calendar Service**
+    - Gestión de eventos y reuniones
+    - Soporta recurrencia (iCal RRULE)
+    - Recordatorios multi-canal
+    - Integración con Google/Outlook (Pro+)
+    - Feature gated por plan
+end note
+
+note top of task
+    **Task Management**
+    - Tableros Kanban, listas, filtros
+    - Subtareas y dependencias
+    - Asignación a usuarios
+    - Comentarios con menciones
+    - Feature gated: limits por plan
+end note
+
+note bottom of file
+    **File Storage**
+    - Almacenamiento con versiones
+    - Soft delete (papelera 30 días)
+    - Compartición con permisos
+    - Límites de storage por plan
+    - Preview de archivos (Pro+)
+end note
+
+note bottom of project
+    **Portfolio/Projects - Gestión Avanzada**
+    - Organización jerárquica por secciones/tags
+    - Items con campos customizables
+    - Tipos: Credenciales, Documentos, Enlaces, Notas, Configs
+    - Passwords encriptados (AES-256)
+    - Operaciones batch (Professional+)
+    - Importación/exportación CSV/JSON
+    - Búsqueda full-text (Professional+)
+    - Roles granulares: Owner, Admin, Editor, Viewer
+    - Auditoría completa de cambios
+    - Límites por plan: Free(2 proj, 50 items), Starter(10, 200),
+      Professional(unlimited), Enterprise(+ webhooks, API)
+end note
+
+note right of project_section
+    **Project Sections/Tags**
+    - Agrupación lógica de items
+    - Orden customizable
+    - Color identificador opcional
+    - Límites: Free(3), Starter(10), Professional+(unlimited)
+end note
+
+note right of project_item
+    **Project Items**
+    - Tipos: credential, document, link, note, config
+    - Campos customizables vía ProjectItemField
+    - Operaciones: editar, clonar, reordenar, eliminar
+    - Expiración para credenciales
+    - Límites: Free(50), Starter(200), Professional+(unlimited)
+end note
+
+note right of project_item_field
+    **Custom Fields per Item**
+    - Campos dinámicos según tipo de item
+    - field_type: text, password, email, url, date, number
+    - Passwords encriptados con AES-256
+    - is_encrypted=true si field_type='password'
+    - Ordenamiento customizable
+end note
+
+note right of notification
+    **Notification Center**
+    - In-app, email, push (por plan)
+    - Preferencias configurables
+    - Agrupación inteligente
+    - Modo "No molestar"
+end note
+
+legend right
+    |= Color |= Entity Type |
+    | <back:LightBlue>   </back> | Core Multi-Tenancy |
+    | <back:LightGreen>  </back> | User & Authentication |
+    | <back:LightYellow> </back> | RBAC System |
+    | <back:LightSalmon> </back> | Subscription & Billing |
+    | <back:Lavender>    </back> | Customer Services (Calendar, Tasks, Files, Projects) |
+    | <back:LightGray>   </back> | Audit & Logging |
+
+    **Cardinality:**
+    ||--o{ : One to Many
+    ||--|| : One to One
+    ||--o| : One to Zero or One
+    }o--o{ : Many to Many
+
+    **Keys:**
+    PK: Primary Key (UUID or BIGSERIAL)
+    FK: Foreign Key
+    UK: Unique Constraint
+endlegend
+
+@enduml

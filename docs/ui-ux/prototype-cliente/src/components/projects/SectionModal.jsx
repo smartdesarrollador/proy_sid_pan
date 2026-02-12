@@ -46,13 +46,13 @@ export const SectionModal = ({ projectId, sectionsCount, onSave, onClose }) => {
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="text-xl font-bold text-gray-900">Nueva Sección</h2>
+          <div className="flex items-center justify-between p-6 border-b dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nueva Sección</h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -62,7 +62,7 @@ export const SectionModal = ({ projectId, sectionsCount, onSave, onClose }) => {
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {/* Nombre */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Nombre <span className="text-red-500">*</span>
               </label>
               <input
@@ -77,7 +77,7 @@ export const SectionModal = ({ projectId, sectionsCount, onSave, onClose }) => {
 
             {/* Descripción */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Descripción
               </label>
               <textarea
@@ -91,7 +91,7 @@ export const SectionModal = ({ projectId, sectionsCount, onSave, onClose }) => {
 
             {/* Color */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Color
               </label>
               <div className="grid grid-cols-8 gap-2">
@@ -119,7 +119,7 @@ export const SectionModal = ({ projectId, sectionsCount, onSave, onClose }) => {
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   className="w-12 h-8 rounded cursor-pointer"
                 />
-                <span className="text-sm text-gray-600">Color personalizado</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">Color personalizado</span>
               </div>
             </div>
 

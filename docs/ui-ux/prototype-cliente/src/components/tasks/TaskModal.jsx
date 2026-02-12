@@ -127,13 +127,13 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {task ? 'Editar Tarea' : 'Nueva Tarea'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -142,7 +142,7 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Título */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Título <span className="text-red-500">*</span>
             </label>
             <input
@@ -157,7 +157,7 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
 
           {/* Descripción */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Descripción
             </label>
             <textarea
@@ -172,7 +172,7 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
           {/* Estado y Prioridad */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Estado
               </label>
               <select
@@ -188,7 +188,7 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 Prioridad
               </label>
               <select
@@ -205,7 +205,7 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
 
           {/* Asignar a */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Asignar a
             </label>
             <select
@@ -232,7 +232,7 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Etiquetas
             </label>
             <div className="flex items-center gap-2 mb-2">
@@ -256,13 +256,13 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
               {formData.tags.map(tag => (
                 <span
                   key={tag}
-                  className="badge bg-blue-100 text-blue-700 inline-flex items-center gap-1"
+                  className="badge bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 inline-flex items-center gap-1"
                 >
                   {tag}
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
-                    className="hover:text-blue-900"
+                    className="hover:text-blue-900 dark:hover:text-blue-200"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -273,10 +273,10 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
 
           {/* Subtareas */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Subtareas
               {!hasFeature('subtasks') && (
-                <span className="ml-2 text-xs text-gray-500">(Plan Professional)</span>
+                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(Plan Professional)</span>
               )}
             </label>
             <div className="flex items-center gap-2 mb-2">
@@ -300,20 +300,20 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
             </div>
             <div className="space-y-2">
               {formData.subtasks.map(subtask => (
-                <div key={subtask.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <div key={subtask.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded">
                   <input
                     type="checkbox"
                     checked={subtask.completed}
                     onChange={() => handleToggleSubtask(subtask.id)}
                     className="rounded"
                   />
-                  <span className={`flex-1 ${subtask.completed ? 'line-through text-gray-500' : ''}`}>
+                  <span className={`flex-1 ${subtask.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
                     {subtask.title}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveSubtask(subtask.id)}
-                    className="text-gray-400 hover:text-red-600"
+                    className="text-gray-400 dark:text-gray-500 hover:text-red-600"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -323,7 +323,7 @@ export const TaskModal = ({ isOpen, onClose, onSave, task }) => {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancelar
             </button>

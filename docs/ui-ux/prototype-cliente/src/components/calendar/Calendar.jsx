@@ -114,8 +114,8 @@ export const Calendar = () => {
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Calendario</h1>
-        <p className="text-gray-600">Gestiona tus eventos y reuniones</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Calendario</h1>
+        <p className="text-gray-600 dark:text-gray-300">Gestiona tus eventos y reuniones</p>
       </div>
 
       {/* Toolbar */}
@@ -135,28 +135,28 @@ export const Calendar = () => {
               </button>
             </div>
 
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {getDateLabel()}
             </h2>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-3 py-1 rounded ${viewMode === 'month' ? 'bg-white shadow-sm' : ''}`}
+                className={`px-3 py-1 rounded ${viewMode === 'month' ? 'bg-white dark:bg-gray-800 shadow-sm' : ''}`}
               >
                 Mes
               </button>
               <button
                 onClick={() => setViewMode('week')}
-                className={`px-3 py-1 rounded ${viewMode === 'week' ? 'bg-white shadow-sm' : ''}`}
+                className={`px-3 py-1 rounded ${viewMode === 'week' ? 'bg-white dark:bg-gray-800 shadow-sm' : ''}`}
               >
                 Semana
               </button>
               <button
                 onClick={() => setViewMode('day')}
-                className={`px-3 py-1 rounded ${viewMode === 'day' ? 'bg-white shadow-sm' : ''}`}
+                className={`px-3 py-1 rounded ${viewMode === 'day' ? 'bg-white dark:bg-gray-800 shadow-sm' : ''}`}
               >
                 Día
               </button>

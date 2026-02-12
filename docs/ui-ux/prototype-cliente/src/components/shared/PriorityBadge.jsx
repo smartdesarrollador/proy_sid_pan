@@ -1,8 +1,8 @@
 export const PriorityBadge = ({ priority }) => {
   const priorityStyles = {
-    alta: 'bg-red-100 text-red-700',
-    media: 'bg-orange-100 text-orange-700',
-    baja: 'bg-gray-100 text-gray-700'
+    alta: 'priority-alta',
+    media: 'priority-media',
+    baja: 'priority-baja'
   };
 
   const priorityLabels = {

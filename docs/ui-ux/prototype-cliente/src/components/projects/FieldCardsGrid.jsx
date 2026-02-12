@@ -30,7 +30,7 @@ export const FieldCardsGrid = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-gray-900">Items</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Items</h2>
           {selectedItem && (
             <span className={`badge badge-${selectedItem.type}`}>
               {selectedItem.type}

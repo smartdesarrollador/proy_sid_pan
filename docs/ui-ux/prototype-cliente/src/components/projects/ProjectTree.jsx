@@ -13,9 +13,9 @@ export const ProjectTree = ({
   return (
     <div className="card p-4 sticky top-24">
       {/* Project header */}
-      <div className="flex items-center gap-2 mb-4 pb-4 border-b">
+      <div className="flex items-center gap-2 mb-4 pb-4 border-b dark:border-gray-700">
         <Folder className="w-5 h-5 text-primary-600" />
-        <span className="font-semibold text-gray-900">{project.name}</span>
+        <span className="font-semibold text-gray-900 dark:text-white">{project.name}</span>
       </div>
 
       {/* Sections tree */}
@@ -29,10 +29,10 @@ export const ProjectTree = ({
               {/* Section header */}
               <button
                 onClick={() => onToggleSection(section.id)}
-                className="section-item w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-gray-50"
+                className="section-item w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <ChevronRight
-                  className={`w-4 h-4 text-gray-500 transition-transform ${
+                  className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${
                     isExpanded ? 'rotate-90' : ''
                   }`}
                 />
@@ -40,11 +40,11 @@ export const ProjectTree = ({
                   className="w-4 h-4"
                   style={{ color: section.color }}
                 />
-                <span className="flex-1 text-left font-medium text-gray-900">
+                <span className="flex-1 text-left font-medium text-gray-900 dark:text-white">
                   {section.name}
                 </span>
                 {!isExpanded && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({items.length} {items.length === 1 ? 'item' : 'items'})
                   </span>
                 )}
@@ -54,7 +54,7 @@ export const ProjectTree = ({
               {isExpanded && (
                 <div className="ml-6 mt-1 space-y-1">
                   {items.length === 0 ? (
-                    <div className="px-3 py-2 text-sm text-gray-500 italic">
+                    <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
                       Sin items
                     </div>
                   ) : (
@@ -65,7 +65,7 @@ export const ProjectTree = ({
                         className={`section-item w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                           selectedItem?.id === item.id
                             ? 'section-item-active bg-primary-50 text-primary-700'
-                            : 'text-gray-700 hover:bg-gray-50'
+                            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                       >
                         <FileText className="w-4 h-4 flex-shrink-0" />

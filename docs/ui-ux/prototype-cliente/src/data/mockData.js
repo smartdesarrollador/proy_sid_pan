@@ -1099,3 +1099,627 @@ export const getProjectItemsCount = (projectId) => {
     return total + getItemsBySection(section.id).length;
   }, 0);
 };
+
+// ============================================================
+// SHARING & COLLABORATION DATA
+// ============================================================
+
+/**
+ * Shares - Compartición de elementos entre usuarios
+ *
+ * resourceType: 'project' | 'project_section' | 'project_item' | 'task' | 'event' | 'file' | 'document' | 'note'
+ * accessLevel: 'viewer' | 'commenter' | 'editor' | 'admin'
+ * isInherited: true si el share viene heredado de un recurso padre (ej: project → section → item)
+ */
+export const shares = [
+  // ========== PROJECT SHARES ==========
+  {
+    id: 'share-001',
+    resourceType: 'project',
+    resourceId: 'project-001',
+    resourceName: 'Sistema de Autenticación',
+    sharedWith: 'user-002', // Sarah Johnson
+    sharedWithName: 'Sarah Johnson',
+    sharedWithEmail: 'sarah.johnson@acme.com',
+    sharedBy: 'user-001', // John Smith (owner)
+    sharedByName: 'John Smith',
+    accessLevel: 'editor',
+    isInherited: false,
+    message: 'Te doy acceso para configurar los secrets JWT',
+    expiresAt: null,
+    canDelegate: false,
+    createdAt: '2026-01-20T10:30:00Z',
+    updatedAt: '2026-01-20T10:30:00Z'
+  },
+  {
+    id: 'share-002',
+    resourceType: 'project',
+    resourceId: 'project-001',
+    resourceName: 'Sistema de Autenticación',
+    sharedWith: 'user-003', // Mike Chen
+    sharedWithName: 'Mike Chen',
+    sharedWithEmail: 'mike.chen@acme.com',
+    sharedBy: 'user-001',
+    sharedByName: 'John Smith',
+    accessLevel: 'viewer',
+    isInherited: false,
+    message: 'Solo lectura para revisión de documentación',
+    expiresAt: '2026-03-01T23:59:59Z',
+    canDelegate: false,
+    createdAt: '2026-01-22T14:15:00Z',
+    updatedAt: '2026-01-22T14:15:00Z'
+  },
+  {
+    id: 'share-003',
+    resourceType: 'project',
+    resourceId: 'project-002',
+    resourceName: 'Infraestructura Cloud',
+    sharedWith: 'user-003', // Mike Chen
+    sharedWithName: 'Mike Chen',
+    sharedWithEmail: 'mike.chen@acme.com',
+    sharedBy: 'user-002', // Sarah Johnson (owner)
+    sharedByName: 'Sarah Johnson',
+    accessLevel: 'admin',
+    isInherited: false,
+    message: 'Gestiona AWS y Azure conmigo',
+    expiresAt: null,
+    canDelegate: true, // Enterprise feature
+    createdAt: '2026-02-03T09:00:00Z',
+    updatedAt: '2026-02-03T09:00:00Z'
+  },
+
+  // ========== SECTION SHARES (Inherited + Local) ==========
+  {
+    id: 'share-004',
+    resourceType: 'project_section',
+    resourceId: 'section-001',
+    resourceName: 'Credenciales de Producción',
+    parentResourceType: 'project',
+    parentResourceId: 'project-001',
+    parentResourceName: 'Sistema de Autenticación',
+    sharedWith: 'user-002',
+    sharedWithName: 'Sarah Johnson',
+    sharedWithEmail: 'sarah.johnson@acme.com',
+    sharedBy: 'user-001',
+    sharedByName: 'John Smith',
+    accessLevel: 'editor',
+    isInherited: true, // Heredado de project-001
+    message: null,
+    expiresAt: null,
+    canDelegate: false,
+    createdAt: '2026-01-20T10:30:00Z',
+    updatedAt: '2026-01-20T10:30:00Z'
+  },
+  {
+    id: 'share-005',
+    resourceType: 'project_section',
+    resourceId: 'section-002',
+    resourceName: 'Configuración JWT',
+    parentResourceType: 'project',
+    parentResourceId: 'project-001',
+    parentResourceName: 'Sistema de Autenticación',
+    sharedWith: 'user-004', // Emma Davis
+    sharedWithName: 'Emma Davis',
+    sharedWithEmail: 'emma.davis@acme.com',
+    sharedBy: 'user-001',
+    sharedByName: 'John Smith',
+    accessLevel: 'viewer',
+    isInherited: false, // Share local específico para esta sección
+    message: 'Revisa la config de JWT por favor',
+    expiresAt: '2026-02-20T23:59:59Z',
+    canDelegate: false,
+    createdAt: '2026-02-05T11:00:00Z',
+    updatedAt: '2026-02-05T11:00:00Z'
+  },
+
+  // ========== ITEM SHARES (Inherited + Local) ==========
+  {
+    id: 'share-006',
+    resourceType: 'project_item',
+    resourceId: 'item-001',
+    resourceName: 'Database Admin',
+    parentResourceType: 'project_section',
+    parentResourceId: 'section-001',
+    parentResourceName: 'Credenciales de Producción',
+    sharedWith: 'user-002',
+    sharedWithName: 'Sarah Johnson',
+    sharedWithEmail: 'sarah.johnson@acme.com',
+    sharedBy: 'user-001',
+    sharedByName: 'John Smith',
+    accessLevel: 'editor',
+    isInherited: true, // Heredado de project-001 → section-001
+    message: null,
+    expiresAt: null,
+    canDelegate: false,
+    createdAt: '2026-01-20T10:30:00Z',
+    updatedAt: '2026-01-20T10:30:00Z'
+  },
+  {
+    id: 'share-007',
+    resourceType: 'project_item',
+    resourceId: 'item-002',
+    resourceName: 'Redis Cache Credentials',
+    parentResourceType: 'project_section',
+    parentResourceId: 'section-001',
+    parentResourceName: 'Credenciales de Producción',
+    sharedWith: 'user-003',
+    sharedWithName: 'Mike Chen',
+    sharedWithEmail: 'mike.chen@acme.com',
+    sharedBy: 'user-001',
+    sharedByName: 'John Smith',
+    accessLevel: 'editor',
+    isInherited: false, // Share local específico para este item
+    message: 'Necesitas editar las credenciales de Redis',
+    expiresAt: null,
+    canDelegate: false,
+    createdAt: '2026-01-25T16:45:00Z',
+    updatedAt: '2026-01-25T16:45:00Z'
+  },
+
+  // ========== TASK SHARES ==========
+  {
+    id: 'share-008',
+    resourceType: 'task',
+    resourceId: 'task-001',
+    resourceName: 'Implementar autenticación JWT',
+    sharedWith: 'user-002',
+    sharedWithName: 'Sarah Johnson',
+    sharedWithEmail: 'sarah.johnson@acme.com',
+    sharedBy: 'user-001',
+    sharedByName: 'John Smith',
+    accessLevel: 'editor',
+    isInherited: false,
+    message: 'Colabora conmigo en esta tarea',
+    expiresAt: null,
+    canDelegate: false,
+    createdAt: '2026-02-01T08:00:00Z',
+    updatedAt: '2026-02-01T08:00:00Z'
+  },
+  {
+    id: 'share-009',
+    resourceType: 'task',
+    resourceId: 'task-003',
+    resourceName: 'Revisar código de seguridad',
+    sharedWith: 'user-004',
+    sharedWithName: 'Emma Davis',
+    sharedWithEmail: 'emma.davis@acme.com',
+    sharedBy: 'user-002',
+    sharedByName: 'Sarah Johnson',
+    accessLevel: 'commenter',
+    isInherited: false,
+    message: 'Déjame tus comentarios sobre el código',
+    expiresAt: '2026-02-15T23:59:59Z',
+    canDelegate: false,
+    createdAt: '2026-02-07T10:30:00Z',
+    updatedAt: '2026-02-07T10:30:00Z'
+  },
+
+  // ========== EVENT SHARES ==========
+  {
+    id: 'share-010',
+    resourceType: 'event',
+    resourceId: 'event-001',
+    resourceName: 'Sprint Planning',
+    sharedWith: 'user-003',
+    sharedWithName: 'Mike Chen',
+    sharedWithEmail: 'mike.chen@acme.com',
+    sharedBy: 'user-001',
+    sharedByName: 'John Smith',
+    accessLevel: 'viewer',
+    isInherited: false,
+    message: 'Invitado a la reunión de planning',
+    expiresAt: null,
+    canDelegate: false,
+    createdAt: '2026-02-09T14:00:00Z',
+    updatedAt: '2026-02-09T14:00:00Z'
+  },
+  {
+    id: 'share-011',
+    resourceType: 'event',
+    resourceId: 'event-002',
+    resourceName: 'Code Review Session',
+    sharedWith: 'user-002',
+    sharedWithName: 'Sarah Johnson',
+    sharedWithEmail: 'sarah.johnson@acme.com',
+    sharedBy: 'user-003',
+    sharedByName: 'Mike Chen',
+    accessLevel: 'editor',
+    isInherited: false,
+    message: 'Co-host del evento',
+    expiresAt: null,
+    canDelegate: false,
+    createdAt: '2026-02-10T09:15:00Z',
+    updatedAt: '2026-02-10T09:15:00Z'
+  }
+];
+
+// ============================================================
+// SHARING HELPER FUNCTIONS
+// ============================================================
+
+/**
+ * Get all shares for a specific resource
+ * @param {string} resourceType - Type of resource
+ * @param {string} resourceId - ID of the resource
+ * @returns {Array} - Array of shares
+ */
+export const getSharesByResource = (resourceType, resourceId) => {
+  return shares.filter(
+    share => share.resourceType === resourceType && share.resourceId === resourceId
+  );
+};
+
+/**
+ * Get all elements shared with a specific user
+ * @param {string} userId - User ID
+ * @returns {Array} - Array of shares where user is recipient
+ */
+export const getSharedWithMeItems = (userId) => {
+  return shares
+    .filter(share => share.sharedWith === userId)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+};
+
+/**
+ * Get all users who have access to a resource (including inherited)
+ * @param {string} resourceType - Type of resource
+ * @param {string} resourceId - ID of the resource
+ * @returns {Array} - Array of users with their access level
+ */
+export const getUsersWithAccessToResource = (resourceType, resourceId) => {
+  const directShares = getSharesByResource(resourceType, resourceId);
+
+  // Create a map to handle multiple shares for same user (keep highest permission)
+  const usersMap = new Map();
+
+  directShares.forEach(share => {
+    const existingShare = usersMap.get(share.sharedWith);
+    if (!existingShare || compareAccessLevels(share.accessLevel, existingShare.accessLevel) > 0) {
+      usersMap.set(share.sharedWith, share);
+    }
+  });
+
+  return Array.from(usersMap.values());
+};
+
+/**
+ * Check if a user has specific access level to a resource
+ * @param {string} userId - User ID
+ * @param {string} resourceType - Type of resource
+ * @param {string} resourceId - ID of the resource
+ * @param {string} requiredLevel - Required access level ('viewer', 'commenter', 'editor', 'admin')
+ * @returns {boolean}
+ */
+export const hasAccessLevel = (userId, resourceType, resourceId, requiredLevel) => {
+  const userShare = shares.find(
+    share =>
+      share.resourceType === resourceType &&
+      share.resourceId === resourceId &&
+      share.sharedWith === userId
+  );
+
+  if (!userShare) return false;
+
+  // Check if user's access level meets requirement
+  return compareAccessLevels(userShare.accessLevel, requiredLevel) >= 0;
+};
+
+/**
+ * Calculate effective permission for a user on a resource (considers inheritance)
+ * @param {string} userId - User ID
+ * @param {string} resourceType - Type of resource
+ * @param {string} resourceId - ID of the resource
+ * @returns {Object|null} - { accessLevel, isInherited, inheritedFrom } or null
+ */
+export const calculateEffectivePermission = (userId, resourceType, resourceId) => {
+  // Check for direct/local share first
+  const localShare = shares.find(
+    share =>
+      share.resourceType === resourceType &&
+      share.resourceId === resourceId &&
+      share.sharedWith === userId &&
+      !share.isInherited
+  );
+
+  if (localShare) {
+    return {
+      accessLevel: localShare.accessLevel,
+      isInherited: false,
+      shareId: localShare.id
+    };
+  }
+
+  // Check for inherited share
+  const inheritedShare = shares.find(
+    share =>
+      share.resourceType === resourceType &&
+      share.resourceId === resourceId &&
+      share.sharedWith === userId &&
+      share.isInherited
+  );
+
+  if (inheritedShare) {
+    return {
+      accessLevel: inheritedShare.accessLevel,
+      isInherited: true,
+      inheritedFrom: inheritedShare.parentResourceType,
+      inheritedFromId: inheritedShare.parentResourceId,
+      inheritedFromName: inheritedShare.parentResourceName,
+      shareId: inheritedShare.id
+    };
+  }
+
+  return null;
+};
+
+/**
+ * Compare two access levels
+ * @param {string} level1 - First access level
+ * @param {string} level2 - Second access level
+ * @returns {number} - 1 if level1 > level2, -1 if level1 < level2, 0 if equal
+ */
+export const compareAccessLevels = (level1, level2) => {
+  const hierarchy = {
+    viewer: 1,
+    commenter: 2,
+    editor: 3,
+    admin: 4
+  };
+
+  const value1 = hierarchy[level1] || 0;
+  const value2 = hierarchy[level2] || 0;
+
+  if (value1 > value2) return 1;
+  if (value1 < value2) return -1;
+  return 0;
+};
+
+/**
+ * Get access level display name
+ * @param {string} level - Access level key
+ * @returns {string} - Display name in Spanish
+ */
+export const getAccessLevelDisplayName = (level) => {
+  const displayNames = {
+    viewer: 'Visualizador',
+    commenter: 'Comentador',
+    editor: 'Editor',
+    admin: 'Administrador'
+  };
+  return displayNames[level] || level;
+};
+
+/**
+ * Get permissions for an access level
+ * @param {string} level - Access level
+ * @returns {Object} - Permissions object
+ */
+export const getPermissionsForAccessLevel = (level) => {
+  const permissions = {
+    viewer: {
+      canRead: true,
+      canComment: false,
+      canUpdate: false,
+      canDelete: false,
+      canShare: false,
+      canManagePermissions: false
+    },
+    commenter: {
+      canRead: true,
+      canComment: true,
+      canUpdate: false,
+      canDelete: false,
+      canShare: false,
+      canManagePermissions: false
+    },
+    editor: {
+      canRead: true,
+      canComment: true,
+      canUpdate: true,
+      canDelete: false,
+      canShare: false,
+      canManagePermissions: false
+    },
+    admin: {
+      canRead: true,
+      canComment: true,
+      canUpdate: true,
+      canDelete: true,
+      canShare: true,
+      canManagePermissions: true
+    }
+  };
+
+  return permissions[level] || permissions.viewer;
+};
+
+/**
+ * Check if a share is expired
+ * @param {Object} share - Share object
+ * @returns {boolean}
+ */
+export const isShareExpired = (share) => {
+  if (!share.expiresAt) return false;
+  return new Date(share.expiresAt) < new Date();
+};
+
+/**
+ * Filter active (non-expired) shares
+ * @param {Array} sharesList - Array of shares
+ * @returns {Array} - Active shares only
+ */
+export const filterActiveShares = (sharesList) => {
+  return sharesList.filter(share => !isShareExpired(share));
+};
+
+// ===========================
+// Landing Page Data
+// ===========================
+
+export const landingPageData = {
+  features: [
+    {
+      id: 'feature-1',
+      icon: 'Shield',
+      title: 'RBAC Granular',
+      description: 'Control de acceso a nivel de recurso con permisos personalizables',
+      color: 'blue'
+    },
+    {
+      id: 'feature-2',
+      icon: 'CheckSquare',
+      title: 'Gestión de Tareas',
+      description: 'Tableros Kanban con prioridades y asignación de equipo',
+      color: 'green'
+    },
+    {
+      id: 'feature-3',
+      icon: 'Calendar',
+      title: 'Calendario Inteligente',
+      description: 'Sincronización automática y recordatorios personalizados',
+      color: 'purple'
+    },
+    {
+      id: 'feature-4',
+      icon: 'Lock',
+      title: 'Proyectos Encriptados',
+      description: 'AES-256 para proteger credenciales y datos sensibles',
+      color: 'red'
+    },
+    {
+      id: 'feature-5',
+      icon: 'Share2',
+      title: 'Compartición Segura',
+      description: 'Permisos granulares con expiración automática',
+      color: 'orange'
+    },
+    {
+      id: 'feature-6',
+      icon: 'Activity',
+      title: 'Auditoría Completa',
+      description: 'Logs inmutables exportables para cumplimiento normativo',
+      color: 'indigo'
+    }
+  ],
+
+  howItWorks: [
+    {
+      id: 'step-1',
+      number: 1,
+      icon: 'UserPlus',
+      title: 'Registra tu Organización',
+      description: 'Menos de 2 minutos, sin tarjeta de crédito requerida'
+    },
+    {
+      id: 'step-2',
+      number: 2,
+      icon: 'ShieldCheck',
+      title: 'Configura Roles y Permisos',
+      description: 'Sistema intuitivo de gestión de accesos'
+    },
+    {
+      id: 'step-3',
+      number: 3,
+      icon: 'Users',
+      title: 'Invita a tu Equipo',
+      description: 'Envía invitaciones por email con asignación de roles'
+    },
+    {
+      id: 'step-4',
+      number: 4,
+      icon: 'Rocket',
+      title: 'Comienza a Trabajar',
+      description: 'Colaboración segura desde el primer día'
+    }
+  ],
+
+  paymentMethods: [
+    {
+      id: 'payment-1',
+      icon: 'CreditCard',
+      name: 'Stripe',
+      description: 'Procesador seguro de pagos'
+    },
+    {
+      id: 'payment-2',
+      icon: 'CreditCard',
+      name: 'Tarjetas',
+      description: 'Visa, Mastercard, Amex'
+    },
+    {
+      id: 'payment-3',
+      icon: 'Wallet',
+      name: 'PayPal',
+      description: 'Paga con tu cuenta PayPal'
+    },
+    {
+      id: 'payment-4',
+      icon: 'Building',
+      name: 'Transferencia',
+      description: 'Para planes Enterprise'
+    }
+  ],
+
+  testimonials: [
+    {
+      id: 'testimonial-1',
+      quote: 'Implementamos RBAC en solo 2 días. El sistema es increíblemente flexible y nos ahorró semanas de desarrollo.',
+      author: 'Carlos Méndez',
+      role: 'CTO',
+      company: 'TechStart',
+      avatar: 'CM',
+      rating: 5
+    },
+    {
+      id: 'testimonial-2',
+      quote: 'La automatización de facturación nos ahorró más de 15 horas al mes. El soporte es excepcional.',
+      author: 'Ana Martínez',
+      role: 'Finance Director',
+      company: 'Retail Solutions',
+      avatar: 'AM',
+      rating: 5
+    },
+    {
+      id: 'testimonial-3',
+      quote: 'Migramos de nuestro sistema legacy sin downtime. La documentación es clara y el equipo muy profesional.',
+      author: 'Roberto Silva',
+      role: 'IT Manager',
+      company: 'Global Logistics',
+      avatar: 'RS',
+      rating: 5
+    }
+  ],
+
+  faqs: [
+    {
+      id: 'faq-1',
+      question: '¿Puedo cambiar de plan en cualquier momento?',
+      answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento desde el panel de administración. Los cambios se aplican inmediatamente y solo pagas la diferencia prorrateada.'
+    },
+    {
+      id: 'faq-2',
+      question: '¿Qué es RBAC y por qué lo necesito?',
+      answer: 'RBAC (Role-Based Access Control) es un sistema de control de acceso que asigna permisos basados en roles. Es esencial para proteger datos sensibles, cumplir con normativas (GDPR, SOC2) y gestionar equipos de forma escalable.'
+    },
+    {
+      id: 'faq-3',
+      question: '¿Los datos están encriptados?',
+      answer: 'Sí, todos los datos están encriptados en tránsito (TLS 1.3) y en reposo (AES-256). Los datos sensibles como contraseñas y credenciales tienen una capa adicional de encriptación a nivel de aplicación.'
+    },
+    {
+      id: 'faq-4',
+      question: '¿Puedo cancelar mi suscripción?',
+      answer: 'Puedes cancelar tu suscripción en cualquier momento sin penalización. Tendrás acceso completo hasta el final de tu período de facturación actual. Tus datos se mantienen disponibles durante 30 días después de la cancelación.'
+    },
+    {
+      id: 'faq-5',
+      question: '¿Ofrecen período de prueba?',
+      answer: 'El plan Free es gratuito para siempre y no requiere tarjeta de crédito. Para planes pagos, ofrecemos garantía de devolución de 30 días sin preguntas.'
+    },
+    {
+      id: 'faq-6',
+      question: '¿Qué soporte está incluido?',
+      answer: 'El plan Free incluye documentación completa y comunidad. Starter incluye soporte por email (respuesta en 24h). Professional incluye soporte prioritario (respuesta en 4h). Enterprise incluye soporte dedicado 24/7 con SLA garantizado.'
+    }
+  ]
+};

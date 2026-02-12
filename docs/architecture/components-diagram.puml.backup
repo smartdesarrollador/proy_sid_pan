@@ -1,0 +1,647 @@
+@startuml Components-Architecture-Diagram
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+title Sistema de Gestión de Roles, Permisos y Suscripciones\nDiagrama de Componentes - Arquitectura Dual Frontend
+
+' ===============================================
+' ESTILOS Y COLORES
+' ===============================================
+
+skinparam component {
+    BackgroundColor<<frontend>> #E3F2FD
+    BorderColor<<frontend>> #1976D2
+    BackgroundColor<<frontend_admin>> #FFE0B2
+    BorderColor<<frontend_admin>> #E65100
+    BackgroundColor<<frontend_client>> #E1F5FE
+    BorderColor<<frontend_client>> #0277BD
+    BackgroundColor<<backend>> #F3E5F5
+    BorderColor<<backend>> #7B1FA2
+    BackgroundColor<<database>> #FFF3E0
+    BorderColor<<database>> #F57C00
+    BackgroundColor<<cache>> #E8F5E9
+    BorderColor<<cache>> #388E3C
+    BackgroundColor<<external>> #FCE4EC
+    BorderColor<<external>> #C2185B
+    BackgroundColor<<queue>> #FFF9C4
+    BorderColor<<queue>> #F9A825
+}
+
+' ===============================================
+' CAPA DE PRESENTACIÓN (DUAL FRONTEND)
+' ===============================================
+
+package "Frontend Admin\n(admin.plataforma.com)" <<frontend_admin>> {
+    component "Angular Admin App" as AngularAdmin {
+        component [Dashboard Admin] as DashboardAdmin
+        component [User Management] as UserManagement
+        component [Role Management] as RoleManagement
+        component [Permission Management] as PermissionManagement
+        component [Subscription Management] as SubscriptionManagement
+        component [Audit Logs] as AuditLogsModule
+        component [Settings] as SettingsModule
+
+        component [Admin Auth Service] as AdminAuthService
+        component [Admin API Service] as AdminApiService
+        component [RBAC Service (Frontend)] as FrontendRBACService
+    }
+
+    component [Shared Guards\nAdmin] as AdminGuards
+    component [Shared Interceptors\nAdmin] as AdminInterceptors
+}
+
+package "Frontend Cliente\n(app.plataforma.com)" <<frontend_client>> {
+    component "Angular Client App" as AngularClient {
+        component [Dashboard Usuario] as DashboardUsuario
+        component [Calendario] as CalendarioModule
+        component [Tareas] as TareasModule
+        component [Notificaciones] as NotificacionesModule
+        component [Archivos] as ArchivosModule
+        component [Portafolio/Proyectos] as PortafolioModule
+        component [Perfil Usuario] as PerfilModule
+
+        component [Client Auth Service] as ClientAuthService
+        component [Client API Service] as ClientApiService
+        component [Feature Gate Service] as FeatureGateService
+    }
+
+    component [Shared Guards\nClient] as ClientGuards
+    component [Shared Interceptors\nClient] as ClientInterceptors
+}
+
+package "Shared Libraries" <<frontend>> {
+    component [Tailwind CSS Config] as TailwindShared
+    component [Common Components] as CommonComponents
+    component [Common Models/Interfaces] as CommonModels
+    component [RxJS Utils] as RxJSUtils
+}
+
+note right of AngularAdmin
+  **Frontend Admin:**
+  • URL: admin.plataforma.com
+  • Usuarios: OrgAdmin, Manager (con permisos)
+  • Módulos: RBAC, Billing, Audit
+  • Tech: Angular 17+ Standalone
+  • Tailwind CSS + Signals
+end note
+
+note right of AngularClient
+  **Frontend Cliente:**
+  • URL: app.plataforma.com
+  • Usuarios: Todos (Member+)
+  • Módulos: Servicios productivos
+  • Tech: Angular 17+ Standalone
+  • Feature gates por plan
+end note
+
+' ===============================================
+' CAPA DE API (BACKEND)
+' ===============================================
+
+package "API Layer (Backend Unificado)" <<backend>> {
+    component "Django REST Framework" as DRF {
+        package "/api/v1/admin/" {
+            component [Tenants API] as TenantsAPI
+            component [Users API] as UsersAPI
+            component [Roles API] as RolesAPI
+            component [Permissions API] as PermissionsAPI
+            component [Subscriptions API] as SubscriptionsAPI
+            component [Audit Logs API] as AuditAPI
+            component [Analytics API] as AnalyticsAPI
+        }
+
+        package "/api/v1/app/" {
+            component [Calendar API] as CalendarAPI
+            component [Tasks API] as TasksAPI
+            component [Notifications API] as NotificationsAPI
+            component [Files API] as FilesAPI
+            component [Projects API] as ProjectsAPI
+            component [Dashboard API] as DashboardAPI
+        }
+
+        package "/api/v1/auth/" {
+            component [Login/Logout] as AuthAPI
+            component [Register] as RegisterAPI
+            component [Token Refresh] as TokenRefreshAPI
+            component [Password Reset] as PasswordResetAPI
+            component [MFA] as MFAAPI
+        }
+
+        component [Webhooks] as WebhooksAPI
+
+        component [JWT Middleware] as JWTMiddleware
+        component [Tenant Middleware] as TenantMiddleware
+        component [Permission Middleware] as PermissionMiddleware
+        component [Rate Limit Middleware] as RateLimitMiddleware
+        component [Feature Gate Middleware] as FeatureGateMiddleware
+
+        component [Auth Service] as BackendAuthService
+        component [Billing Service] as BackendBillingService
+        component [RBAC Service] as RBACService
+        component [Notification Service] as NotificationService
+        component [Calendar Service] as CalendarService
+        component [Task Service] as TaskService
+        component [File Service] as FileService
+        component [Project Service] as ProjectService
+    }
+
+    component [Django ORM] as ORM
+    component [Django Signals] as Signals
+    component [Serializers] as Serializers
+}
+
+note right of DRF
+  **Tech Stack:**
+  • Django 5.0+
+  • Python 3.11+
+  • DRF 3.14+
+  • PyJWT
+  • bcrypt
+
+  **Patterns:**
+  • ViewSets + Routers
+  • Serializers con validación
+  • Permissions personalizados
+  • Signals para eventos
+  • Middleware pipeline
+end note
+
+' ===============================================
+' CAPA DE DATOS (DATABASE)
+' ===============================================
+
+package "Data Layer" <<database>> {
+    database "PostgreSQL 15+" as PostgreSQL {
+        component [Tables] as Tables
+        component [Row-Level Security] as RLS
+        component [Indexes] as Indexes
+        component [Triggers] as Triggers
+        component [Partitions] as Partitions
+    }
+
+    component [PgBouncer\nConnection Pool] as PgBouncer
+    component [pg_stat_statements] as PgStats
+}
+
+note bottom of PostgreSQL
+  **Features:**
+  • Row-Level Security (RLS)
+  • JSONB para settings/metadata
+  • Full-text search (tsvector)
+  • Partitioned tables (audit_log)
+  • Composite indexes con tenant_id
+  • Foreign keys + constraints
+
+  **Performance:**
+  • Connection pooling (10-50)
+  • Read replicas (heavy queries)
+  • Automatic VACUUM
+  • Query optimization monitoring
+end note
+
+' ===============================================
+' CAPA DE CACHE
+' ===============================================
+
+package "Cache Layer" <<cache>> {
+    database "Redis 7+" as Redis {
+        component [Session Store] as SessionStore
+        component [Permissions Cache] as PermissionsCache
+        component [Rate Limit Counters] as RateLimitCounters
+        component [MFA Pending] as MFAPending
+        component [Feature Flags Cache] as FeatureFlagsCache
+    }
+}
+
+note bottom of Redis
+  **Keys Structure:**
+  • permissions:{user_id}:{tenant_id}
+  • sessions:{session_id}
+  • rate_limit:{ip}:{endpoint}
+  • mfa_pending:{token}
+  • features:{tenant_id}
+  • lockout:{email}
+
+  **TTLs:**
+  • Permissions: 5 min
+  • Sessions: 24 hours
+  • Rate limits: 1 min
+  • MFA pending: 5 min
+  • Features: 5 min
+end note
+
+' ===============================================
+' CAPA DE TAREAS ASÍNCRONAS
+' ===============================================
+
+package "Background Jobs" <<queue>> {
+    component "Celery Workers" as Celery {
+        component [Email Tasks] as EmailTasks
+        component [Billing Tasks] as BillingTasks
+        component [Notification Tasks] as NotificationTasks
+        component [Cleanup Tasks] as CleanupTasks
+        component [Export Tasks] as ExportTasks
+    }
+
+    component [Celery Beat\nScheduler] as CeleryBeat
+    database "Redis\n(Broker)" as RedisBroker
+}
+
+note bottom of Celery
+  **Tasks:**
+  • send_email(template, data)
+  • process_renewals() [daily]
+  • retry_payment(tenant_id) [scheduled]
+  • generate_invoice_pdf(invoice_id)
+  • export_audit_logs(filters)
+  • cleanup_expired_tokens() [daily]
+
+  **Scheduling:**
+  • Cron-like with Celery Beat
+  • Task priority queues
+  • Retry with exponential backoff
+  • Result backend (Redis)
+end note
+
+' ===============================================
+' SERVICIOS EXTERNOS
+' ===============================================
+
+package "External Services" <<external>> {
+    component [Stripe API] as Stripe {
+        portin "Charges" as StripeCharges
+        portin "Customers" as StripeCustomers
+        portin "Subscriptions" as StripeSubs
+        portout "Webhooks" as StripeWebhooks
+    }
+
+    component [Email Service\n(SendGrid/SES)] as EmailService {
+        portin "Send Email" as SendEmail
+        portout "Webhooks" as EmailWebhooks
+    }
+
+    component [AWS S3] as S3 {
+        portin "Upload" as S3Upload
+        portin "Download" as S3Download
+    }
+
+    component [Monitoring\n(Sentry/DataDog)] as Monitoring {
+        portin "Error Tracking" as ErrorTracking
+        portin "Performance Metrics" as Metrics
+    }
+}
+
+note bottom of Stripe
+  **Integration:**
+  • Stripe Elements (PCI-compliant)
+  • Webhook signature verification
+  • Idempotency keys
+  • Customer portal
+
+  **Events:**
+  • invoice.payment_succeeded
+  • invoice.payment_failed
+  • customer.subscription.deleted
+end note
+
+' ===============================================
+' INTERFACES Y PROTOCOLOS
+' ===============================================
+
+interface "HTTPS\nREST API" as HTTPS
+interface "WebSocket\n(future)" as WebSocket
+interface "PostgreSQL\nProtocol" as PostgresProtocol
+interface "Redis\nProtocol" as RedisProtocol
+interface "SMTP/API" as SMTP
+
+' ===============================================
+' RELACIONES - FRONTEND ADMIN → BACKEND
+' ===============================================
+
+AngularAdmin --> HTTPS : REST calls /api/v1/admin/*
+DashboardAdmin --> AdminApiService
+UserManagement --> AdminApiService
+RoleManagement --> AdminApiService
+PermissionManagement --> AdminApiService
+SubscriptionManagement --> AdminApiService
+AuditLogsModule --> AdminApiService
+
+AdminAuthService --> HTTPS : POST /api/v1/auth/*
+AdminApiService --> HTTPS : /api/v1/admin/*
+
+AdminGuards ..> AdminAuthService : Check admin permissions
+AdminInterceptors ..> HTTPS : JWT + Error handling
+
+AngularAdmin ..> TailwindShared : Styles
+AngularAdmin ..> CommonComponents : UI components
+AdminApiService ..> RxJSUtils : Observables
+
+' ===============================================
+' RELACIONES - FRONTEND CLIENTE → BACKEND
+' ===============================================
+
+AngularClient --> HTTPS : REST calls /api/v1/app/*
+DashboardUsuario --> ClientApiService
+CalendarioModule --> ClientApiService
+TareasModule --> ClientApiService
+NotificacionesModule --> ClientApiService
+ArchivosModule --> ClientApiService
+PortafolioModule --> ClientApiService
+
+ClientAuthService --> HTTPS : POST /api/v1/auth/*
+ClientApiService --> HTTPS : /api/v1/app/*
+
+ClientGuards ..> ClientAuthService : Check auth
+ClientGuards ..> FeatureGateService : Check plan features
+ClientInterceptors ..> HTTPS : JWT + Error handling
+
+AngularClient ..> TailwindShared : Styles
+AngularClient ..> CommonComponents : UI components
+ClientApiService ..> RxJSUtils : Observables
+
+' ===============================================
+' RELACIONES - SHARED LIBRARIES
+' ===============================================
+
+AngularAdmin ..> CommonModels : Shared interfaces
+AngularClient ..> CommonModels : Shared interfaces
+
+' ===============================================
+' RELACIONES - BACKEND → MIDDLEWARE PIPELINE
+' ===============================================
+
+HTTPS --> JWTMiddleware : 1. Verify JWT token
+JWTMiddleware --> TenantMiddleware : 2. Set tenant context
+TenantMiddleware --> PermissionMiddleware : 3. Load user permissions
+PermissionMiddleware --> FeatureGateMiddleware : 4. Check plan features
+FeatureGateMiddleware --> RateLimitMiddleware : 5. Rate limit by plan
+RateLimitMiddleware --> TenantsAPI : 6. Route to endpoint
+
+' Admin API endpoints
+TenantsAPI --> RBACService
+UsersAPI --> RBACService
+RolesAPI --> RBACService
+PermissionsAPI --> RBACService
+SubscriptionsAPI --> BackendBillingService
+AuditAPI --> RBACService
+AnalyticsAPI --> RBACService
+
+' App API endpoints
+CalendarAPI --> CalendarService
+TasksAPI --> TaskService
+NotificationsAPI --> NotificationService
+FilesAPI --> FileService
+ProjectsAPI --> ProjectService
+DashboardAPI --> RBACService
+
+' Auth API endpoints
+AuthAPI --> BackendAuthService
+RegisterAPI --> BackendAuthService
+TokenRefreshAPI --> BackendAuthService
+PasswordResetAPI --> BackendAuthService
+MFAAPI --> BackendAuthService
+
+' Webhooks
+WebhooksAPI --> BackendBillingService
+
+' ===============================================
+' RELACIONES - BACKEND → DATABASE
+' ===============================================
+
+DRF --> PostgresProtocol
+PostgresProtocol --> PgBouncer : Connection pooling
+PgBouncer --> PostgreSQL
+
+ORM --> PostgresProtocol : SQL queries
+Signals ..> PostgresProtocol : Trigger actions
+
+PostgreSQL --> Tables
+PostgreSQL --> RLS : Tenant isolation
+PostgreSQL --> Indexes : Query optimization
+PostgreSQL --> Triggers : Auto-actions
+PostgreSQL --> Partitions : Large tables
+
+PgStats ..> PostgreSQL : Monitor performance
+
+' ===============================================
+' RELACIONES - BACKEND → CACHE
+' ===============================================
+
+DRF --> RedisProtocol
+RedisProtocol --> Redis
+
+JWTMiddleware ..> PermissionsCache : GET cached perms
+TenantMiddleware ..> FeatureFlagsCache : GET features
+RateLimitMiddleware ..> RateLimitCounters : INCR counter
+BackendAuthService ..> SessionStore : SET/GET sessions
+BackendAuthService ..> MFAPending : SET/GET mfa state
+
+' ===============================================
+' RELACIONES - BACKEND → CELERY
+' ===============================================
+
+BackendAuthService --> EmailTasks : send_verification_email.delay()
+BackendBillingService --> BillingTasks : process_renewals.delay()
+NotificationService --> NotificationTasks : send_notification.delay()
+
+CeleryBeat --> BillingTasks : Schedule: 0 0 * * *
+CeleryBeat --> CleanupTasks : Schedule: 0 2 * * *
+
+Celery --> RedisBroker : Task queue
+RedisBroker --> Celery : Task results
+
+' ===============================================
+' RELACIONES - CELERY → EXTERNAL
+' ===============================================
+
+EmailTasks --> SMTP
+SMTP --> EmailService : Send transactional emails
+
+BillingTasks --> StripeCharges : Create charges
+BillingTasks --> StripeCustomers : Manage customers
+BillingTasks --> StripeSubs : Manage subscriptions
+
+ExportTasks --> S3Upload : Upload PDFs/CSVs
+
+StripeWebhooks --> WebhooksAPI : POST /webhooks/stripe
+EmailWebhooks --> WebhooksAPI : POST /webhooks/email
+
+' ===============================================
+' RELACIONES - MONITORING
+' ===============================================
+
+DRF ..> ErrorTracking : Send errors
+DRF ..> Metrics : Send APM data
+Angular ..> ErrorTracking : Frontend errors
+Angular ..> Metrics : Performance metrics
+
+' ===============================================
+' DEPLOYMENT BOUNDARIES
+' ===============================================
+
+package "Load Balancer" <<external>> {
+    component [Nginx/ALB] as LoadBalancer
+}
+
+note top of LoadBalancer
+  **Features:**
+  • HTTPS termination (TLS 1.3)
+  • Request routing
+  • Static file serving
+  • Rate limiting (IP-based)
+  • Health checks
+  • SSL certificates (Let's Encrypt)
+end note
+
+LoadBalancer --> Angular : Serve SPA
+LoadBalancer --> HTTPS : Proxy API requests
+
+' ===============================================
+' SECURITY COMPONENTS
+' ===============================================
+
+package "Security Layer" {
+    component [WAF\n(Web Application Firewall)] as WAF
+    component [DDoS Protection\n(Cloudflare)] as DDoS
+    component [SSL/TLS\nCertificates] as SSL
+}
+
+DDoS --> WAF : Filter malicious traffic
+WAF --> LoadBalancer : Clean traffic
+SSL ..> LoadBalancer : HTTPS encryption
+
+' ===============================================
+' NOTAS ADICIONALES
+' ===============================================
+
+note as N0
+  **Arquitectura Dual Frontend**
+
+  **Frontend Admin** (admin.plataforma.com)
+  - Gestión de RBAC, usuarios, roles, permisos
+  - Subscription management y billing
+  - Audit logs y analytics
+  - Solo accesible para OrgAdmin, Manager
+  - Consume: /api/v1/admin/*
+
+  **Frontend Cliente** (app.plataforma.com)
+  - Servicios productivos para usuarios finales
+  - Calendario, Tareas, Archivos
+  - Gestión de Proyectos (secciones, items, credenciales)
+  - Dashboard personalizado, notificaciones
+  - Accesible para todos (Member+)
+  - Consume: /api/v1/app/*
+  - Feature gates por plan de suscripción
+
+  **Backend Unificado** (Django)
+  - API única que sirve a ambos frontends
+  - Autenticación compartida (/api/v1/auth/)
+  - Mismos JWT tokens para ambos
+  - RLS garantiza aislamiento por tenant
+end note
+
+note as N1
+  **Data Flow Example: Login (Ambos Frontends)**
+  1. User enters credentials (Admin o Cliente)
+  2. POST /api/v1/auth/login (HTTPS)
+  3. JWT Middleware validates (skip, no token yet)
+  4. Auth Service validates credentials (bcrypt)
+  5. Query user from PostgreSQL (ORM)
+  6. Generate JWT tokens (access + refresh)
+  7. Store refresh token in PostgreSQL
+  8. Cache permissions in Redis (TTL 5min)
+  9. Cache plan features in Redis (TTL 5min)
+  10. Return tokens to frontend
+  11. Frontend stores in localStorage
+  12. Audit log entry created (async via Signals)
+end note
+
+note as N2
+  **Data Flow Example: Feature Gate Check**
+  (Frontend Cliente accede a feature Premium)
+  1. Usuario click en "Crear Proyecto" (Pro+)
+  2. ClientGuard verifica feature localmente
+  3. POST /api/v1/app/projects (HTTPS)
+  4. JWT Middleware verifica token
+  5. Tenant Middleware carga tenant context
+  6. Feature Gate Middleware:
+     a. Consulta plan del tenant (cache/DB)
+     b. Valida si plan incluye feature "projects"
+     c. Si no: HTTP 403 Forbidden + upgrade prompt
+     d. Si sí: continúa al endpoint
+  7. Projects API crea proyecto (PostgreSQL)
+  8. Retorna proyecto creado
+  9. Frontend actualiza UI
+end note
+
+note as N3
+  **Data Flow Example: Billing Renewal**
+  1. Celery Beat triggers daily cron (00:00 UTC)
+  2. process_renewals() task executes
+  3. Query tenants to renew (PostgreSQL)
+  4. For each tenant:
+     a. Create charge (Stripe API)
+     b. Update subscription dates (PostgreSQL)
+     c. Create invoice (PostgreSQL)
+     d. Generate PDF (export task → S3)
+     e. Send email (email task → SendGrid)
+  5. Stripe webhook confirms payment
+  6. Webhook handler updates status
+  7. Cache invalidation (Redis)
+  8. Notify admins via notification service
+end note
+
+note as N4
+  **Data Flow Example: Crear Item con Credenciales**
+  (Frontend Cliente crea item tipo "credential")
+  1. Usuario completa form: título, usuario, password, email
+  2. POST /api/v1/app/projects/{id}/sections/{id}/items
+  3. JWT Middleware verifica token
+  4. Tenant Middleware carga tenant context
+  5. Feature Gate Middleware:
+     a. Valida límites del plan (Free: max 50 items)
+     b. Si excede: HTTP 403 + upgrade prompt
+  6. Projects API recibe request
+  7. ProjectService procesa:
+     a. Crea ProjectItem (tenant_id, section_id)
+     b. Crea ProjectItemFields:
+        - field_name='usuario', field_value='admin', field_type='text'
+        - field_name='password', field_value=encrypt('secret123'),
+          field_type='password', is_encrypted=true
+        - field_name='email', field_value='admin@example.com', field_type='email'
+  8. AuditLog registra: action='project_item.create'
+  9. PostgreSQL commit con RLS (tenant_id validado)
+  10. Response 201 Created con item + fields
+  11. Frontend muestra item con password oculto (•••)
+end note
+
+' ===============================================
+' LEYENDA
+' ===============================================
+
+legend right
+  |= Color |= Layer |
+  | <back:#FFE0B2>   </back> | Frontend Admin (Angular) |
+  | <back:#E1F5FE>   </back> | Frontend Cliente (Angular) |
+  | <back:#E3F2FD>   </back> | Shared Libraries |
+  | <back:#F3E5F5>   </back> | Backend (Django API Unificado) |
+  | <back:#FFF3E0>   </back> | Database (PostgreSQL) |
+  | <back:#E8F5E9>   </back> | Cache (Redis) |
+  | <back:#FFF9C4>   </back> | Queue (Celery) |
+  | <back:#FCE4EC>   </back> | External Services |
+
+  |= Symbol |= Meaning |
+  | → | Synchronous call |
+  | ..> | Asynchronous call |
+  | —— | Component boundary |
+
+  **Protocols:**
+  • HTTPS: REST API (JSON)
+  • WebSocket: Real-time (future)
+  • PostgreSQL: SQL queries
+  • Redis: Key-value commands
+  • SMTP: Email delivery
+endlegend
+
+@enduml

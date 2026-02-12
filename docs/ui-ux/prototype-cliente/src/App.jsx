@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import LandingPage from './components/landing/LandingPage';
 import Login from './components/Login';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -8,9 +9,11 @@ import { TaskBoard } from './components/tasks/TaskBoard';
 import { Calendar } from './components/calendar/Calendar';
 import { ProjectsView } from './components/projects/ProjectsView';
 import { ProjectDetail } from './components/projects/ProjectDetail';
+import SharedWithMeView from './components/sharing/SharedWithMeView';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
+  const [appState, setAppState] = useState('landing'); // 'landing', 'login', 'authenticated'
   const [activeView, setActiveView] = useState('user-dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -42,18 +45,35 @@ function AppContent() {
             onBack={handleBackToProjects}
           />
         );
+      case 'shared-with-me':
+        return (
+          <SharedWithMeView
+            currentPlan="professional"
+            onNavigateToResource={(item) => {
+              // Navigate to the resource
+              if (item.resourceType === 'project') {
+                handleSelectProject(item.resourceId);
+              } else if (item.resourceType === 'task') {
+                setActiveView('tasks');
+              } else if (item.resourceType === 'event') {
+                setActiveView('calendar');
+              }
+              // Add more navigation logic as needed
+            }}
+          />
+        );
       case 'profile':
         return (
           <div className="text-center py-20">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Mi Perfil</h2>
-            <p className="text-gray-600">Esta vista estará disponible próximamente</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Mi Perfil</h2>
+            <p className="text-gray-600 dark:text-gray-400">Esta vista estará disponible próximamente</p>
           </div>
         );
       case 'settings':
         return (
           <div className="text-center py-20">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Configuración</h2>
-            <p className="text-gray-600">Esta vista estará disponible próximamente</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Configuración</h2>
+            <p className="text-gray-600 dark:text-gray-400">Esta vista estará disponible próximamente</p>
           </div>
         );
       default:
@@ -61,12 +81,24 @@ function AppContent() {
     }
   };
 
-  if (!isAuthenticated) {
-    return <Login />;
+  // Landing page - shown by default
+  if (appState === 'landing') {
+    return <LandingPage onGetStarted={() => setAppState('login')} />;
   }
 
+  // Login page - shown when user clicks "Get Started" or not authenticated
+  if (appState === 'login' || !isAuthenticated) {
+    return (
+      <Login
+        onBack={() => setAppState('landing')}
+        onLoginSuccess={() => setAppState('authenticated')}
+      />
+    );
+  }
+
+  // Authenticated app - main application
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex">
