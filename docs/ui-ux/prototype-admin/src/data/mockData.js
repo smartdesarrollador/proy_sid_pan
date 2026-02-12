@@ -217,6 +217,10 @@ export const permissions = [
   { id: 'perm-037', codename: 'calendar.update', name: 'Editar Eventos', resource: 'calendar', action: 'update', category: 'Calendar' },
   { id: 'perm-038', codename: 'calendar.delete', name: 'Eliminar Eventos', resource: 'calendar', action: 'delete', category: 'Calendar' },
   { id: 'perm-039', codename: 'calendar.share', name: 'Compartir Calendario', resource: 'calendar', action: 'share', category: 'Calendar' },
+
+  // Customers
+  { id: 'perm-040', codename: 'customers.read', name: 'Ver Clientes', resource: 'customers', action: 'read', category: 'Customers' },
+  { id: 'perm-041', codename: 'customers.update', name: 'Editar Clientes', resource: 'customers', action: 'update', category: 'Customers' },
 ];
 
 export const subscriptionPlans = [
@@ -319,6 +323,143 @@ export const subscriptionPlans = [
       apiCalls: Infinity
     },
     popular: false
+  }
+];
+
+// ===========================
+// Customers / Tenants
+// ===========================
+
+export const customers = [
+  {
+    id: 'tenant-001',
+    companyName: 'Acme Corporation',
+    subdomain: 'acme',
+    adminEmail: 'admin@acme.com',
+    adminName: 'John Smith',
+    subscription: {
+      planId: 'plan-professional',
+      planName: 'Professional',
+      status: 'active',
+      currentPeriodStart: '2026-01-09',
+      currentPeriodEnd: '2026-03-09',
+      trialEndsAt: null,
+      cancelledAt: null,
+      mrr: 99
+    },
+    usage: {
+      users: { current: 23, limit: 50 },
+      storage: { current: 12.5, limit: 50, unit: 'GB' },
+      apiCalls: { current: 8234, limit: 100000 }
+    },
+    createdAt: '2025-12-01',
+    status: 'active',
+    logo: null,
+    primaryColor: '#3b82f6'
+  },
+  {
+    id: 'tenant-002',
+    companyName: 'TechStart Solutions',
+    subdomain: 'techstart',
+    adminEmail: 'carlos@techstart.com',
+    adminName: 'Carlos Méndez',
+    subscription: {
+      planId: 'plan-starter',
+      planName: 'Starter',
+      status: 'trial',
+      currentPeriodStart: '2026-02-05',
+      currentPeriodEnd: '2026-02-19',
+      trialEndsAt: '2026-02-19',
+      cancelledAt: null,
+      mrr: 0
+    },
+    usage: {
+      users: { current: 5, limit: 10 },
+      storage: { current: 2.1, limit: 5, unit: 'GB' },
+      apiCalls: { current: 1450, limit: 10000 }
+    },
+    createdAt: '2026-02-05',
+    status: 'active',
+    logo: null,
+    primaryColor: '#10b981'
+  },
+  {
+    id: 'tenant-003',
+    companyName: 'Global Logistics Inc',
+    subdomain: 'globallog',
+    adminEmail: 'roberto@globallog.com',
+    adminName: 'Roberto Silva',
+    subscription: {
+      planId: 'plan-enterprise',
+      planName: 'Enterprise',
+      status: 'active',
+      currentPeriodStart: '2025-11-15',
+      currentPeriodEnd: '2026-11-15',
+      trialEndsAt: null,
+      cancelledAt: null,
+      mrr: 499
+    },
+    usage: {
+      users: { current: 87, limit: null },
+      storage: { current: 234.7, limit: null, unit: 'GB' },
+      apiCalls: { current: 45230, limit: null }
+    },
+    createdAt: '2025-11-15',
+    status: 'active',
+    logo: null,
+    primaryColor: '#8b5cf6'
+  },
+  {
+    id: 'tenant-004',
+    companyName: 'Retail Solutions SA',
+    subdomain: 'retailsol',
+    adminEmail: 'ana@retailsol.com',
+    adminName: 'Ana Martínez',
+    subscription: {
+      planId: 'plan-free',
+      planName: 'Free',
+      status: 'active',
+      currentPeriodStart: '2026-01-20',
+      currentPeriodEnd: null,
+      trialEndsAt: null,
+      cancelledAt: null,
+      mrr: 0
+    },
+    usage: {
+      users: { current: 3, limit: 5 },
+      storage: { current: 0.8, limit: 1, unit: 'GB' },
+      apiCalls: { current: 450, limit: 1000 }
+    },
+    createdAt: '2026-01-20',
+    status: 'active',
+    logo: null,
+    primaryColor: '#f59e0b'
+  },
+  {
+    id: 'tenant-005',
+    companyName: 'Design Studio Pro',
+    subdomain: 'designpro',
+    adminEmail: 'laura@designpro.com',
+    adminName: 'Laura Fernández',
+    subscription: {
+      planId: 'plan-professional',
+      planName: 'Professional',
+      status: 'past_due',
+      currentPeriodStart: '2026-01-01',
+      currentPeriodEnd: '2026-03-01',
+      trialEndsAt: null,
+      cancelledAt: null,
+      mrr: 99
+    },
+    usage: {
+      users: { current: 15, limit: 50 },
+      storage: { current: 18.3, limit: 50, unit: 'GB' },
+      apiCalls: { current: 12450, limit: 100000 }
+    },
+    createdAt: '2025-10-15',
+    status: 'active',
+    logo: null,
+    primaryColor: '#ec4899'
   }
 ];
 
@@ -638,7 +779,7 @@ export const rolePermissions = {
   ],
   'Manager': [
     'users.read', 'users.update', 'roles.read', 'projects.*', 'audit.read',
-    'dashboard.read', 'content.read', 'tasks.*', 'calendar.*'
+    'customers.read', 'dashboard.read', 'content.read', 'tasks.*', 'calendar.*'
   ],
   'Member': [
     'dashboard.read', 'projects.read', 'projects.create',

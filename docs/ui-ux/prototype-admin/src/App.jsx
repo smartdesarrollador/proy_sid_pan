@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import UserManagement from './components/UserManagement';
+import ClientManagement from './components/ClientManagement';
 import RoleManagement from './components/RoleManagement';
 import PermissionManagement from './components/PermissionManagement';
 import SubscriptionManagement from './components/SubscriptionManagement';
@@ -20,6 +21,8 @@ function AppContent() {
         return <Dashboard />;
       case 'users':
         return <UserManagement />;
+      case 'clients':
+        return <ClientManagement />;
       case 'roles':
         return <RoleManagement />;
       case 'permissions':

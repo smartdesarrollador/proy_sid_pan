@@ -32,6 +32,10 @@ export const usePermissions = () => {
   const canDeleteEvents = () => hasPermission('calendar.delete');
   const canShareCalendar = () => hasPermission('calendar.share');
 
+  // Customers permissions
+  const canViewCustomers = () => hasPermission('customers.read');
+  const canEditCustomers = () => hasPermission('customers.update');
+
   // Helper para verificar si es admin completo
   const isOrgAdmin = () => {
     return currentUser?.roles?.includes('OrgAdmin') || false;
@@ -78,6 +82,8 @@ export const usePermissions = () => {
     canEditEvents,
     canDeleteEvents,
     canShareCalendar,
+    canViewCustomers,
+    canEditCustomers,
     isOrgAdmin,
     getPrimaryRole,
     getRoleColor,

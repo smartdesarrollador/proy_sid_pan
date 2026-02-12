@@ -5,7 +5,8 @@ import {
   Key,
   CreditCard,
   FileText,
-  Settings
+  Settings,
+  Building2
 } from 'lucide-react';
 import clsx from 'clsx';
 import { usePermissions } from '../hooks/usePermissions';
@@ -13,6 +14,7 @@ import { usePermissions } from '../hooks/usePermissions';
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard.read' },
   { id: 'users', label: 'Usuarios', icon: Users, permission: 'users.read' },
+  { id: 'clients', label: 'Clientes', icon: Building2, permission: 'customers.read' },
   { id: 'roles', label: 'Roles', icon: Shield, permission: 'roles.read' },
   { id: 'permissions', label: 'Permisos', icon: Key, permission: 'permissions.read' },
   { id: 'subscription', label: 'Suscripción', icon: CreditCard, permission: 'billing.read' },
