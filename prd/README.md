@@ -1,7 +1,7 @@
 # PRD: Sistema Avanzado de Gestión de Roles, Permisos y Suscripciones Multi-Tenant
 
 **Version:** 2.0.0
-**Date:** 2026-02-10
+**Date:** 2026-02-12
 **Status:** Draft
 **Owner:** Product Team
 **Tech Stack:** Django REST Framework, PostgreSQL, Angular (Admin + Cliente), React (Prototipos), Tailwind CSS
@@ -21,6 +21,7 @@ Este PRD está organizado en módulos para facilitar la navegación y mantenimie
 - **[Sharing & Collaboration](features/sharing-collaboration.md)** - Sistema de compartición con permisos granulares
 - **[Projects/Portafolio](features/projects.md)** - Gestión de proyectos con secciones, items y campos customizables
 - **[Billing & Subscriptions](features/billing.md)** - Planes, facturación, feature gates, límites de uso
+- **[Digital Services](features/digital-services.md)** - Tarjeta digital, Landing page, Portafolio, CV público con SSR
 
 ### 🔧 Technical (Documentación Técnica)
 - **[Architecture](technical/architecture.md)** - Arquitectura general del sistema, multi-tenancy, seguridad
@@ -162,7 +163,7 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - ✅ API REST documentada con Swagger
 - ✅ Frontend Angular con Tailwind (login, dashboard, user/role management)
 
-#### Fase 2 (16 semanas) - Advanced RBAC
+#### Fase 2 (16 semanas) - Advanced RBAC + UX Enhancements
 - ✅ Roles personalizados por tenant
 - ✅ Jerarquía de roles con herencia
 - ✅ Permisos condicionales (ej: edit_own, approve_department)
@@ -171,6 +172,8 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - ✅ MFA (TOTP/SMS)
 - ✅ Advanced audit logs con búsqueda y filtros
 - ✅ Webhooks para eventos de autenticación/autorización
+- **NEW** ✅ Internacionalización (i18n): Soporte ES/EN en admin y cliente
+- **NEW** ✅ Dark Mode: Theme switcher con persistencia de preferencias
 
 #### Fase 3 (24 semanas) - Enterprise Features
 - ✅ SSO/SAML integration
@@ -181,6 +184,26 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - ✅ API rate limiting granular por endpoint
 - ✅ Geo-redundancy y disaster recovery
 - ✅ Compliance reports (SOC2, GDPR)
+
+#### Fase 4 (12 semanas) - Sharing & Projects
+- ✅ Sistema de compartición con permisos granulares
+- ✅ Gestión de proyectos con secciones, items y campos customizables
+- ✅ Herencia automática de permisos en cascada
+- ✅ Permisos locales que sobrescriben heredados
+- ✅ Operaciones batch (Professional+)
+- ✅ Export/import de proyectos (CSV/JSON)
+- ✅ Búsqueda full-text (PostgreSQL FTS)
+- ✅ Auditoría completa de eventos de compartición
+
+#### Fase 5 (10 semanas) - Digital Services
+- ✅ SSR con Angular Universal
+- ✅ Tarjeta Digital pública
+- ✅ Landing Page personalizable
+- ✅ Portafolio de proyectos público
+- ✅ CV Digital con export PDF
+- ✅ Analytics de vistas y conversiones
+- ✅ Custom domains (Enterprise)
+- ✅ SEO optimization (meta tags, sitemap, structured data)
 
 #### Future Phases (Post-MVP)
 - Attribute-Based Access Control (ABAC)

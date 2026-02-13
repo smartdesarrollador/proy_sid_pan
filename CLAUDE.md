@@ -80,7 +80,7 @@ src/
 
 ## Custom Tools & Skills
 
-- Skills: `.claude/skills/` (angular-accessibility, angular-api-pagination, angular-api-service-patterns, angular-auth-flow, angular-core-setup, angular-data-table, angular-error-handling, angular-file-upload, angular-form-handling, angular-http-interceptors, angular-performance, angular-real-time, angular-responsive-layout, angular-routing-guards, angular-rxjs-operators, angular-state-management, angular-tailwind-components, angular-testing-patterns, django-db-models, drf-auth, drf-core-api, drf-docs, drf-errors, drf-performance, drf-security, drf-testing, drf-utils, find-skills, skill-creator)
+- Skills: `.claude/skills/` (django-db-models, drf-auth, drf-core-api, drf-docs, drf-errors, drf-performance, drf-security, drf-testing, drf-utils, find-skills, nextjs-routing-data, react-api-authentication, react-context-state, react-forms-validation, react-hooks-patterns, react-router-patterns, react-tailwind-animations, react-tailwind-components, react-tanstack-query, react-typescript-foundations, skill-creator)
 - Commands: `.claude/commands/` (create-prd, generate-report, onboard, pr-review)
 - Agents: `.claude/agents/` (api-documenter, billing-validator, code-reviewer, compliance-checker, database-optimizer, frontend-builder, migration-manager, planner, researcher, security-auditor, test-generator)
 - Rules: `.claude/rules/` (ai-development, code-style, security)

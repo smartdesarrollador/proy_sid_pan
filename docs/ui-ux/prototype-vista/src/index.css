@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  .btn-secondary {
+    @apply btn bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500;
+  }
+  .btn-outline {
+    @apply btn border border-primary-600 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900 focus:ring-primary-500;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+  .btn-lg {
+    @apply px-6 py-3 text-lg;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-primary {
+    @apply badge bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300;
+  }
+  .badge-success {
+    @apply badge bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300;
+  }
+  .badge-warning {
+    @apply badge bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300;
+  }
+  .badge-danger {
+    @apply badge bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300;
+  }
+  .badge-gray {
+    @apply badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-md;
+  }
+  .card-hover {
+    @apply card transition-shadow hover:shadow-xl cursor-pointer;
+  }
+  .card-body {
+    @apply p-6;
+  }
+
+  /* Digital Card */
+  .digital-card-layout {
+    @apply grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto p-6;
+  }
+  .digital-card-left {
+    @apply bg-gray-800 dark:bg-gray-900 text-white rounded-xl p-8 flex flex-col items-center text-center;
+  }
+  .digital-card-center {
+    @apply bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg;
+  }
+  .digital-card-right {
+    @apply bg-gray-50 dark:bg-gray-700 rounded-xl p-8 flex flex-col items-center text-center;
+  }
+  .contact-item {
+    @apply flex items-center gap-3 py-3 px-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-lg cursor-pointer;
+  }
+  .social-icon {
+    @apply w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform cursor-pointer;
+  }
+  .specialty-badge {
+    @apply inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm rounded-full font-medium;
+  }
+
+  /* Landing Page */
+  .landing-section {
+    @apply py-16 md:py-20 lg:py-24;
+  }
+  .landing-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .section-editor-toolbar {
+    @apply flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg;
+  }
+  .drag-handle {
+    @apply cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300;
+  }
+
+  /* Portfolio */
+  .portfolio-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  .project-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-shadow overflow-hidden;
+  }
+  .project-card-image {
+    @apply w-full h-48 object-cover;
+  }
+  .featured-badge {
+    @apply absolute top-4 right-4 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg;
+  }
+  .tag-badge {
+    @apply inline-block px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer transition-colors;
+  }
+  .tag-badge-active {
+    @apply bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300;
+  }
+
+  /* CV */
+  .cv-layout-classic {
+    @apply max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-xl p-12;
+  }
+  .cv-layout-modern {
+    @apply max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 shadow-xl p-12;
+  }
+  .cv-layout-minimal {
+    @apply max-w-4xl mx-auto bg-white dark:bg-gray-800 p-12 border border-gray-200 dark:border-gray-700;
+  }
+  .cv-section-title {
+    @apply text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-500;
+  }
+  .cv-experience-item {
+    @apply mb-6 last:mb-0;
+  }
+  .skill-pill {
+    @apply inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm rounded-full font-medium;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  }
+  .label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4;
+  }
+  .modal-content {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+  }
+  .modal-header {
+    @apply flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700;
+  }
+  .modal-body {
+    @apply p-6;
+  }
+  .modal-footer {
+    @apply flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700;
+  }
+
+  /* Empty State */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 px-4 text-center;
+  }
+  .empty-state-icon {
+    @apply w-16 h-16 text-gray-400 dark:text-gray-600 mb-4;
+  }
+  .empty-state-title {
+    @apply text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2;
+  }
+  .empty-state-description {
+    @apply text-gray-500 dark:text-gray-400 mb-6 max-w-md;
+  }
+}

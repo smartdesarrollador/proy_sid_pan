@@ -533,6 +533,468 @@ Response 200:
 
 ---
 
+## Digital Services Endpoints
+
+### Public Endpoints (No Authentication Required)
+
+**GET /{service}/{username}**
+
+Render public page for user (Server-Side Rendering).
+
+**Auth**: None (public)
+
+**Params**:
+- `service`: tarjeta | landing | portafolio | cv
+- `username`: Public profile username
+
+**Response**: HTML (Server-Side Rendered)
+
+**Cache**: Redis 5min + CDN 1h
+
+**Examples**:
+```
+GET /tarjeta/jsmith
+GET /landing/mgarcia
+GET /portafolio/alopez
+GET /portafolio/alopez/mi-proyecto-web  (individual project)
+GET /cv/rperez
+```
+
+---
+
+**GET /sitemap.xml**
+
+Generate dynamic sitemap with all public profiles.
+
+**Auth**: None
+
+**Response**: XML
+
+**Cache**: 24 hours
+
+---
+
+**GET /robots.txt**
+
+Generate robots.txt with configuration.
+
+**Auth**: None
+
+**Response**: Text
+
+---
+
+### Admin Endpoints - Public Profile
+
+**POST /api/v1/app/digital-services/profile**
+
+Create or update public profile.
+
+**Auth**: JWT required
+
+**Body**:
+```json
+{
+  "username": "jsmith",
+  "display_name": "Juan Smith",
+  "title": "Desarrollador Full Stack",
+  "bio": "Apasionado por crear aplicaciones web modernas...",
+  "avatar": "base64_or_url",
+  "is_public": true,
+  "meta_title": "Juan Smith - Desarrollador Full Stack",
+  "meta_description": "Portafolio de proyectos web y aplicaciones móviles"
+}
+```
+
+**Response**: `200 OK`
+```json
+{
+  "id": "uuid",
+  "username": "jsmith",
+  "display_name": "Juan Smith",
+  "url": "https://domain.com/landing/jsmith",
+  "created_at": "2026-02-12T10:00:00Z"
+}
+```
+
+---
+
+**GET /api/v1/app/digital-services/profile**
+
+Get authenticated user's public profile.
+
+**Auth**: JWT required
+
+**Response**: `200 OK` or `404 Not Found`
+
+---
+
+### Admin Endpoints - Digital Card
+
+**POST /api/v1/app/digital-services/tarjeta**
+
+Create or update digital card.
+
+**Auth**: JWT required
+
+**Body**:
+```json
+{
+  "email": "juan@example.com",
+  "phone": "+34 600 123 456",
+  "location": "Madrid, España",
+  "linkedin_url": "https://linkedin.com/in/jsmith",
+  "github_url": "https://github.com/jsmith",
+  "primary_color": "#3B82F6",
+  "background_color": "#FFFFFF"
+}
+```
+
+**Response**: `200 OK`
+
+---
+
+**GET /api/v1/app/digital-services/tarjeta**
+
+Get authenticated user's digital card.
+
+**Auth**: JWT required
+
+**Response**: `200 OK`
+
+---
+
+**POST /api/v1/app/digital-services/tarjeta/generate-qr**
+
+Generate QR code for digital card.
+
+**Auth**: JWT required
+
+**Body**:
+```json
+{
+  "size": 600,
+  "include_logo": true
+}
+```
+
+**Response**: `200 OK`
+```json
+{
+  "qr_code_url": "https://domain.com/media/qr-codes/jsmith.png"
+}
+```
+
+---
+
+**GET /api/v1/app/digital-services/tarjeta/export-vcard**
+
+Export vCard file (Starter+).
+
+**Auth**: JWT required
+
+**Feature Gate**: Starter+
+
+**Response**: `200 OK` (Content-Type: text/vcard)
+
+---
+
+### Admin Endpoints - Landing Page
+
+**POST /api/v1/app/digital-services/landing**
+
+Create or update landing page.
+
+**Auth**: JWT required
+
+**Body**:
+```json
+{
+  "template_type": "minimal",
+  "sections": [
+    {
+      "type": "hero",
+      "visible": true,
+      "props": {
+        "title": "Hola, soy Juan Smith",
+        "subtitle": "Desarrollador Full Stack",
+        "cta_text": "Ver proyectos",
+        "cta_link": "#portfolio"
+      }
+    }
+  ],
+  "enable_contact_form": true,
+  "contact_email": "juan@example.com",
+  "ga_tracking_id": "GA-123456"
+}
+```
+
+**Response**: `200 OK`
+
+---
+
+**GET /api/v1/app/digital-services/landing**
+
+Get authenticated user's landing page.
+
+**Auth**: JWT required
+
+**Response**: `200 OK`
+
+---
+
+### Admin Endpoints - Portfolio
+
+**GET /api/v1/app/digital-services/portafolio**
+
+List all portfolio items for authenticated user.
+
+**Auth**: JWT required
+
+**Response**: `200 OK`
+```json
+{
+  "count": 5,
+  "results": [
+    {
+      "id": "uuid",
+      "title": "E-Commerce Platform",
+      "slug": "e-commerce-platform",
+      "description_short": "Plataforma de e-commerce con Django + React",
+      "cover_image": "https://...",
+      "is_featured": true,
+      "tags": ["web", "react", "django"],
+      "demo_url": "https://demo.example.com"
+    }
+  ]
+}
+```
+
+---
+
+**POST /api/v1/app/digital-services/portafolio**
+
+Create new portfolio item (Professional+).
+
+**Auth**: JWT required
+
+**Feature Gate**: Professional+
+
+**Body**:
+```json
+{
+  "title": "E-Commerce Platform",
+  "description_short": "Plataforma de e-commerce moderna",
+  "description_full": "## Descripción\n\nPlataforma completa de e-commerce...",
+  "cover_image": "base64_or_url",
+  "gallery_images": [
+    {"url": "https://...", "caption": "Dashboard"}
+  ],
+  "tags": ["web", "react", "django"],
+  "demo_url": "https://demo.example.com",
+  "repo_url": "https://github.com/jsmith/ecommerce",
+  "project_date": "2026-01-15",
+  "is_featured": false
+}
+```
+
+**Response**: `201 Created`
+
+---
+
+**PATCH /api/v1/app/digital-services/portafolio/{id}**
+
+Update portfolio item (owner only).
+
+**Auth**: JWT required
+
+**Body**: Partial update
+
+**Response**: `200 OK`
+
+---
+
+**DELETE /api/v1/app/digital-services/portafolio/{id}**
+
+Delete portfolio item (owner only).
+
+**Auth**: JWT required
+
+**Response**: `204 No Content`
+
+---
+
+### Admin Endpoints - CV Digital
+
+**POST /api/v1/app/digital-services/cv**
+
+Create or update CV.
+
+**Auth**: JWT required
+
+**Body**:
+```json
+{
+  "professional_summary": "Desarrollador Full Stack con 5 años de experiencia...",
+  "experience": [
+    {
+      "company": "Tech Corp",
+      "position": "Senior Developer",
+      "start_date": "2020-01-01",
+      "end_date": "2025-12-31",
+      "responsibilities": "Desarrollo de APIs REST, liderazgo técnico..."
+    }
+  ],
+  "education": [
+    {
+      "institution": "Universidad de Madrid",
+      "degree": "Ingeniería Informática",
+      "field": "Computer Science",
+      "start_date": "2015-09-01",
+      "end_date": "2019-06-30"
+    }
+  ],
+  "skills": ["Python", "Django", "React", "PostgreSQL"],
+  "languages": [
+    {"language": "Español", "level": "native"},
+    {"language": "Inglés", "level": "fluent"}
+  ],
+  "template_type": "modern",
+  "show_photo": true
+}
+```
+
+**Response**: `200 OK`
+
+---
+
+**GET /api/v1/app/digital-services/cv**
+
+Get authenticated user's CV.
+
+**Auth**: JWT required
+
+**Response**: `200 OK`
+
+---
+
+**POST /api/v1/app/digital-services/cv/export-pdf**
+
+Generate and download CV as PDF (Professional+).
+
+**Auth**: JWT required
+
+**Feature Gate**: Professional+
+
+**Response**: PDF file download
+
+**Headers**:
+```
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="CV_Juan_Smith_2026-02-12.pdf"
+```
+
+---
+
+### Admin Endpoints - Analytics
+
+**GET /api/v1/app/digital-services/analytics/{service}**
+
+Get analytics for specific service (Starter+).
+
+**Auth**: JWT required
+
+**Feature Gate**: Starter+
+
+**Params**:
+- `service`: tarjeta | landing | portafolio | cv
+
+**Query Params**:
+- `days`: 7 | 30 | 90 (default: 7)
+
+**Response**: `200 OK`
+```json
+{
+  "service": "landing",
+  "period": "7_days",
+  "total_views": 245,
+  "unique_visitors": 123,
+  "views_by_day": [
+    {"date": "2026-02-12", "views": 35, "unique": 18},
+    {"date": "2026-02-11", "views": 42, "unique": 21}
+  ],
+  "clicks": {
+    "linkedin": 15,
+    "github": 8,
+    "contact_form": 3
+  }
+}
+```
+
+---
+
+### Admin Endpoints - Custom Domain (Enterprise)
+
+**POST /api/v1/app/digital-services/custom-domain**
+
+Configure custom domain (Enterprise only).
+
+**Auth**: JWT required
+
+**Feature Gate**: Enterprise
+
+**Body**:
+```json
+{
+  "domain": "juansmith.com",
+  "default_service": "landing"
+}
+```
+
+**Response**: `200 OK`
+```json
+{
+  "domain": "juansmith.com",
+  "verification_status": "pending",
+  "verification_token": "abc123...",
+  "instructions": {
+    "type": "CNAME",
+    "name": "@",
+    "value": "proxy.platform.com",
+    "ttl": 3600
+  }
+}
+```
+
+---
+
+**POST /api/v1/app/digital-services/custom-domain/verify**
+
+Verify DNS configuration.
+
+**Auth**: JWT required
+
+**Response**: `200 OK`
+```json
+{
+  "verification_status": "verified",
+  "ssl_status": "pending",
+  "message": "DNS configured correctly. SSL provisioning in progress..."
+}
+```
+
+---
+
+**GET /api/v1/app/digital-services/custom-domain**
+
+Get custom domain status.
+
+**Auth**: JWT required
+
+**Response**: `200 OK`
+
+---
+
 ## Rate Limiting
 
 | Plan | Rate Limit |
@@ -559,6 +1021,6 @@ X-RateLimit-Reset: 1675174800
 
 ---
 
-**Última actualización**: 2026-02-10
+**Última actualización**: 2026-02-12
 
 **Nota**: Para documentación completa de todos los endpoints, consultar el archivo original completo en `/prd/rbac-subscription-system.md` sección 6.4.

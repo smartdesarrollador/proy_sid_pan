@@ -11,6 +11,8 @@
 - [4.4 Multi-Tenancy](#44-multi-tenancy)
 - [4.5 Gestión de Proyectos](#45-gestión-de-proyectos)
 - [4.6 Compartición y Colaboración](#46-compartición-y-colaboración)
+- [4.7 Internacionalización y Temas](#47-internacionalización-y-temas)
+- [4.8 Digital Services (Public Profiles)](#48-digital-services-public-profiles)
 - [5. Non-Functional Requirements](#5-non-functional-requirements)
 
 ---
@@ -499,6 +501,248 @@ Usuarios con nivel `admin` o owners pueden revocar acceso a elementos compartido
 
 ---
 
+### 4.7 Internacionalización y Temas
+
+**FR-059: Soporte Multi-Idioma (i18n)**
+- El sistema DEBE soportar al menos 2 idiomas: Español (es) e Inglés (en)
+- El sistema DEBE usar Django i18n framework en backend (`django.utils.translation`)
+- El sistema DEBE usar `@angular/localize` o `ngx-translate` en frontend Angular
+- El sistema DEBE detectar idioma del navegador en primera visita (`Accept-Language` header)
+- El sistema DEBE permitir usuarios cambiar idioma manualmente desde UI
+- Cambio de idioma DEBE aplicarse inmediatamente sin recargar página (SPA)
+- El sistema DEBE formatear fechas/números según locale seleccionado
+- El sistema DEBE traducir mensajes de error y validación
+- Textos generados por usuarios (nombres de proyectos, tareas) NO DEBEN traducirse
+- El sistema DEBE incluir fallback a español si traducción no existe
+
+---
+
+**FR-060: Gestión de Traducciones**
+- Backend DEBE mantener archivos de traducción en `locale/es/LC_MESSAGES/django.po` y `locale/en/LC_MESSAGES/django.po`
+- Frontend Admin DEBE mantener traducciones en `src/assets/i18n/es.json` y `src/assets/i18n/en.json`
+- Frontend Cliente DEBE compartir mismos archivos de traducción del Admin para consistencia
+- El sistema DEBE permitir agregar nuevos idiomas sin cambios de código (solo agregar archivos)
+- Traducciones DEBEN organizarse por namespaces: `common`, `admin`, `client`, `auth`, `errors`
+- El sistema DEBE validar que todas las keys de traducción existan en todos los idiomas
+- Missing translations DEBEN loguearse pero no romper la aplicación
+- El sistema DEBE soportar pluralización (`{count, plural, =1 {tarea} other {tareas}}`)
+- El sistema DEBE soportar interpolación de variables (`Hola {username}`)
+
+---
+
+**FR-061: Dark Mode / Light Mode**
+- El sistema DEBE soportar 3 modos de tema: Light, Dark, Auto
+- Modo "Auto" DEBE respetar `prefers-color-scheme` del navegador/sistema
+- Dark mode DEBE implementarse con Tailwind CSS usando `class` strategy
+- Clase `dark` en `<html>` DEBE activar dark mode globalmente
+- Todos los componentes DEBEN definir estilos dark con `dark:` prefix de Tailwind
+- Contraste de colores DEBE cumplir WCAG 2.1 AA en ambos temas (4.5:1 para texto)
+- Tema DEBE cambiar inmediatamente sin flash de contenido (FOUC)
+- El sistema DEBE persistir tema en localStorage como fallback rápido
+- Imágenes/logos DEBEN tener variantes para light/dark si es necesario
+
+---
+
+**FR-062: Persistencia de Preferencias de Usuario**
+- El sistema DEBE almacenar preferencias de usuario en campo JSONB `users.preferences`
+- Estructura de preferencias DEBE incluir: `{"language": "es"|"en", "theme": "light"|"dark"|"auto"}`
+- Endpoint `PATCH /api/v1/users/me/preferences` DEBE permitir actualizar preferencias
+- Cambios en preferencias DEBEN aplicarse inmediatamente sin logout/login
+- El sistema DEBE sincronizar preferencias entre frontend (localStorage) y backend
+- Si localStorage y backend difieren, backend DEBE tener precedencia
+- El sistema DEBE enviar preferencias en respuesta de login/refresh token
+- Preferencias DEBEN incluirse en JWT payload para acceso rápido (opcional)
+
+---
+
+### 4.8 Digital Services (Public Profiles)
+
+**FR-063: Server-Side Rendering con Angular Universal**
+- El sistema DEBE utilizar Angular Universal para renderizar las páginas públicas en el servidor
+- HTML completo DEBE generarse server-side antes de enviar al cliente
+- Express server DEBE usar `@nguniversal/express-engine` para SSR
+- TransferState DEBE usarse para evitar duplicate API calls entre server y client
+- Pre-rendering DEBE aplicarse para rutas estáticas en build time
+
+---
+
+**FR-064: Generación de HTML Estático para Páginas Públicas**
+- El sistema DEBE generar HTML estático completo con contenido renderizado en servidor
+- HTML source DEBE ser visible sin JavaScript habilitado (indexable por buscadores)
+- Meta tags DEBEN estar en `<head>` del HTML renderizado en servidor
+- Contenido NO DEBE depender de client-side rendering para SEO
+- No-JS fallback DEBE soportar funcionalidades básicas (navegación)
+
+---
+
+**FR-065: Caching de Páginas Renderizadas**
+- El sistema DEBE cachear páginas SSR renderizadas en Redis con TTL de 5 minutos
+- Cache key DEBE seguir formato: `ssr:{service}:{username}:{version}`
+- Hit rate objetivo DEBE ser >80%
+- Fallback DEBE renderizar directo si Redis está down (degradación graceful)
+- Métricas de cache DEBEN trackearse: hit rate, miss rate, latency
+
+---
+
+**FR-066: Invalidación de Cache al Actualizar Perfil**
+- El sistema DEBE invalidar cache de página pública inmediatamente al actualizar perfil
+- Post-save hooks en modelos Django DEBEN borrar keys de Redis correspondientes
+- Patrón de invalidación: `DELETE ssr:{service}:{username}:*`
+- CDN purge DEBE ejecutarse si se usa Cloudflare/CloudFront
+- Cambios DEBEN ser visibles en <1 minuto tras actualización
+
+---
+
+**FR-067: Patrón de URLs Públicas**
+- El sistema DEBE seguir patrón de URL `/{servicio}/{username}` para páginas públicas
+- URLs soportadas: `/tarjeta/{username}`, `/landing/{username}`, `/portafolio/{username}`, `/cv/{username}`
+- URLs DEBEN ser limpias, memorables, y SEO-friendly
+- Sistema DEBE manejar URLs con trailing slash y sin trailing slash idénticamente
+- 404 page DEBE mostrarse si username no existe o perfil no es público
+
+---
+
+**FR-068: Validación de Username Único Global**
+- El sistema DEBE validar que usernames sean únicos globalmente (cross-tenant)
+- Constraint `UNIQUE` en `PublicProfile.username` a nivel de database
+- Regex permitido: `^[a-z0-9]([a-z0-9-]{0,48}[a-z0-9])?$` (2-50 chars, lowercase, números, guiones)
+- Sistema DEBE reservar usernames: `admin`, `api`, `www`, `app`, `dashboard`, `login`, `register`
+- Si username tomado, DEBE sugerir alternativas: `username1`, `username2`, `user-name`
+
+---
+
+**FR-069: Templates Component-Based**
+- El sistema DEBE soportar templates component-based con componentes Angular reutilizables
+- Template DEBE definirse como JSON: `{ sections: [ { type: 'hero', props: {...} } ] }`
+- Componentes standalone DEBEN usar `@Input()` para configuración dinámica
+- Lazy loading DEBE aplicarse para componentes no usados en template
+- Templates DEBEN ser extensibles sin cambios en código core
+
+---
+
+**FR-070: Templates Responsive Mobile-First**
+- Todos los templates DEBEN ser responsive con diseño mobile-first
+- Breakpoints Tailwind: Mobile (<640px), Tablet (640-1024px), Desktop (>=1024px)
+- Grid DEBE ajustarse: 1 col (mobile), 2 cols (tablet), 3 cols (desktop)
+- Touch targets DEBEN ser >=44x44px para mobile
+- Testing DEBE incluir Chrome DevTools mobile emulation
+
+---
+
+**FR-071: Custom CSS para Professional+**
+- El sistema DEBE permitir usuarios Professional+ agregar CSS personalizado
+- CSS DEBE aplicarse en sandbox con scope al contenedor del usuario
+- Validación DEBE prevenir: `<script>`, `background-image: url()` con JS, imports externos no seguros
+- Editor DEBE incluir syntax highlighting
+- Preview en tiempo real DEBE mostrar cambios antes de publicar
+- CSS NO DEBE afectar otros usuarios (aislamiento)
+
+---
+
+**FR-072: Custom Templates para Enterprise**
+- El sistema DEBE permitir usuarios Enterprise crear templates custom vía código HTML/CSS/TypeScript
+- Solicitud de template custom DEBE hacerse vía ticket de soporte
+- Revisión de código DEBE realizarse por equipo técnico antes de deploy
+- Template custom DEBE deployarse como componente standalone
+- Template DEBE estar aislado de otros usuarios
+
+---
+
+**FR-073: Generación Automática de Meta Tags**
+- El sistema DEBE generar automáticamente meta tags para todas las páginas públicas
+- Meta tags DEBEN incluir: title, description, Open Graph (og:title, og:description, og:image, og:url), Twitter Cards
+- Override manual DEBE permitirse para Professional+
+- Auto-generación de OG image DEBE usar título + foto de perfil si no se sube imagen custom
+- Meta tags DEBEN validarse con Facebook Debugger y Twitter Card Validator
+
+---
+
+**FR-074: Sitemap.xml Dinámico**
+- El sistema DEBE generar `sitemap.xml` dinámico incluyendo todas las páginas públicas
+- Endpoint: `GET /sitemap.xml` (accesible públicamente)
+- DEBE incluir solo perfiles con `is_public=True`
+- Prioridad: 0.8 (landing/tarjeta), 0.6 (portfolio/CV)
+- Changefreq: weekly
+- Cache DEBE ser 24 horas
+- Sitemap DEBE actualizarse automáticamente al crear/eliminar perfiles
+
+---
+
+**FR-075: Structured Data (JSON-LD)**
+- El sistema DEBE incluir structured data en formato JSON-LD para páginas públicas
+- Schema.org types: Person (tarjeta, landing, CV), CreativeWork (proyectos de portafolio), Organization
+- JSON-LD DEBE estar en `<head>` del HTML renderizado
+- Validación DEBE hacerse con Google Rich Results Test
+- Structured data DEBE incluir: name, jobTitle, url, sameAs (social links)
+
+---
+
+**FR-076: Robots.txt Configurable**
+- El sistema DEBE generar `robots.txt` configurable
+- Default DEBE permitir indexación de servicios públicos: `/tarjeta/`, `/landing/`, `/portafolio/`, `/cv/`
+- Default DEBE bloquear: `/api/`, `/admin/`
+- Sitemap DEBE referenciarse: `Sitemap: https://domain.com/sitemap.xml`
+- Professional+ DEBE poder configurar allow/disallow por servicio
+
+---
+
+**FR-077: Endpoints Públicos Sin Autenticación**
+- Endpoints públicos para renderizar servicios digitales NO DEBEN requerir JWT
+- Endpoints: `GET /tarjeta/{username}`, `GET /landing/{username}`, `GET /portafolio/{username}`, `GET /cv/{username}`
+- Rate limiting DEBE aplicarse: 100 req/min por IP
+- CORS DEBE permitir all origins para sharing
+- Response DEBE ser HTML (SSR), no JSON
+
+---
+
+**FR-078: Endpoints Admin con Validación de Ownership**
+- Endpoints de administración DEBEN validar que usuario autenticado sea owner del perfil
+- Validación: `profile.user == request.user`, raise `PermissionDenied` si no match
+- Endpoints admin: `POST /api/v1/app/digital-services/tarjeta`, `PATCH /api/v1/app/digital-services/tarjeta`, etc.
+- JWT DEBE ser válido y no expirado
+- Audit log DEBE registrar modificaciones
+
+---
+
+**FR-079: Tracking de Vistas y Visitantes**
+- El sistema DEBE trackear views, unique visitors, clicks en enlaces para servicios digitales
+- Métricas: page views (total, por día), unique visitors (por session cookie o IP), clicks en social links, clicks en proyectos, descargas de PDF
+- Owner NO DEBE contarse en views (filtrar por session)
+- Modelo `ServiceAnalytics`: service, date, views, unique_visitors, clicks (agregado diario)
+- Performance: tracking NO DEBE afectar latencia de rendering (<10ms overhead)
+
+---
+
+**FR-080: Analytics por Plan**
+- Analytics DEBEN estar disponibles según plan del usuario
+- Free: Sin analytics
+- Starter: Analytics básicas (7 días, totales)
+- Professional: Analytics avanzadas (30 días, gráficos, por fuente/referrer)
+- Enterprise: Analytics completas (ilimitado, export CSV, Google Analytics integration)
+- Feature gate DEBE validar plan antes de mostrar analytics
+
+---
+
+**FR-081: Soporte para Custom Domains con CNAME**
+- El sistema DEBE soportar dominios personalizados para usuarios Enterprise mediante CNAME
+- Usuario DEBE configurar CNAME apuntando a: `proxy.platform.com`
+- Validación DNS DEBE ejecutarse con retry cada 30 min (max 48h)
+- Tabla `CustomDomain`: domain, tenant, verification_status, ssl_status, created_at
+- Solo 1 custom domain activo DEBE permitirse por usuario (Enterprise)
+- Validación DEBE prevenir dominios ya usados por otros usuarios
+
+---
+
+**FR-082: Provisión Automática de SSL**
+- El sistema DEBE provisionar certificados SSL automáticamente para custom domains usando Let's Encrypt
+- Validación DEBE usar HTTP-01 challenge o DNS-01
+- Renovación automática DEBE ejecutarse 30 días antes de expiración
+- Alertas DEBE enviarse si renovación falla
+- SSL status DEBE ser `pending` → `active` → `renewing` → `active`
+- Certificado DEBE ser válido para dominio + `www.dominio` (wildcard opcional)
+
+---
+
 ## 5. Non-Functional Requirements
 
 ### 5.1 Performance
@@ -605,4 +849,4 @@ Usuarios con nivel `admin` o owners pueden revocar acceso a elementos compartido
 
 ---
 
-**Última actualización**: 2026-02-10
+**Última actualización**: 2026-02-12

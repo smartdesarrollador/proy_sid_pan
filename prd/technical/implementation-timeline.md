@@ -9,6 +9,7 @@
 - [Fase 2: Advanced RBAC (16 semanas)](#fase-2-advanced-rbac-16-semanas)
 - [Fase 3: Enterprise Features (24 semanas)](#fase-3-enterprise-features-24-semanas)
 - [Fase 4: Sharing & Projects (12 semanas)](#fase-4-sharing--projects-12-semanas)
+- [Fase 5: Digital Services (10 semanas)](#fase-5-digital-services-10-semanas)
 
 ---
 
@@ -22,8 +23,9 @@
 │ Phase 2: Advanced RBAC    │ 16 weeks │ ░░░░░░░░░░░░████████████  │
 │ Phase 3: Enterprise       │ 24 weeks │ ░░░░░░░░░░░░░░░░░░░░████  │
 │ Phase 4: Sharing/Projects │ 12 weeks │ ░░░░░░░░░░░░░░░░░░░░░░██  │
+│ Phase 5: Digital Services │ 10 weeks │ ░░░░░░░░░░░░░░░░░░░░░░░█  │
 └─────────────────────────────────────────────────────────────────┘
-Total: ~64 weeks (~15 months)
+Total: ~74 weeks (~17 months)
 ```
 
 ---
@@ -264,6 +266,140 @@ Total: ~64 weeks (~15 months)
 
 ---
 
+## Fase 5: Digital Services (10 semanas)
+
+**Objetivo**: Implementar servicios digitales públicos (tarjeta digital, landing page, portafolio, CV) con SSR para SEO.
+
+### Sprint 33-34: SSR Infrastructure (4 weeks)
+
+**Backend (Django)**:
+- [ ] Modelos: PublicProfile, DigitalCard, PortfolioItem, CVDocument
+- [ ] Migrations con indexes optimizados
+- [ ] Serializers para todos los modelos
+- [ ] Endpoints admin: CRUD para cada servicio
+- [ ] Public API endpoints (no auth): `GET /{service}/{username}`
+- [ ] Validación de username único con sugerencias
+- [ ] Post-save hooks para invalidar cache Redis
+
+**Frontend SSR (Angular Universal)**:
+- [ ] Setup Angular 17+ con SSR support
+- [ ] Configurar Express server con `@nguniversal/express-engine`
+- [ ] Integración con Redis para caching (TTL 5min)
+- [ ] Componentes base: DigitalCard, LandingPage, Portfolio, CV
+- [ ] 1 template básico por servicio
+- [ ] Service para meta tags (SEO)
+- [ ] TransferState para evitar duplicate API calls
+
+**DevOps**:
+- [ ] Deploy SSR service en servidor Node separado (puerto 4000)
+- [ ] Nginx reverse proxy: `/tarjeta/*` → SSR, `/api/*` → Django
+- [ ] Redis setup con replication
+- [ ] Monitoring: latencia SSR, cache hit rate
+
+**Milestones Week 33-36**:
+- Week 33: Modelos + API backend completos
+- Week 34: SSR funcional con 1 template por servicio
+
+---
+
+### Sprint 35-36: Tarjeta Digital + Landing Page (3 weeks)
+
+**Tarjeta Digital**:
+- [ ] Editor de tarjeta en panel cliente (Angular SPA)
+- [ ] Campos: info de contacto, redes sociales, colores del tema
+- [ ] Preview en tiempo real
+- [ ] Generación de QR code (backend con qrcode library)
+- [ ] Export vCard (Starter+)
+- [ ] Analytics básicas: views, unique visitors
+- [ ] 3 templates: Classic, Minimal, Modern
+
+**Landing Page**:
+- [ ] Selector de templates (Free: 1, Starter: 3)
+- [ ] Editor de secciones con drag & drop
+- [ ] Secciones: Hero, About, Services, Portfolio, Contact
+- [ ] Rich text editor para About (markdown support)
+- [ ] Formulario de contacto con anti-spam (reCAPTCHA)
+- [ ] Configuración de SEO: meta title, description, OG image
+- [ ] Preview responsive (mobile/tablet/desktop)
+
+**Testing**:
+- [ ] Unit tests: serializers, validators
+- [ ] Integration tests: endpoints CRUD
+- [ ] E2E tests: Crear tarjeta → Publicar → Verificar URL pública
+
+**Milestones Week 35-37**:
+- Week 35: Tarjeta digital completa con QR
+- Week 37: Landing page con 3 templates y editor
+
+---
+
+### Sprint 37-38: Portafolio + CV Digital (3 weeks)
+
+**Portafolio**:
+- [ ] CRUD de proyectos: título, descripción, imágenes, tags, links
+- [ ] Upload de imágenes con drag & drop
+- [ ] Galería con lightbox
+- [ ] Filtrado por tags (client-side)
+- [ ] Proyectos destacados (max 3)
+- [ ] Drag & drop para reordenar proyectos
+- [ ] Analytics: clicks en demo, repo, por proyecto
+- [ ] Página individual de proyecto: `/portafolio/{username}/{slug}`
+
+**CV Digital**:
+- [ ] Auto-población desde perfil del usuario
+- [ ] Formularios para: Experiencia, Educación, Habilidades, Idiomas, Certificaciones
+- [ ] Validación de fechas (end_date >= start_date)
+- [ ] Templates: Classic, Modern, Minimal
+- [ ] Export PDF (Professional+) con wkhtmltopdf o Puppeteer
+- [ ] Múltiples versiones de CV guardables
+- [ ] Toggle para mostrar/ocultar secciones
+
+**Testing**:
+- [ ] PDF generation tests
+- [ ] Image upload and compression tests
+- [ ] Analytics tracking tests
+
+**Milestones Week 37-40**:
+- Week 38: Portafolio con proyectos ilimitados
+- Week 40: CV con export PDF funcional
+
+---
+
+### Sprint 39-40: Analytics + Custom Domains (2 weeks)
+
+**Analytics**:
+- [ ] Modelo ServiceAnalytics: service, date, views, unique_visitors, clicks
+- [ ] Tracking de views con cookies/sessions (no duplicar owner)
+- [ ] Endpoint: `GET /api/v1/app/digital-services/analytics/{service}?days=30`
+- [ ] Dashboard en panel cliente: gráficos de vistas por día
+- [ ] Clicks en enlaces: LinkedIn, GitHub, demo, repo
+- [ ] Export CSV (Professional+)
+
+**Custom Domains (Enterprise)**:
+- [ ] Modelo CustomDomain: domain, verification_status, ssl_status
+- [ ] Formulario de configuración con instrucciones DNS
+- [ ] Celery task: verificar DNS cada 30 min
+- [ ] Integración con Let's Encrypt (certbot)
+- [ ] Provisión SSL automática tras validación DNS
+- [ ] Configuración de redirecciones: domain → default_service
+- [ ] Soporte para subdominios
+
+**SEO Final**:
+- [ ] Sitemap.xml dinámico: `/sitemap.xml`
+- [ ] Robots.txt configurable
+- [ ] Structured data (JSON-LD): Person, Organization, CreativeWork
+- [ ] Meta tags testing con Facebook Debugger, Twitter Card Validator
+
+**Feature Gates**:
+- [ ] Validar límites por plan en todos los endpoints
+- [ ] UpgradePrompt en frontend para features bloqueadas
+
+**Milestones Week 39-42**:
+- Week 41: Analytics completas con gráficos
+- Week 42: Custom domains funcionales con SSL
+
+---
+
 ## Milestones
 
 | Milestone | Week | Deliverable |
@@ -272,6 +408,7 @@ Total: ~64 weeks (~15 months)
 | **Beta Release** | Week 20 | Advanced RBAC, closed beta users |
 | **Public Launch** | Week 28 | Enterprise features, public availability |
 | **v2.0** | Week 40 | Sharing & Projects completo |
+| **v2.5** | Week 50 | Digital Services (SSR + Public Profiles) |
 
 ---
 
@@ -305,19 +442,19 @@ Total: ~64 weeks (~15 months)
 
 ## Post-Launch Roadmap
 
-### Future Phases (Beyond Week 40)
+### Future Phases (Beyond Week 50)
 
-**Phase 5: Mobile Apps**
+**Phase 6: Mobile Apps**
 - iOS app (Swift/SwiftUI)
 - Android app (Kotlin)
 - Push notifications
 
-**Phase 6: AI/ML Features**
+**Phase 7: AI/ML Features**
 - Anomaly detection en accesos
 - Smart permission recommendations
 - Predictive analytics
 
-**Phase 7: Marketplace**
+**Phase 8: Marketplace**
 - Integraciones con terceros (Jira, Slack, etc.)
 - Webhook templates
 - Partner ecosystem
@@ -333,4 +470,4 @@ Total: ~64 weeks (~15 months)
 
 ---
 
-**Última actualización**: 2026-02-10
+**Última actualización**: 2026-02-12

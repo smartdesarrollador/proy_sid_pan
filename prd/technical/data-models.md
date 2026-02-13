@@ -439,6 +439,325 @@ class AuditLog(models.Model):
 
 ---
 
+## Digital Services Models
+
+### PublicProfile
+
+```python
+class PublicProfile(models.Model):
+    """Perfil público del usuario para servicios digitales"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='public_profile')
+    username = models.SlugField(unique=True, max_length=50, db_index=True)
+    display_name = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, blank=True)  # "Desarrollador Full Stack"
+    bio = models.TextField(max_length=500, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+
+    # Privacy
+    is_public = models.BooleanField(default=False)
+
+    # SEO
+    meta_title = models.CharField(max_length=60, blank=True)
+    meta_description = models.CharField(max_length=160, blank=True)
+    og_image = models.ImageField(upload_to='og-images/', blank=True, null=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'public_profiles'
+        indexes = [
+            models.Index(fields=['username']),
+            models.Index(fields=['is_public', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.display_name} (@{self.username})"
+```
+
+---
+
+### DigitalCard
+
+```python
+class DigitalCard(models.Model):
+    """Tarjeta digital de contacto"""
+    profile = models.OneToOneField(PublicProfile, on_delete=models.CASCADE, related_name='digital_card')
+
+    # Contact Info
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    location = models.CharField(max_length=100, blank=True)  # "Madrid, España"
+
+    # Social Links
+    linkedin_url = models.URLField(blank=True)
+    twitter_url = models.URLField(blank=True)
+    github_url = models.URLField(blank=True)
+    instagram_url = models.URLField(blank=True)
+    facebook_url = models.URLField(blank=True)
+    website_url = models.URLField(blank=True)
+
+    # Theme
+    primary_color = models.CharField(max_length=7, default='#3B82F6')  # Hex color
+    background_color = models.CharField(max_length=7, default='#FFFFFF')
+
+    # QR Code
+    qr_code = models.ImageField(upload_to='qr-codes/', blank=True, null=True)
+
+    # Stats (updated by analytics)
+    total_views = models.IntegerField(default=0)
+    unique_visitors = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'digital_cards'
+
+    def __str__(self):
+        return f"Digital Card: {self.profile.username}"
+```
+
+---
+
+### LandingTemplate
+
+```python
+class LandingTemplate(models.Model):
+    """Landing page personalizable"""
+    TEMPLATE_CHOICES = [
+        ('basic', 'Basic'),
+        ('minimal', 'Minimal'),
+        ('corporate', 'Corporate'),
+        ('creative', 'Creative'),
+    ]
+
+    profile = models.OneToOneField(PublicProfile, on_delete=models.CASCADE, related_name='landing')
+    template_type = models.CharField(max_length=20, choices=TEMPLATE_CHOICES, default='basic')
+
+    # Sections (stored as JSON)
+    sections = models.JSONField(default=list)  # [{ type: 'hero', props: {...} }, ...]
+
+    # Contact Form Config
+    contact_email = models.EmailField(blank=True)
+    enable_contact_form = models.BooleanField(default=False)
+
+    # Custom CSS (Professional+)
+    custom_css = models.TextField(blank=True)
+
+    # Google Analytics (Professional+)
+    ga_tracking_id = models.CharField(max_length=20, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'landing_templates'
+
+    def __str__(self):
+        return f"Landing: {self.profile.username}"
+```
+
+---
+
+### PortfolioItem
+
+```python
+class PortfolioItem(models.Model):
+    """Proyecto de portafolio"""
+    profile = models.ForeignKey(PublicProfile, on_delete=models.CASCADE, related_name='portfolio_items')
+
+    title = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100)
+    description_short = models.CharField(max_length=200)
+    description_full = models.TextField()  # Supports markdown
+
+    # Images
+    cover_image = models.ImageField(upload_to='portfolio/covers/')
+    gallery_images = models.JSONField(default=list)  # [{ url: '...', caption: '...' }, ...]
+
+    # Links
+    demo_url = models.URLField(blank=True)
+    repo_url = models.URLField(blank=True)
+    case_study_url = models.URLField(blank=True)
+
+    # Organization
+    tags = models.JSONField(default=list)  # ['web', 'react', 'tailwind']
+    is_featured = models.BooleanField(default=False)
+    order = models.IntegerField(default=0)
+
+    # Dates
+    project_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'portfolio_items'
+        ordering = ['-is_featured', '-project_date']
+        indexes = [
+            models.Index(fields=['profile', 'is_featured']),
+            models.Index(fields=['slug']),
+        ]
+        unique_together = [['profile', 'slug']]
+
+    def __str__(self):
+        return f"{self.title} - {self.profile.username}"
+```
+
+---
+
+### CVDocument
+
+```python
+class CVDocument(models.Model):
+    """CV digital del usuario"""
+    LANGUAGE_LEVEL_CHOICES = [
+        ('native', 'Native'),
+        ('fluent', 'Fluent'),
+        ('intermediate', 'Intermediate'),
+        ('basic', 'Basic'),
+    ]
+
+    profile = models.OneToOneField(PublicProfile, on_delete=models.CASCADE, related_name='cv')
+
+    # Summary
+    professional_summary = models.TextField(max_length=500, blank=True)
+
+    # Experience (stored as JSON for flexibility)
+    experience = models.JSONField(default=list)
+    # [{ company, position, start_date, end_date, responsibilities }, ...]
+
+    # Education
+    education = models.JSONField(default=list)
+    # [{ institution, degree, field, start_date, end_date }, ...]
+
+    # Skills
+    skills = models.JSONField(default=list)  # ['Python', 'Django', 'React', ...]
+
+    # Languages
+    languages = models.JSONField(default=list)
+    # [{ language: 'English', level: 'fluent' }, ...]
+
+    # Certifications
+    certifications = models.JSONField(default=list)
+    # [{ title, issuer, date, credential_url }, ...]
+
+    # Template & Config
+    template_type = models.CharField(max_length=20, default='classic')
+    show_photo = models.BooleanField(default=True)
+    show_contact = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'cv_documents'
+
+    def __str__(self):
+        return f"CV: {self.profile.username}"
+```
+
+---
+
+### CustomDomain (Enterprise)
+
+```python
+class CustomDomain(models.Model):
+    """Dominio personalizado para usuarios Enterprise"""
+    VERIFICATION_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('verified', 'Verified'),
+        ('failed', 'Failed'),
+    ]
+
+    SSL_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('active', 'Active'),
+        ('renewing', 'Renewing'),
+        ('failed', 'Failed'),
+    ]
+
+    profile = models.OneToOneField(PublicProfile, on_delete=models.CASCADE, related_name='custom_domain')
+    domain = models.CharField(max_length=255, unique=True)
+
+    # DNS Verification
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VERIFICATION_STATUS_CHOICES,
+        default='pending'
+    )
+    verification_token = models.CharField(max_length=64, unique=True)
+    last_verification_attempt = models.DateTimeField(null=True, blank=True)
+
+    # SSL
+    ssl_status = models.CharField(
+        max_length=20,
+        choices=SSL_STATUS_CHOICES,
+        default='pending'
+    )
+    ssl_cert_expires_at = models.DateTimeField(null=True, blank=True)
+
+    # Redirect Config
+    default_service = models.CharField(max_length=20, default='landing')  # landing, tarjeta, portafolio, cv
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'custom_domains'
+        indexes = [
+            models.Index(fields=['domain']),
+            models.Index(fields=['verification_status']),
+        ]
+
+    def __str__(self):
+        return f"{self.domain} → {self.profile.username}"
+```
+
+---
+
+### ServiceAnalytics
+
+```python
+class ServiceAnalytics(models.Model):
+    """Analytics agregadas por día para servicios digitales"""
+    SERVICE_CHOICES = [
+        ('tarjeta', 'Tarjeta Digital'),
+        ('landing', 'Landing Page'),
+        ('portafolio', 'Portafolio'),
+        ('cv', 'CV Digital'),
+    ]
+
+    profile = models.ForeignKey(PublicProfile, on_delete=models.CASCADE, related_name='analytics')
+    service = models.CharField(max_length=20, choices=SERVICE_CHOICES)
+    date = models.DateField()
+
+    # Metrics
+    page_views = models.IntegerField(default=0)
+    unique_visitors = models.IntegerField(default=0)
+
+    # Click tracking (JSON for flexibility)
+    clicks = models.JSONField(default=dict)
+    # { 'linkedin': 10, 'github': 5, 'demo_project_1': 3, ... }
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'service_analytics'
+        unique_together = [['profile', 'service', 'date']]
+        indexes = [
+            models.Index(fields=['profile', 'service', 'date']),
+            models.Index(fields=['date']),
+        ]
+
+    def __str__(self):
+        return f"{self.profile.username} - {self.service} - {self.date}"
+```
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -447,6 +766,6 @@ class AuditLog(models.Model):
 
 ---
 
-**Última actualización**: 2026-02-10
+**Última actualización**: 2026-02-12
 
 **Nota**: Para modelos completos con todos los campos y relaciones, consultar el archivo original en `/prd/rbac-subscription-system.md` sección 6.1.

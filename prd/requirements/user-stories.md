@@ -11,6 +11,8 @@
 - [3.4 Multi-Tenancy y Aislamiento de Datos](#34-multi-tenancy-y-aislamiento-de-datos)
 - [3.5 Gestión de Proyectos (Cliente)](#35-gestión-de-proyectos-cliente)
 - [3.6 Compartición y Colaboración](#36-compartición-y-colaboración)
+- [3.7 Internacionalización y Experiencia de Usuario](#37-internacionalización-y-experiencia-de-usuario)
+- [3.8 Digital Services (Servicios Públicos)](#38-digital-services-servicios-públicos)
 
 ---
 
@@ -598,6 +600,411 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
+### 3.7 Internacionalización y Experiencia de Usuario
+
+**US-037: Cambio de Idioma en Panel de Admin**
+
+**Como** administrador de organización,
+**Quiero** cambiar el idioma de la interfaz entre Español e Inglés desde el panel de admin,
+**Para** usar la plataforma en mi idioma preferido y facilitar la gestión.
+
+**Criterios de aceptación:**
+- [ ] Language switcher visible en navbar del panel de admin (top-right)
+- [ ] Selector muestra opciones: Español (ES), English (EN)
+- [ ] Al seleccionar idioma, toda la UI cambia inmediatamente (textos, labels, mensajes)
+- [ ] Cambio de idioma NO requiere recargar página (SPA behavior)
+- [ ] Idioma seleccionado se guarda en backend (`user.preferences.language`)
+- [ ] Idioma se persiste entre sesiones (localStorage + backend sync)
+- [ ] Textos dinámicos (datos del usuario) NO se traducen (solo UI)
+
+**Escenarios de prueba:**
+- Login en español → Cambiar a inglés → Validar que navbar, sidebar, botones cambien
+- Cambiar idioma → Recargar página → Idioma se mantiene
+- Cambiar idioma en admin → Abrir cliente → Cliente también usa nuevo idioma
+
+---
+
+**US-038: Cambio de Idioma en Portal de Cliente**
+
+**Como** usuario final del portal de cliente,
+**Quiero** cambiar el idioma de la interfaz desde el portal de cliente,
+**Para** interactuar con tareas, calendario y proyectos en mi idioma preferido.
+
+**Criterios de aceptación:**
+- [ ] Language switcher visible en navbar del portal de cliente
+- [ ] Misma funcionalidad que panel de admin (cambio instantáneo, persistencia)
+- [ ] Servicios (Tareas, Calendario, Proyectos, Archivos) se traducen
+- [ ] Nombres de estados, prioridades, tipos se traducen (TODO → Por Hacer, High → Alta)
+- [ ] Fechas se formatean según locale (ES: dd/MM/yyyy, EN: MM/dd/yyyy)
+
+**Escenarios de prueba:**
+- Crear tarea en español → Cambiar a inglés → Validar estados (TODO → To Do, DONE → Done)
+- Ver calendario en inglés → Nombres de meses y días en inglés
+
+---
+
+**US-039: Persistencia de Preferencia de Idioma**
+
+**Como** usuario de la plataforma,
+**Quiero** que mi idioma preferido se guarde en mi perfil,
+**Para** no tener que seleccionarlo cada vez que hago login.
+
+**Criterios de aceptación:**
+- [ ] Primera vez que hago login, sistema detecta idioma del navegador (Accept-Language header)
+- [ ] Si cambio idioma manualmente, preferencia se guarda en backend
+- [ ] Endpoint `PATCH /api/v1/users/me/preferences` acepta `{"language": "es" | "en"}`
+- [ ] Backend actualiza campo `user.preferences.language` (JSONB)
+- [ ] Al hacer login desde nuevo dispositivo, idioma guardado se aplica
+- [ ] Si no hay idioma guardado, usar español como default
+
+**Escenarios de prueba:**
+- Login en español → Cambiar a inglés → Logout → Login → Sigue en inglés
+- Login desde móvil en inglés → Cambiar a español → Login desde desktop → Sigue en español
+
+---
+
+**US-040: Cambio de Tema (Light/Dark)**
+
+**Como** usuario de la plataforma,
+**Quiero** cambiar entre tema claro y oscuro,
+**Para** reducir fatiga visual según la hora del día y mis preferencias.
+
+**Criterios de aceptación:**
+- [ ] Theme switcher visible en navbar (icono sol/luna)
+- [ ] Click alterna entre light mode y dark mode
+- [ ] Dark mode aplica inmediatamente sin reload (clase `dark` en `<html>`)
+- [ ] Todos los componentes respetan tema (Tailwind `dark:` classes)
+- [ ] Colores mantienen contraste WCAG AA en ambos temas
+- [ ] Tema se persiste en localStorage (`theme: 'light' | 'dark'`)
+- [ ] Auto-detect: Si no hay preferencia guardada, usar `prefers-color-scheme` del navegador
+
+**Escenarios de prueba:**
+- Cambiar a dark mode → Validar navbar, sidebar, cards, modals en dark
+- Cambiar tema → Recargar página → Tema se mantiene
+- Navegador en dark mode → Primera vez → Sistema usa dark por default
+
+---
+
+**US-041: Persistencia de Preferencia de Tema**
+
+**Como** usuario de la plataforma,
+**Quiero** que mi tema preferido se sincronice entre dispositivos,
+**Para** tener experiencia consistente en desktop, móvil, tablet.
+
+**Criterios de aceptación:**
+- [ ] Tema se guarda en backend además de localStorage
+- [ ] Endpoint `PATCH /api/v1/users/me/preferences` acepta `{"theme": "light" | "dark" | "auto"}`
+- [ ] Opción "Auto" respeta `prefers-color-scheme` del dispositivo
+- [ ] Login desde nuevo dispositivo aplica tema guardado
+- [ ] Si localStorage y backend difieren, backend tiene precedencia
+
+**Escenarios de prueba:**
+- Cambiar a dark en desktop → Login en móvil → Móvil usa dark
+- Seleccionar "Auto" → Cambiar tema del sistema a dark → App cambia a dark
+
+---
+
+### 3.8 Digital Services (Servicios Públicos)
+
+**US-042: Crear y Editar Tarjeta Digital desde Panel Cliente**
+
+**Como** usuario,
+**Quiero** crear mi tarjeta digital con información de contacto y enlaces sociales,
+**Para** tener una presencia profesional online con URL compartible.
+
+**Criterios de Aceptación:**
+- [ ] Formulario solicita: nombre, título, foto, bio, email, teléfono, redes sociales
+- [ ] Preview en tiempo real muestra cambios al editar
+- [ ] Sistema valida username único globalmente
+- [ ] Colores del tema personalizables (color primario, fondo)
+- [ ] Tarjeta publicada accesible en `/tarjeta/{username}` sin autenticación
+- [ ] Botón "Editar" permite modificar después de publicar
+
+**Escenarios de prueba:**
+- Usuario Free crea primera tarjeta → Publicada exitosamente
+- Username "jsmith" ya existe → Sugiere "jsmith1", "j-smith", "john-smith"
+- Usuario edita bio y color → Preview actualiza inmediatamente
+
+---
+
+**US-043: Compartir Tarjeta vía QR Code**
+
+**Como** usuario,
+**Quiero** generar QR code de mi tarjeta digital,
+**Para** compartir mi contacto fácilmente en eventos o imprimir en tarjetas físicas.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Generar QR" crea código QR apuntando a URL pública
+- [ ] QR descargable como PNG (300x300px, 600x600px, 1200x1200px)
+- [ ] QR incluye logo/avatar en centro (opcional)
+- [ ] Opción "Copiar Link" copia URL al portapapeles
+- [ ] Modal muestra preview del QR antes de descargar
+
+---
+
+**US-044: Exportar vCard para Contactos**
+
+**Como** usuario con plan Starter+,
+**Quiero** exportar mi tarjeta como archivo vCard (.vcf),
+**Para** que otros puedan agregar mi contacto a sus teléfonos con un click.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Exportar vCard" genera archivo `.vcf`
+- [ ] vCard incluye: nombre, email, teléfono, URL de tarjeta, foto
+- [ ] Compatible con iOS Contacts y Google Contacts
+- [ ] Feature gate valida plan Starter+ antes de exportar
+
+---
+
+**US-045: Personalizar Colores y Foto de Perfil**
+
+**Como** usuario,
+**Quiero** personalizar colores de mi tarjeta y subir foto de perfil profesional,
+**Para** reflejar mi identidad de marca personal.
+
+**Criterios de Aceptación:**
+- [ ] Color picker permite seleccionar color primario (usado en botones, links)
+- [ ] Color picker para fondo (sólido o degradado)
+- [ ] Upload de foto con preview y crop
+- [ ] Validación: JPG/PNG, max 5MB, min 200x200px
+- [ ] Compresión automática si excede 500KB
+- [ ] Opción "Usar avatar de Gravatar" (basado en email)
+
+---
+
+**US-046: Ver Analytics de Vistas en Tarjeta**
+
+**Como** usuario con plan Starter+,
+**Quiero** ver cuántas personas han visitado mi tarjeta digital,
+**Para** medir el alcance de mi presencia online.
+
+**Criterios de Aceptación:**
+- [ ] Dashboard muestra: total views, unique visitors, views últimos 7/30 días
+- [ ] Gráfico de líneas muestra tendencia de vistas por día
+- [ ] No se trackean vistas del propio usuario (by session)
+- [ ] Analytics disponibles solo para Starter+ (UpgradePrompt para Free)
+- [ ] Clicks en enlaces sociales trackeados individualmente
+
+---
+
+**US-047: Seleccionar Template de Landing Page**
+
+**Como** usuario con plan Starter+,
+**Quiero** elegir un template profesional para mi landing page,
+**Para** crear una presencia online atractiva sin diseñar desde cero.
+
+**Criterios de Aceptación:**
+- [ ] Galería muestra templates disponibles según plan
+- [ ] Free: 1 template (Basic) - solo lectura
+- [ ] Starter: 3 templates (Minimal, Corporate, Creative)
+- [ ] Professional: Todos los templates + custom CSS
+- [ ] Preview de template muestra diseño completo antes de seleccionar
+- [ ] Cambiar template preserva contenido, solo cambia diseño
+
+---
+
+**US-048: Editar Secciones de Landing (Hero, About, Services, Contact)**
+
+**Como** usuario,
+**Quiero** personalizar las secciones de mi landing page,
+**Para** comunicar efectivamente mi propuesta de valor y servicios.
+
+**Criterios de Aceptación:**
+- [ ] Editor muestra secciones: Hero, About, Services, Portfolio, Contact
+- [ ] Drag & drop para reordenar secciones
+- [ ] Toggle para mostrar/ocultar secciones
+- [ ] **Hero**: Título, subtítulo, CTA button (texto + link), background image
+- [ ] **About**: Rich text editor (markdown), imagen lateral
+- [ ] **Services**: Grid de servicios (hasta 6), cada uno con ícono, título, descripción
+- [ ] **Contact**: Formulario (nombre, email, mensaje) con configuración de email destino
+- [ ] Preview responsive (mobile/tablet/desktop)
+
+---
+
+**US-049: Agregar Formulario de Contacto**
+
+**Como** usuario,
+**Quiero** incluir formulario de contacto en mi landing,
+**Para** que visitantes puedan comunicarse conmigo directamente.
+
+**Criterios de Aceptación:**
+- [ ] Formulario tiene campos: nombre, email, asunto, mensaje
+- [ ] Validación client-side y server-side
+- [ ] Configuración de email destino (por defecto: email del usuario)
+- [ ] Anti-spam con reCAPTCHA (opcional, Professional+)
+- [ ] Notificación in-app cuando recibe nuevo mensaje
+- [ ] Rate limiting: max 20 mensajes/hora por IP
+
+---
+
+**US-050: Configurar Meta Tags para SEO**
+
+**Como** usuario con plan Professional+,
+**Quiero** configurar meta tags personalizados,
+**Para** mejorar el ranking de mi landing en buscadores.
+
+**Criterios de Aceptación:**
+- [ ] Campos: Meta title (max 60 chars), meta description (max 160 chars)
+- [ ] Upload de Open Graph image (1200x630px recomendado)
+- [ ] Preview muestra cómo se verá en Google, Facebook, Twitter
+- [ ] Auto-generación de OG image si no se sube (título + foto perfil)
+- [ ] Tags incluidos: og:title, og:description, og:image, twitter:card
+- [ ] HTML source muestra tags en `<head>` (validar con SSR)
+
+---
+
+**US-051: Integrar Google Analytics**
+
+**Como** usuario con plan Professional+,
+**Quiero** conectar Google Analytics a mi landing,
+**Para** entender el comportamiento de mis visitantes.
+
+**Criterios de Aceptación:**
+- [ ] Campo para ingresar Google Analytics Tracking ID (GA4 o Universal Analytics)
+- [ ] Script de Analytics inyectado en `<head>` de la página
+- [ ] No afecta performance (async loading)
+- [ ] Cumple GDPR: banner de cookies si usuario en EU
+- [ ] Opción para deshabilitar Analytics temporalmente
+
+---
+
+**US-052: Agregar Proyectos al Portafolio con Imágenes**
+
+**Como** usuario con plan Professional+,
+**Quiero** publicar proyectos en mi portafolio con imágenes y descripciones,
+**Para** mostrar mi trabajo a potenciales clientes o empleadores.
+
+**Criterios de Aceptación:**
+- [ ] Formulario: título, descripción breve, descripción completa (markdown), cover image, galería (max 10 imágenes)
+- [ ] Upload de imágenes con drag & drop, preview, y reordenamiento
+- [ ] Validación: JPG/PNG/WebP, max 5MB por imagen
+- [ ] Compresión y optimización automática (WebP conversion)
+- [ ] Links: demo live, repositorio, case study (validación de URLs)
+- [ ] Fecha de publicación del proyecto
+
+---
+
+**US-053: Organizar Proyectos por Categoría/Tags**
+
+**Como** usuario,
+**Quiero** categorizar proyectos con tags,
+**Para** que visitantes filtren por tipo de trabajo.
+
+**Criterios de Aceptación:**
+- [ ] Tags predefinidos: Web Development, Mobile App, UI/UX Design, Branding, Backend, Frontend
+- [ ] Opción para crear tags personalizados (max 20 tags totales)
+- [ ] Multi-selección de tags por proyecto
+- [ ] Página de portafolio muestra filtros por tag (client-side filtering)
+- [ ] URL con query param: `/portafolio/jsmith?tag=web-development`
+
+---
+
+**US-054: Configurar Proyecto Destacado**
+
+**Como** usuario,
+**Quiero** marcar hasta 3 proyectos como destacados,
+**Para** que aparezcan primero en mi portafolio.
+
+**Criterios de Aceptación:**
+- [ ] Toggle "Destacar proyecto" en editor
+- [ ] Máximo 3 proyectos destacados simultáneamente
+- [ ] Proyectos destacados muestran badge "Destacado"
+- [ ] Orden: Destacados (ordenados manualmente) → Resto (por fecha descendente)
+- [ ] Drag & drop para reordenar proyectos destacados
+
+---
+
+**US-055: Compartir Link a Proyecto Específico**
+
+**Como** usuario,
+**Quiero** compartir URL de un proyecto individual,
+**Para** enviar mi trabajo específico a clientes o incluir en aplicaciones de empleo.
+
+**Criterios de Aceptación:**
+- [ ] URL de proyecto: `/portafolio/jsmith/{project-slug}`
+- [ ] Slug generado automáticamente desde título (ej: "Mi App" → `mi-app`)
+- [ ] Página de proyecto individual muestra: galería full, descripción completa, links
+- [ ] Botón "Compartir" copia URL al portapapeles
+- [ ] Meta tags específicos del proyecto para sharing en redes sociales
+
+---
+
+**US-056: Generar CV Digital desde Perfil del Usuario**
+
+**Como** usuario,
+**Quiero** generar mi CV digital automáticamente desde mi perfil,
+**Para** ahorrar tiempo al no tener que duplicar información.
+
+**Criterios de Aceptación:**
+- [ ] Sistema auto-completa secciones desde perfil: nombre, email, teléfono, foto
+- [ ] Secciones editables: Resumen profesional, Experiencia, Educación, Habilidades, Idiomas, Certificaciones
+- [ ] Cada sección tiene formulario específico con validaciones
+- [ ] Fechas de experiencia/educación con validación (end_date >= start_date)
+- [ ] Habilidades con auto-complete de skills comunes
+
+---
+
+**US-057: Personalizar Secciones del CV**
+
+**Como** usuario,
+**Quiero** personalizar qué secciones incluir en mi CV,
+**Para** adaptarlo a diferentes oportunidades laborales.
+
+**Criterios de Aceptación:**
+- [ ] Toggle para mostrar/ocultar secciones: Foto, Teléfono, Dirección, Certificaciones, Referencias
+- [ ] Drag & drop para reordenar secciones
+- [ ] Opción "Versión Anónima" oculta: foto, nombre completo, contacto (para procesos ciegos)
+- [ ] Múltiples versiones de CV guardables (ej: "CV Backend", "CV Fullstack")
+
+---
+
+**US-058: Exportar CV a PDF**
+
+**Como** usuario con plan Professional+,
+**Quiero** descargar mi CV como PDF profesional,
+**Para** enviarlo en aplicaciones de empleo.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Exportar PDF" genera PDF de alta calidad
+- [ ] PDF usa template seleccionado (Classic, Modern, Minimal)
+- [ ] Nombre de archivo: `CV_{Nombre}_{Apellido}_{Fecha}.pdf`
+- [ ] PDF tamaño A4, fuentes embebidas, compatible con ATS (Applicant Tracking Systems)
+- [ ] Opción para incluir/excluir foto en PDF
+
+---
+
+**US-059: Configurar SEO Global para Servicios Digitales**
+
+**Como** usuario con plan Professional+,
+**Quiero** configurar SEO default para todos mis servicios digitales,
+**Para** maximizar mi visibilidad en buscadores.
+
+**Criterios de Aceptación:**
+- [ ] Configuración global: Meta title base, meta description base, keywords
+- [ ] Cada servicio puede override configuración global
+- [ ] Sistema genera `sitemap.xml` dinámico incluyendo todas las páginas públicas
+- [ ] `robots.txt` configurable (allow/disallow por servicio)
+- [ ] Structured data (JSON-LD) para Person schema
+
+---
+
+**US-060: Conectar Dominio Personalizado (Enterprise)**
+
+**Como** admin de organización Enterprise,
+**Quiero** conectar un dominio personalizado a mis servicios digitales,
+**Para** branding profesional sin mencionar la plataforma.
+
+**Criterios de Aceptación:**
+- [ ] Configuración de dominio: ingresar domain, verificar DNS, activar SSL
+- [ ] Instrucciones claras para configurar CNAME en proveedor DNS
+- [ ] Validación automática de DNS cada 30 min (max 24h)
+- [ ] Provisión automática de SSL con Let's Encrypt
+- [ ] Configuración de redirecciones: dominio → servicio específico
+- [ ] Soporte para subdominios: `cv.domain.com`, `portfolio.domain.com`
+- [ ] White-label: remover "Powered by [Platform]" footer
+
+---
+
 
 ---
 
@@ -609,4 +1016,4 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
-**Última actualización**: 2026-02-10
+**Última actualización**: 2026-02-12

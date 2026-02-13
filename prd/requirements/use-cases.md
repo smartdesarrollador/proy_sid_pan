@@ -13,6 +13,11 @@
 - [CU-006: Compartir Proyecto con Control de Permisos](#cu-006-compartir-proyecto-con-control-de-permisos)
 - [CU-007: Revocar Acceso a Elemento Compartido](#cu-007-revocar-acceso-a-elemento-compartido)
 - [CU-008: Gestionar Herencia de Permisos en Proyecto](#cu-008-gestionar-herencia-de-permisos-en-proyecto)
+- [CU-009: Crear Tarjeta Digital desde Panel Cliente](#cu-009-crear-tarjeta-digital-desde-panel-cliente)
+- [CU-010: Personalizar Landing Page Pública](#cu-010-personalizar-landing-page-pública)
+- [CU-011: Gestionar Portafolio de Proyectos](#cu-011-gestionar-portafolio-de-proyectos)
+- [CU-012: Generar CV Digital desde Perfil](#cu-012-generar-cv-digital-desde-perfil)
+- [CU-013: Configurar Dominio Personalizado (Enterprise)](#cu-013-configurar-dominio-personalizado-enterprise)
 
 ---
 
@@ -206,6 +211,174 @@
 
 ---
 
+## CU-009: Crear Tarjeta Digital desde Panel Cliente
+
+**Actor**: Usuario final (Free+)
+
+**Flujo principal**:
+1. Usuario hace login en panel de cliente
+2. Navega a "Servicios Digitales" → "Tarjeta Digital"
+3. Si no existe tarjeta, ve pantalla de bienvenida con preview de template
+4. Click "Crear Mi Tarjeta"
+5. Formulario solicita:
+   - Nombre completo
+   - Título/profesión
+   - Foto de perfil (upload o URL)
+   - Bio breve (max 200 caracteres)
+   - Email público
+   - Teléfono (opcional)
+   - Enlaces sociales: LinkedIn, Twitter, GitHub, Instagram, Facebook, website
+   - Colores del tema (color primario, color de fondo)
+6. Preview en tiempo real muestra cambios
+7. Click "Publicar"
+8. Sistema valida username único, genera URL pública
+9. Tarjeta publicada disponible en `https://domain.com/tarjeta/{username}`
+10. Usuario puede compartir vía QR code o enlace directo
+
+**Tiempo objetivo**: <5 minutos desde inicio hasta publicación
+
+**Criterios de éxito**:
+- Tarjeta creada y accesible públicamente sin autenticación
+- Preview actualiza en tiempo real al editar
+- QR code generado automáticamente apunta a URL pública
+- Responsive en mobile/tablet/desktop
+
+---
+
+## CU-010: Personalizar Landing Page Pública
+
+**Actor**: Usuario con plan Professional+ (Starter incluye templates limitados)
+
+**Flujo principal**:
+1. Usuario navega a "Servicios Digitales" → "Landing Page"
+2. Selector de templates muestra:
+   - Free: 1 template básico (fijo)
+   - Starter: 3 templates (Minimal, Corporate, Creative)
+   - Professional: Todos los templates + custom CSS
+3. Selecciona template "Minimal"
+4. Editor muestra secciones configurables:
+   - **Hero**: Título, subtítulo, CTA button, imagen de fondo
+   - **About**: Texto enriquecido (markdown), imagen lateral
+   - **Services**: Grid de servicios (ícono, título, descripción)
+   - **Portfolio**: Galería de proyectos destacados (vincula a proyectos existentes)
+   - **Contact**: Formulario de contacto (emails se envían a usuario)
+5. Usuario personaliza cada sección con drag & drop para reordenar
+6. Configuración de SEO:
+   - Meta title (max 60 caracteres)
+   - Meta description (max 160 caracteres)
+   - Open Graph image (upload o auto-generate)
+7. Click "Vista Previa" abre modal con preview responsive
+8. Click "Publicar"
+9. Landing disponible en `https://domain.com/landing/{username}`
+
+**Tiempo objetivo**: <15 minutos para personalización completa
+
+**Criterios de éxito**:
+- Drag & drop funciona smoothly para reordenar secciones
+- Preview muestra exactamente lo que se verá en producción
+- SEO meta tags visibles en código fuente HTML (SSR)
+- Formulario de contacto envía emails correctamente
+
+---
+
+## CU-011: Gestionar Portafolio de Proyectos
+
+**Actor**: Usuario con plan Professional+
+
+**Flujo principal**:
+1. Usuario navega a "Servicios Digitales" → "Portafolio"
+2. Dashboard muestra proyectos existentes (vinculados o standalone)
+3. Click "+ Agregar Proyecto"
+4. Formulario solicita:
+   - Título del proyecto
+   - Descripción breve (200 caracteres) y completa (markdown)
+   - Imágenes: Cover image + galería (max 10 imágenes)
+   - Tags/categorías: Selección múltiple (Web, Mobile, Design, Backend, etc.)
+   - Enlaces: Demo live, repositorio GitHub, case study
+   - Fecha de publicación
+5. Opción "Vincular a proyecto existente" conecta con módulo Projects
+6. Vista previa muestra card del proyecto en grid
+7. Click "Publicar Proyecto"
+8. Proyecto aparece en `https://domain.com/portafolio/{username}`
+9. Proyectos ordenados por: Destacado → Fecha (recientes primero)
+10. Usuario puede marcar hasta 3 proyectos como "Destacados" (aparecen primero)
+
+**Tiempo objetivo**: <10 minutos por proyecto
+
+**Criterios de éxito**:
+- Grid responsive (1 col mobile, 2 cols tablet, 3 cols desktop)
+- Lightbox para galería de imágenes
+- Filtrado por tags funcional (client-side)
+- Links externos abren en nueva pestaña con `rel="noopener"`
+
+---
+
+## CU-012: Generar CV Digital desde Perfil
+
+**Actor**: Usuario (Free+, limitaciones por plan)
+
+**Flujo principal**:
+1. Usuario navega a "Servicios Digitales" → "CV Digital"
+2. Sistema auto-completa secciones desde perfil del usuario:
+   - **Header**: Nombre, título, contacto (email, teléfono, ubicación)
+   - **Resumen Profesional**: Campo editable (max 300 caracteres)
+   - **Experiencia Laboral**: Lista de empleos (empresa, cargo, fechas, responsabilidades)
+   - **Educación**: Lista de títulos (institución, grado, fechas)
+   - **Habilidades**: Tags de habilidades (Frontend, React, Python, etc.)
+   - **Idiomas**: Lista con nivel (Nativo, Fluido, Intermedio, Básico)
+   - **Certificaciones**: Títulos y emisores
+3. Usuario edita cada sección con formulario dedicado
+4. Selector de template: Classic, Modern, Minimal (Free: 1, Starter: 2, Pro: todos)
+5. Botón "Export PDF" genera PDF descargable (Professional+)
+6. Click "Publicar CV"
+7. CV disponible en `https://domain.com/cv/{username}`
+
+**Tiempo objetivo**: <10 minutos con auto-población, <30 min manualmente
+
+**Criterios de éxito**:
+- Auto-población funciona si usuario completó perfil
+- CV responsive (mobile muestra secciones apiladas)
+- PDF generado coincide visualmente con versión web
+- PDF descargable tiene nombre: `CV_{Nombre}_{Fecha}.pdf`
+
+---
+
+## CU-013: Configurar Dominio Personalizado (Enterprise)
+
+**Actor**: Admin de organización con plan Enterprise
+
+**Flujo principal**:
+1. Usuario navega a "Servicios Digitales" → "Configuración" → "Custom Domain"
+2. Ingresa dominio deseado: `juansmith.com`
+3. Sistema verifica disponibilidad y que no esté usado por otro tenant
+4. Instrucciones de configuración DNS:
+   ```
+   Tipo: CNAME
+   Nombre: @  (o www)
+   Valor: proxy.platform.com
+   TTL: 3600
+   ```
+5. Usuario configura DNS en su proveedor (Cloudflare, GoDaddy, etc.)
+6. Click "Verificar Configuración"
+7. Sistema valida DNS propagation (puede tardar hasta 24h)
+8. Tras validación exitosa, sistema provisiona SSL automático (Let's Encrypt)
+9. Dominio activo apunta a landing page o tarjeta (configurable)
+10. Usuario puede configurar redirecciones:
+    ```
+    juansmith.com → /landing/jsmith
+    juansmith.com/cv → /cv/jsmith
+    ```
+
+**Tiempo objetivo**: <5 minutos configuración, <24h propagación DNS
+
+**Criterios de éxito**:
+- Verificación DNS automática con retry cada 30 min
+- SSL activo en <2h tras validación DNS
+- Redirecciones configurables desde panel
+- Soporte para subdominios (www, cv, portfolio)
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -214,4 +387,4 @@
 
 ---
 
-**Última actualización**: 2026-02-10
+**Última actualización**: 2026-02-12
