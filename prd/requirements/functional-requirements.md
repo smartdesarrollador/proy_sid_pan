@@ -557,12 +557,15 @@ Usuarios con nivel `admin` o owners pueden revocar acceso a elementos compartido
 
 ### 4.8 Digital Services (Public Profiles)
 
-**FR-063: Server-Side Rendering con Angular Universal**
-- El sistema DEBE utilizar Angular Universal para renderizar las páginas públicas en el servidor
+**FR-063: Server-Side Rendering con Next.js App Router**
+- El sistema DEBE utilizar Next.js App Router para renderizar las páginas públicas en el servidor
 - HTML completo DEBE generarse server-side antes de enviar al cliente
-- Express server DEBE usar `@nguniversal/express-engine` para SSR
-- TransferState DEBE usarse para evitar duplicate API calls entre server y client
-- Pre-rendering DEBE aplicarse para rutas estáticas en build time
+- Next.js 14+ con App Router y React Server Components DEBE usarse para SSR
+- Static Site Generation (SSG) DEBE aplicarse para rutas estáticas en build time
+- Dynamic SSR DEBE usarse para rutas dinámicas (usernames)
+- Incremental Static Regeneration (ISR) DEBE configurarse con revalidación de 60 segundos
+- Automatic data deduplication DEBE aplicarse (no manual TransferState needed)
+- Built-in metadata API DEBE usarse para SEO (meta tags, Open Graph, JSON-LD)
 
 ---
 
@@ -612,11 +615,41 @@ Usuarios con nivel `admin` o owners pueden revocar acceso a elementos compartido
 ---
 
 **FR-069: Templates Component-Based**
-- El sistema DEBE soportar templates component-based con componentes Angular reutilizables
+- El sistema DEBE soportar templates component-based con componentes React reutilizables
 - Template DEBE definirse como JSON: `{ sections: [ { type: 'hero', props: {...} } ] }`
-- Componentes standalone DEBEN usar `@Input()` para configuración dinámica
-- Lazy loading DEBE aplicarse para componentes no usados en template
+- Componentes React DEBEN usar props tipados (TypeScript interfaces)
+- Dynamic imports con React.lazy() DEBEN usarse para lazy loading de componentes
+- Server Components DEBEN usarse por defecto, Client Components solo cuando necesario ('use client')
 - Templates DEBEN ser extensibles sin cambios en código core
+
+**Ejemplo de implementación**:
+```typescript
+// components/sections/index.ts
+export const SECTION_COMPONENTS = {
+  hero: React.lazy(() => import('./HeroSection')),
+  about: React.lazy(() => import('./AboutSection')),
+  portfolio: React.lazy(() => import('./PortfolioSection')),
+  contact: React.lazy(() => import('./ContactSection')),
+} as const;
+
+// app/[locale]/[username]/page.tsx
+import { Suspense } from 'react';
+
+export default function ProfilePage({ config }) {
+  return (
+    <>
+      {config.sections.map((section, i) => {
+        const Component = SECTION_COMPONENTS[section.type];
+        return (
+          <Suspense key={i} fallback={<SectionSkeleton />}>
+            <Component {...section.props} />
+          </Suspense>
+        );
+      })}
+    </>
+  );
+}
+```
 
 ---
 

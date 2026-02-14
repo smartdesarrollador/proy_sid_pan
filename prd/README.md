@@ -4,7 +4,7 @@
 **Date:** 2026-02-12
 **Status:** Draft
 **Owner:** Product Team
-**Tech Stack:** Django REST Framework, PostgreSQL, Angular (Admin + Cliente), React (Prototipos), Tailwind CSS
+**Tech Stack:** Django REST Framework, PostgreSQL, React + Vite (Admin + Cliente), Next.js (Digital Services), Tailwind CSS
 
 ---
 
@@ -161,7 +161,7 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - ✅ Invitaciones por email
 - ✅ Audit log básico (cambios en roles/permisos)
 - ✅ API REST documentada con Swagger
-- ✅ Frontend Angular con Tailwind (login, dashboard, user/role management)
+- ✅ Frontend React + Vite con Tailwind (login, dashboard, user/role management)
 
 #### Fase 2 (16 semanas) - Advanced RBAC + UX Enhancements
 - ✅ Roles personalizados por tenant
@@ -196,7 +196,7 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - ✅ Auditoría completa de eventos de compartición
 
 #### Fase 5 (10 semanas) - Digital Services
-- ✅ SSR con Angular Universal
+- ✅ SSR con Next.js App Router
 - ✅ Tarjeta Digital pública
 - ✅ Landing Page personalizable
 - ✅ Portafolio de proyectos público

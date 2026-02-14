@@ -23,7 +23,7 @@
 │                    Frontend Layer                        │
 ├───────────────────────┬─────────────────────────────────┤
 │  Frontend Admin       │    Frontend Cliente             │
-│  (Angular 17+)        │    (Angular 17+)                │
+│  (React + Vite + TS)  │    (React + Vite + TS)          │
 │  - RBAC Management    │    - Calendar, Tasks            │
 │  - User Management    │    - Notifications, Files       │
 │  - Billing            │    - Projects, Dashboard        │
@@ -213,15 +213,23 @@ def create_custom_role(request):
     ...
 ```
 
-**Frontend Guards**:
+**Frontend Protected Routes**:
 
 ```typescript
-@Injectable()
-export class PermissionGuard implements CanActivate {
-  canActivate(route: ActivatedRouteSnapshot): boolean {
-    const requiredPermission = route.data['permission'];
-    return this.authService.hasPermission(requiredPermission);
+// components/auth/ProtectedRoute.tsx
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiredPermission: string;
+}
+
+export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteProps) {
+  const { hasPermission } = useAuth();
+
+  if (!hasPermission(requiredPermission)) {
+    return <Navigate to="/unauthorized" />;
   }
+
+  return <>{children}</>;
 }
 ```
 
@@ -285,20 +293,27 @@ export class PermissionGuard implements CanActivate {
 
 | Component | Technology | Version | Purpose |
 |-----------|-----------|---------|---------|
-| **Framework** | Angular | 17+ | SPA framework |
-| **UI Library** | Angular Material + Tailwind | Latest | UI components |
-| **State** | RxJS | 7+ | Reactive state management |
-| **HTTP** | Angular HttpClient | - | API calls |
-| **Auth** | Angular JWT | - | Token handling |
+| **Framework** | React 18+ + Vite | 5+ | SPA framework + build tool |
+| **UI Library** | shadcn/ui + Tailwind | Latest | Componentes + estilos |
+| **State Management** | TanStack Query + Zustand | 5+ | Server state + Client state |
+| **HTTP Client** | Axios / fetch + custom hooks | 1.6+ | API calls con interceptors |
+| **Auth** | Custom AuthContext + JWT | - | Token handling |
+| **Forms** | React Hook Form + Zod | 7.5+ | Form validation |
+| **Routing** | React Router | 6.22+ | Client-side routing |
+| **i18n** | react-i18next | 14+ | Internacionalización |
+| **Date/Time** | date-fns + Intl API | 3.3+ | Formatting con locale |
 
 ### Frontend Cliente
 
 | Component | Technology | Version | Purpose |
 |-----------|-----------|---------|---------|
-| **Framework** | Angular | 17+ | SPA framework |
-| **UI** | Tailwind CSS | 3+ | Styling |
-| **State** | RxJS + Signals | - | Reactive state |
-| **HTTP** | Angular HttpClient | - | API calls |
+| **Framework** | React 18+ + Vite | 5+ | SPA framework |
+| **UI** | Tailwind CSS | 3.4+ | Styling |
+| **State** | TanStack Query + Zustand | Latest | Reactive state |
+| **HTTP** | Axios / fetch | 1.6+ | API calls |
+| **Calendar UI** | FullCalendar React | 6.1+ | Calendario interactivo |
+| **Drag & Drop** | dnd-kit | 6.1+ | Kanban boards |
+| **Charts** | Recharts | 2.12+ | Data visualization |
 
 ---
 
@@ -311,12 +326,19 @@ export class PermissionGuard implements CanActivate {
 - Middleware: `django.middleware.locale.LocaleMiddleware`
 - Detection order: 1) User preference (DB), 2) Session, 3) Accept-Language header, 4) Default (es)
 
-**Frontend (Angular):**
-- `@angular/localize` para traducciones nativas de Angular
-- Archivos de traducción: `src/assets/i18n/{es,en}.json`
-- TranslateService para cambio dinámico de idioma
-- DatePipe y CurrencyPipe con locale awareness
-- Lazy loading de traducciones por módulo (performance)
+**Frontend Admin/Cliente (React + Vite):**
+- `react-i18next` para traducciones
+- Archivos de traducción: `src/locales/{es,en}/translation.json`
+- `useTranslation` hook para acceso a traducciones
+- `date-fns` con locale awareness para fechas
+- `Intl.NumberFormat` para monedas
+- Lazy loading de namespaces por ruta
+
+**Frontend SSR (Next.js):**
+- `next-intl` para traducciones con SSR
+- `app/[locale]/layout.tsx` para routing por idioma
+- Server Components con traducciones pre-renderizadas
+- Client Components con `useTranslations` hook
 
 **Estrategia de Sincronización:**
 1. Usuario cambia idioma en UI → Frontend actualiza localStorage
@@ -345,26 +367,79 @@ export class PermissionGuard implements CanActivate {
   }
   ```
 
-**Angular Service:**
+**React + Vite Implementation:**
 ```typescript
-@Injectable({ providedIn: 'root' })
-export class ThemeService {
-  private theme$ = new BehaviorSubject<'light' | 'dark' | 'auto'>('auto');
+// contexts/ThemeContext.tsx
+import { createContext, useContext, useEffect, useState } from 'react';
 
-  setTheme(theme: 'light' | 'dark' | 'auto') {
-    localStorage.setItem('theme', theme);
-    this.applyTheme(theme);
-    this.syncToBackend(theme);
-  }
+type Theme = 'light' | 'dark' | 'auto';
 
-  private applyTheme(theme: string) {
+interface ThemeContextType {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    return (localStorage.getItem('theme') as Theme) || 'auto';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
     if (theme === 'auto') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.toggle('dark', prefersDark);
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+      root.classList.add(systemTheme);
     } else {
-      document.documentElement.classList.toggle('dark', theme === 'dark');
+      root.classList.add(theme);
     }
-  }
+  }, [theme]);
+
+  const setTheme = (newTheme: Theme) => {
+    localStorage.setItem('theme', newTheme);
+    setThemeState(newTheme);
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) throw new Error('useTheme must be used within ThemeProvider');
+  return context;
+};
+```
+
+**Next.js Implementation:**
+```typescript
+// app/providers.tsx
+'use client';
+
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
+      {children}
+    </NextThemesProvider>
+  );
+}
+
+// Uso en componentes:
+import { useTheme } from 'next-themes';
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  // ...
 }
 ```
 
@@ -374,21 +449,30 @@ export class ThemeService {
 
 ### Overview
 
-Public profile pages (tarjeta digital, landing page, portafolio, CV digital) require Server-Side Rendering (SSR) for optimal SEO and search engine indexing. We use **Angular Universal** to render pages on the server before sending HTML to the browser.
+Public profile pages (tarjeta digital, landing page, portafolio, CV digital) require Server-Side Rendering (SSR) for optimal SEO and search engine indexing. We use **Next.js App Router** to render pages on the server before sending HTML to the browser.
 
-### Why Angular Universal?
+### Why Next.js App Router?
 
 **Decision Rationale:**
-- **Stack Consistency**: Angular 17+ is already used for admin and cliente frontends
-- **Component Reuse**: Standalone components can be shared between SSR and SPAs
-- **Team Expertise**: Team is familiar with Angular, reducing learning curve
-- **Maturity**: Angular Universal is production-ready with active community
-- **Maintenance**: Single stack reduces overhead vs adding Next.js/Nuxt.js
+- **Best-in-class SEO**: Next.js is industry standard for SEO-optimized React apps
+- **Built-in SSR**: No additional setup required (vs Express + rendering engine)
+- **React Server Components**: Stream HTML with progressive enhancement
+- **Image Optimization**: Built-in next/image for Core Web Vitals
+- **Metadata API**: Automatic meta tags, Open Graph, structured data
+- **Developer Experience**: Fast Refresh, TypeScript, built-in routing
+- **Deployment**: Vercel integration with edge functions and CDN
+- **Component Reuse**: Can share UI components between Next.js and Vite apps
 
 **Alternatives Considered:**
-1. **Next.js (React)**: Better SEO out-of-box, but requires different tech stack
-2. **Nuxt.js (Vue)**: Excellent SSR, but requires Vue.js (new stack for team)
-3. **Django Templates**: No SPA interactivity, difficult to reuse components
+1. **Remix**: Great SSR framework, but smaller ecosystem than Next.js
+2. **Astro**: Excellent for content sites, but limited interactivity
+3. **Django Templates**: No SPA interactivity, poor DX for modern UI
+4. **React + Vite SSR**: Requires manual setup (Express, routing, data fetching)
+
+**Why NOT use the same stack for everything?**
+- Next.js adds ~30% to bundle size vs Vite (not needed for internal admin panels)
+- Admin and Cliente apps don't need SEO, so Vite is lighter and faster
+- Next.js routing is opinionated (file-based), Vite is flexible (React Router)
 
 ### Architecture Diagram
 
@@ -405,8 +489,8 @@ Public profile pages (tarjeta digital, landing page, portafolio, CV digital) req
        │
        ▼
 ┌──────────────────┐      ┌─────────────┐
-│  Express Server  │─────▶│    Redis    │
-│  (Angular SSR)   │◀─────│   (Cache)   │
+│  Next.js Server  │─────▶│    Redis    │
+│  (App Router)    │◀─────│   (Cache)   │
 └──────┬───────────┘      └─────────────┘
        │ API Call: GET /api/v1/app/public-profiles/jsmith
        ▼
@@ -419,17 +503,17 @@ Public profile pages (tarjeta digital, landing page, portafolio, CV digital) req
 ### SSR Rendering Flow
 
 1. **Request**: Browser requests `GET /landing/jsmith`
-2. **Routing**: Nginx routes to Express server (SSR service on port 4000)
-3. **Cache Check**: Express checks Redis for cached HTML (`ssr:landing:jsmith`)
-4. **Cache Hit**: If cached (TTL 5min), return HTML immediately
-5. **Cache Miss**: If not cached:
-   - Express calls Django API: `GET /api/v1/app/public-profiles/jsmith`
-   - Angular Universal renders component on server
-   - HTML generated with full content + TransferState
-   - HTML cached in Redis (TTL 300s)
+2. **Routing**: Nginx routes to Next.js server (SSR service on port 3000)
+3. **Cache Check**: Next.js checks ISR cache for pre-rendered page
+4. **Cache Hit**: If cached (revalidate: 60s), return HTML immediately
+5. **Cache Miss or Stale**: If not cached or needs revalidation:
+   - Next.js Server Component calls Django API: `GET /api/v1/app/public-profiles/jsmith`
+   - React Server Components render on server
+   - HTML generated with full content (no TransferState needed)
+   - Page cached for ISR (revalidate every 60s)
    - HTML returned to browser
 6. **Browser Receives**: Full HTML with content (indexable by search engines)
-7. **Hydration**: Angular bootstraps in client for interactivity (SPA mode)
+7. **Hydration**: React hydrates in client for interactivity
 
 ### Caching Strategy
 
@@ -453,86 +537,144 @@ Public profile pages (tarjeta digital, landing page, portafolio, CV digital) req
 - LCP (Largest Contentful Paint): <2.5s
 - FCP (First Contentful Paint): <1.8s
 
-### Express Server Setup
+### Next.js App Router Configuration
 
-**server.ts** (Angular Universal):
-```typescript
-import { ngExpressEngine } from '@nguniversal/express-engine';
-import { AppServerModule } from './src/main.server';
-import * as express from 'express';
-import * as redis from 'redis';
+Next.js 14+ uses the App Router with built-in SSR, eliminating the need for custom Express setup.
 
-const app = express();
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-
-await redisClient.connect();
-
-// Angular Universal engine
-app.engine('html', ngExpressEngine({
-  bootstrap: AppServerModule,
-}));
-
-app.set('view engine', 'html');
-app.set('views', './dist/browser');
-
-// Static files
-app.use('/assets', express.static('./dist/browser/assets'));
-
-// SSR routes with Redis cache
-app.get('/:service(tarjeta|landing|portafolio|cv)/:username', async (req, res) => {
-  const { service, username } = req.params;
-  const cacheKey = `ssr:${service}:${username}`;
-
-  try {
-    // Check cache
-    const cached = await redisClient.get(cacheKey);
-    if (cached) {
-      console.log(`Cache HIT: ${cacheKey}`);
-      return res.send(cached);
-    }
-
-    console.log(`Cache MISS: ${cacheKey}`);
-
-    // Render with Angular Universal
-    res.render('index', {
-      req,
-      res,
-      providers: [
-        { provide: 'SERVICE', useValue: service },
-        { provide: 'USERNAME', useValue: username },
-      ]
-    }, async (err, html) => {
-      if (err) {
-        console.error('SSR Error:', err);
-        return res.status(500).send('Error rendering page');
-      }
-
-      // Cache for 5 minutes
-      await redisClient.setEx(cacheKey, 300, html);
-      res.send(html);
-    });
-  } catch (error) {
-    console.error('Redis Error:', error);
-    // Fallback: render without cache
-    res.render('index', { req, res }, (err, html) => {
-      if (err) return res.status(500).send('Error rendering page');
-      res.send(html);
-    });
-  }
-});
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`SSR server listening on port ${PORT}`);
-});
+**Project Structure**:
 ```
+digital-services/              # Next.js app for public pages
+├── app/
+│   ├── [locale]/             # Internationalized routing
+│   │   ├── layout.tsx        # Root layout (Server Component)
+│   │   ├── page.tsx          # Landing page
+│   │   ├── [username]/       # Dynamic user profiles
+│   │   │   └── page.tsx      # Profile SSR page
+│   ├── api/                  # API routes (if needed)
+│   └── globals.css           # Tailwind imports
+├── components/
+│   ├── server/               # React Server Components
+│   └── client/               # Client Components (with 'use client')
+├── lib/
+│   ├── api.ts                # API client for Django backend
+│   └── metadata.ts           # SEO metadata helpers
+├── public/                   # Static assets
+├── next.config.js            # Next.js configuration
+└── package.json
+```
+
+**next.config.js**:
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Output mode
+  output: 'standalone', // For Docker deployment
+
+  // Images optimization
+  images: {
+    domains: ['api.example.com'], // Django media server
+    formats: ['image/avif', 'image/webp'],
+  },
+
+  // i18n (next-intl)
+  experimental: {
+    serverActions: true,
+  },
+
+  // Environment variables
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  },
+
+  // Rewrites for API proxy (optional)
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/api/:path*', // Django backend
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
+```
+
+**Server Component con SSR**:
+```typescript
+// app/[locale]/[username]/page.tsx (Server Component)
+import { notFound } from 'next/navigation';
+import { getPublicProfile } from '@/lib/api';
+import type { Metadata } from 'next';
+
+interface Props {
+  params: { username: string; locale: string };
+}
+
+// Generate metadata for SEO (runs on server)
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const profile = await getPublicProfile(params.username);
+
+  if (!profile) return { title: 'Profile Not Found' };
+
+  return {
+    title: `${profile.display_name} | Digital Card`,
+    description: profile.bio,
+    openGraph: {
+      title: profile.display_name,
+      description: profile.bio,
+      images: [profile.avatar_url],
+    },
+  };
+}
+
+// Server Component (SSR by default)
+export default async function ProfilePage({ params }: Props) {
+  const profile = await getPublicProfile(params.username);
+
+  if (!profile) notFound();
+
+  return (
+    <div>
+      <h1>{profile.display_name}</h1>
+      <p>{profile.bio}</p>
+      {/* Render sections from profile.config */}
+    </div>
+  );
+}
+
+// Static params for pre-rendering popular profiles
+export async function generateStaticParams() {
+  const topProfiles = await getTopProfiles(100);
+  return topProfiles.map((profile) => ({
+    username: profile.username,
+  }));
+}
+```
+
+**API Client**:
+```typescript
+// lib/api.ts
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function getPublicProfile(username: string) {
+  const res = await fetch(`${API_URL}/api/digital-services/public/${username}/`, {
+    next: { revalidate: 60 }, // ISR: revalidate every 60s
+  });
+
+  if (!res.ok) return null;
+  return res.json();
+}
+```
+
+**Key Benefits of Next.js App Router**:
+- ✅ No Express server configuration needed
+- ✅ No TransferState (automatic data deduplication)
+- ✅ Built-in metadata API for SEO
+- ✅ Automatic code splitting
+- ✅ Image optimization with next/image
+- ✅ ISR (Incremental Static Regeneration) built-in
+- ✅ Server Components stream HTML progressively
 
 ### Cache Invalidation (Django)
 

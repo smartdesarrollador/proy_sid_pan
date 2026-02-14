@@ -33,14 +33,15 @@ El módulo de **Digital Services** permite a los usuarios crear y publicar cuatr
 
 ### Características Clave
 
-- **Server-Side Rendering (SSR)**: Utilizando Angular Universal para renderizado en servidor y óptimo SEO
+- **Server-Side Rendering (SSR)**: Utilizando Next.js App Router para renderizado en servidor, React Server Components, y óptimo SEO out-of-the-box
+- **Modern React Stack**: Next.js 14+ con TypeScript, Tailwind CSS, y best practices
 - **Responsive Design**: Diseño mobile-first con Tailwind CSS, enfoque minimalista
 - **SEO Optimizado**: Meta tags automáticos (Open Graph, Twitter Cards), sitemap.xml, structured data (JSON-LD)
 - **Analytics**: Trackeo de vistas, visitantes únicos, clicks en enlaces (disponible según plan)
 - **Compartición Social**: URLs amigables, QR codes, Open Graph images
 - **Custom Domains**: Dominios personalizados para planes Enterprise con SSL automático
 - **Template System**: Sistema de templates component-based, responsive, y customizable
-- **Performance**: Caching con Redis (5min TTL), invalidación automática al actualizar perfil
+- **Performance**: ISR (Incremental Static Regeneration) con revalidación de 60s, caching optimizado
 
 ### URL Patterns
 
@@ -533,9 +534,9 @@ Como admin de organización Enterprise, quiero conectar un dominio personalizado
 
 #### SSR Architecture (FR-063 a FR-066)
 
-**FR-063: Server-Side Rendering con Angular Universal**
+**FR-063: Server-Side Rendering con Next.js App Router**
 
-El sistema DEBE utilizar Angular Universal para renderizar las páginas públicas en el servidor, generando HTML completo antes de enviar al cliente para optimizar SEO y performance.
+El sistema DEBE utilizar Next.js App Router para renderizar las páginas públicas en el servidor, generando HTML completo antes de enviar al cliente para optimizar SEO y performance.
 
 **Detalles técnicos:**
 - Express server con `@nguniversal/express-engine`
@@ -609,12 +610,13 @@ El sistema DEBE validar que los usernames sean únicos globalmente (no solo por 
 
 **FR-069: Templates Component-Based**
 
-El sistema DEBE soportar un sistema de templates component-based, donde cada template se compone de componentes Angular reutilizables (Header, Hero, About, Footer, etc.).
+El sistema DEBE soportar un sistema de templates component-based, donde cada template se compone de componentes React reutilizables (Header, Hero, About, Footer, etc.).
 
 **Detalles técnicos:**
 - Template como configuración JSON: `{ sections: [ { type: 'hero', props: {...} } ] }`
-- Componentes standalone con `@Input()` para configuración
-- Lazy loading de componentes no usados
+- React components con props tipados (TypeScript interfaces)
+- Dynamic imports con React.lazy() para lazy loading de componentes
+- Server Components por defecto, Client Components solo cuando necesario
 
 ---
 
@@ -833,38 +835,66 @@ El sistema DEBE provisionar certificados SSL automáticamente para custom domain
 
 ### Stack Tecnológico
 
-**Frontend SSR (Public Pages):**
-- Angular 17+ con standalone components
-- Angular Universal (@nguniversal/express-engine) para SSR
-- Tailwind CSS 3+ para estilos
-- Express.js como servidor Node para SSR
+**Frontend SSR (Public Pages - Digital Services):**
+- Next.js 14+ App Router con React 18+ Server Components
+- TypeScript 5+ con strict mode
+- Tailwind CSS 3.4+ para estilos
+- next-intl para internacionalización con SSR
+- next-themes para dark mode
+- Built-in Node.js server (standalone output para Docker)
 
 **Backend (API + Admin):**
 - Django REST Framework (existing backend)
 - PostgreSQL para datos
-- Redis para caching de páginas SSR
+- Redis para caching (opcional con ISR)
 - Celery para tareas async (PDF generation, email)
 
 **Infraestructura:**
 - Nginx como reverse proxy
 - Let's Encrypt para SSL (custom domains)
+- Vercel (recommended) o self-hosted con Docker
 - Cloudflare CDN (opcional) para caching global
 
 ---
 
-### Decisión de SSR: Angular Universal
+### Decisión de SSR: Next.js App Router
+
+**Razones para Next.js:**
+
+1. **Best-in-class SEO**:
+   - Metadata API automática (title, description, Open Graph, Twitter Cards)
+   - JSON-LD structured data out-of-the-box
+   - Sitemap y robots.txt generation
+   - Automatic canonical URLs
+
+2. **Performance**:
+   - React Server Components stream HTML progresivamente
+   - Automatic code splitting por ruta
+   - Image optimization con next/image (WebP, AVIF, lazy loading)
+   - Font optimization con next/font
+   - CSS optimization (Tailwind purge automático)
+
+3. **Developer Experience**:
+   - File-based routing (no router config)
+   - Fast Refresh (HMR instantáneo)
+   - Built-in TypeScript support
+   - Zero-config production builds
+
+4. **ISR (Incremental Static Regeneration)**:
+   - Pre-render rutas populares en build time
+   - Revalidación on-demand o por tiempo
+   - Fallback rendering para rutas nuevas
+
+5. **Deployment**:
+   - Vercel integration (edge functions, CDN, analytics)
+   - Standalone output para Docker/self-hosted
+   - Middleware para A/B testing, redirects, auth checks
 
 **Alternativas consideradas:**
-1. **Next.js (React)**: Mejor SEO out-of-box, pero requiere stack diferente
-2. **Nuxt.js (Vue)**: Excelente SSR, pero requiere Vue.js (nuevo stack)
-3. **Django Templates**: No ofrece SPA interactivity, dificulta reutilización de componentes
-
-**Razones para Angular Universal:**
-- **Consistencia de stack**: Angular 17+ ya usado en admin y cliente
-- **Reutilización de componentes**: Componentes standalone compartibles entre SSR y SPAs
-- **Experiencia del equipo**: Familiaridad con Angular reduce curva de aprendizaje
-- **Madurez**: Angular Universal es producción-ready con comunidad activa
-- **Mantenimiento**: Un solo stack reduce overhead de mantenimiento
+1. **Remix**: Excelente SSR, pero ecosistema más pequeño que Next.js
+2. **Astro**: Ideal para sitios estáticos, pero interactividad limitada
+3. **React + Vite SSR**: Requiere setup manual (Express, routing, data fetching)
+4. **Django Templates**: Sin SPA interactivity, DX pobre para UI modernas
 
 ---
 
@@ -883,8 +913,8 @@ El sistema DEBE provisionar certificados SSL automáticamente para custom domain
        │
        ▼
 ┌──────────────────┐      ┌─────────────┐
-│  Express Server  │─────▶│    Redis    │
-│  (Angular SSR)   │◀─────│   (Cache)   │
+│  Next.js Server  │─────▶│    Redis    │
+│  (App Router)    │◀─────│   (Cache)   │
 └──────┬───────────┘      └─────────────┘
        │ API Call
        ▼
@@ -896,17 +926,17 @@ El sistema DEBE provisionar certificados SSL automáticamente para custom domain
 
 **Flujo de rendering:**
 1. Browser solicita `/landing/jsmith`
-2. Nginx enruta a Express server (SSR)
-3. Express verifica cache Redis (`ssr:landing:jsmith`)
+2. Nginx enruta a Next.js server (SSR)
+3. Next.js verifica ISR cache (`revalidate: 60`)
 4. Si hit: devuelve HTML cacheado
-5. Si miss:
-   - Express llama API Django: `GET /api/v1/app/public-profiles/jsmith`
-   - Angular renderiza componente en servidor
-   - HTML completo generado con TransferState
-   - Cachea en Redis (TTL 5min)
+5. Si miss o stale:
+   - Next.js Server Component llama API Django: `GET /api/v1/app/public-profiles/jsmith`
+   - React Server Components renderizan en servidor
+   - HTML completo generado (no necesita TransferState)
+   - Next.js cachea para ISR (revalidate cada 60s)
    - Devuelve HTML al browser
 6. Browser recibe HTML completo (indexable por SEO)
-7. Angular bootstrap en cliente para interactividad
+7. React hydration en cliente para interactividad
 
 ---
 
@@ -932,52 +962,363 @@ El sistema DEBE provisionar certificados SSL automáticamente para custom domain
 
 ---
 
-### Express Server Setup
+### Next.js Project Setup
 
-**server.ts** (ejemplo):
+**Installation**:
+```bash
+# Create Next.js app
+npx create-next-app@latest digital-services --typescript --tailwind --app --src-dir
+
+cd digital-services
+
+# Install dependencies
+npm install next-intl next-themes
+npm install -D @types/node
+```
+
+**Project Structure**:
+```
+digital-services/
+├── src/
+│   ├── app/
+│   │   ├── [locale]/
+│   │   │   ├── layout.tsx          # Root layout (Server Component)
+│   │   │   ├── page.tsx            # Landing page
+│   │   │   ├── [username]/
+│   │   │   │   ├── page.tsx        # User profile (SSR)
+│   │   │   │   └── opengraph-image.tsx  # Dynamic OG images
+│   │   │   └── not-found.tsx       # 404 page
+│   │   ├── api/                    # API routes (optional)
+│   │   └── sitemap.ts              # Dynamic sitemap
+│   ├── components/
+│   │   ├── server/                 # Server Components
+│   │   │   ├── ProfileHeader.tsx
+│   │   │   └── SectionRenderer.tsx
+│   │   └── client/                 # Client Components
+│   │       ├── ThemeToggle.tsx
+│   │       └── ContactForm.tsx
+│   ├── lib/
+│   │   ├── api.ts                  # Django API client
+│   │   ├── metadata.ts             # SEO helpers
+│   │   └── i18n.ts                 # i18n config
+│   └── styles/
+│       └── globals.css
+├── public/
+│   ├── favicon.ico
+│   └── robots.txt
+├── next.config.js
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+**next.config.js**:
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Output for deployment
+  output: 'standalone', // Docker-friendly
+
+  // Images
+  images: {
+    domains: ['api.example.com', 'cdn.example.com'],
+    formats: ['image/avif', 'image/webp'],
+  },
+
+  // i18n with next-intl
+  experimental: {
+    serverActions: true,
+  },
+
+  // Environment variables
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  },
+
+  // API proxy (optional)
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.API_URL}/api/:path*`,
+      },
+    ];
+  },
+
+  // Redirects
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
+```
+
+**Root Layout con i18n**:
 ```typescript
-import { ngExpressEngine } from '@nguniversal/express-engine';
-import { AppServerModule } from './src/main.server';
-import * as express from 'express';
-import * as redis from 'redis';
+// src/app/[locale]/layout.tsx
+import { notFound } from 'next/navigation';
+import { NextIntlClientProvider } from 'next-intl';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 
-const app = express();
-const redisClient = redis.createClient({ url: process.env.REDIS_URL });
+const locales = ['en', 'es'];
 
-// Angular Universal engine
-app.engine('html', ngExpressEngine({
-  bootstrap: AppServerModule,
-}));
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
 
-app.set('view engine', 'html');
-app.set('views', './dist/browser');
+export default async function RootLayout({
+  children,
+  params: { locale },
+}: {
+  children: React.ReactNode;
+  params: { locale: string };
+}) {
+  if (!locales.includes(locale)) notFound();
 
-// SSR with Redis cache
-app.get('/:service/:username', async (req, res) => {
-  const { service, username } = req.params;
-  const cacheKey = `ssr:${service}:${username}`;
+  const messages = await import(`@/locales/${locale}.json`);
 
-  // Check cache
-  const cached = await redisClient.get(cacheKey);
-  if (cached) {
-    return res.send(cached);
+  return (
+    <html lang={locale} suppressHydrationWarning>
+      <body>
+        <NextIntlClientProvider locale={locale} messages={messages.default}>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+**Profile Page con SSR y SEO**:
+```typescript
+// src/app/[locale]/[username]/page.tsx
+import { notFound } from 'next/navigation';
+import { getPublicProfile } from '@/lib/api';
+import type { Metadata } from 'next';
+import ProfileHeader from '@/components/server/ProfileHeader';
+import SectionRenderer from '@/components/server/SectionRenderer';
+
+interface Props {
+  params: { username: string; locale: string };
+}
+
+// SEO Metadata (Server Component)
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const profile = await getPublicProfile(params.username);
+
+  if (!profile) return { title: 'Profile Not Found' };
+
+  return {
+    title: `${profile.display_name} | Digital Card`,
+    description: profile.bio || `View ${profile.display_name}'s digital profile`,
+    keywords: profile.tags?.join(', '),
+    authors: [{ name: profile.display_name }],
+
+    // Open Graph
+    openGraph: {
+      title: profile.display_name,
+      description: profile.bio,
+      url: `https://example.com/${params.username}`,
+      siteName: 'Digital Services',
+      images: [
+        {
+          url: profile.avatar_url,
+          width: 1200,
+          height: 630,
+          alt: profile.display_name,
+        },
+      ],
+      locale: params.locale,
+      type: 'profile',
+    },
+
+    // Twitter Card
+    twitter: {
+      card: 'summary_large_image',
+      title: profile.display_name,
+      description: profile.bio,
+      images: [profile.avatar_url],
+    },
+
+    // JSON-LD Structured Data
+    other: {
+      'application/ld+json': JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: profile.display_name,
+        description: profile.bio,
+        image: profile.avatar_url,
+        url: `https://example.com/${params.username}`,
+      }),
+    },
+  };
+}
+
+// Server Component con SSR
+export default async function ProfilePage({ params }: Props) {
+  const profile = await getPublicProfile(params.username);
+
+  if (!profile) notFound();
+
+  return (
+    <div className="min-h-screen bg-background">
+      <ProfileHeader profile={profile} />
+
+      <main className="container mx-auto py-8">
+        {profile.config.sections.map((section: any, i: number) => (
+          <SectionRenderer key={i} section={section} />
+        ))}
+      </main>
+    </div>
+  );
+}
+
+// ISR: Regenerate popular profiles every 60 seconds
+export const revalidate = 60;
+
+// Pre-render top 100 profiles at build time
+export async function generateStaticParams() {
+  const topProfiles = await getTopProfiles(100);
+  return topProfiles.map((profile: any) => ({
+    username: profile.username,
+  }));
+}
+```
+
+**API Client con fetch cache**:
+```typescript
+// src/lib/api.ts
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function getPublicProfile(username: string) {
+  const res = await fetch(`${API_URL}/api/digital-services/public/${username}/`, {
+    next: {
+      revalidate: 60,  // ISR: revalidate every 60 seconds
+      tags: [`profile-${username}`],  // For on-demand revalidation
+    },
+  });
+
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Failed to fetch profile: ${res.status}`);
   }
 
-  // Render with Angular
-  res.render('index', { req, res }, (err, html) => {
-    if (err) {
-      return res.status(500).send('Error rendering page');
-    }
+  return res.json();
+}
 
-    // Cache for 5 minutes
-    redisClient.setEx(cacheKey, 300, html);
-    res.send(html);
+export async function getTopProfiles(limit: number = 100) {
+  const res = await fetch(`${API_URL}/api/digital-services/top-profiles/?limit=${limit}`, {
+    next: { revalidate: 3600 },  // Revalidate every hour
   });
-});
 
-app.listen(4000, () => {
-  console.log('SSR server listening on port 4000');
-});
+  if (!res.ok) return [];
+  return res.json();
+}
+```
+
+**Dynamic Sitemap**:
+```typescript
+// src/app/sitemap.ts
+import { MetadataRoute } from 'next';
+import { getAllPublicProfiles } from '@/lib/api';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = 'https://example.com';
+
+  const profiles = await getAllPublicProfiles();
+
+  const profileUrls = profiles.map((profile: any) => ({
+    url: `${baseUrl}/${profile.username}`,
+    lastModified: profile.updated_at,
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }));
+
+  return [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 1,
+    },
+    ...profileUrls,
+  ];
+}
+```
+
+**Package.json**:
+```json
+{
+  "name": "digital-services",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "next": "^14.1.0",
+    "next-intl": "^3.9.0",
+    "next-themes": "^0.2.1",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0"
+  }
+}
+```
+
+**Deployment (Docker)**:
+```dockerfile
+# Dockerfile
+FROM node:20-alpine AS base
+
+# Dependencies
+FROM base AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+# Builder
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+# Runner
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
 ```
 
 ---
@@ -1502,8 +1843,8 @@ Cada template se define como configuración JSON con array de secciones:
 - [ ] Validación de username único con sugerencias
 - [ ] Post-save hooks para invalidar cache Redis
 
-**Frontend SSR (Angular Universal):**
-- [ ] Setup Angular 17+ con SSR support
+**Frontend SSR (Next.js App Router):**
+- [ ] Setup Next.js 14+ con App Router
 - [ ] Configurar Express server con `@nguniversal/express-engine`
 - [ ] Integración con Redis para caching
 - [ ] Componentes base: `DigitalCardComponent`, `LandingPageComponent`, `PortfolioComponent`, `CVComponent`
@@ -1526,7 +1867,7 @@ Cada template se define como configuración JSON con array de secciones:
 #### Sprint 35-36: Tarjeta Digital + Landing Page (3 semanas)
 
 **Tarjeta Digital:**
-- [ ] Editor de tarjeta en panel cliente (Angular SPA)
+- [ ] Editor de tarjeta en panel cliente (React + Vite SPA)
 - [ ] Campos: info de contacto, redes sociales, colores del tema
 - [ ] Preview en tiempo real
 - [ ] Generación de QR code (backend con qrcode library)

@@ -44,12 +44,14 @@ Total: ~74 weeks (~17 months)
 - [ ] Middleware de tenant isolation
 - [ ] Endpoints básicos: /auth/register, /auth/login, /auth/refresh
 
-**Frontend Admin** (Angular):
-- [ ] Setup proyecto Angular con Tailwind + Material
-- [ ] Implementar login/register pages
-- [ ] Auth service con JWT storage
-- [ ] HTTP interceptor para agregar auth header
-- [ ] Guards para rutas protegidas
+**Frontend Admin** (React + Vite + TypeScript):
+- [ ] Setup proyecto con `npm create vite@latest` (React + TypeScript)
+- [ ] Configurar Tailwind CSS + shadcn/ui
+- [ ] Implementar login/register pages con React Hook Form + Zod
+- [ ] AuthContext provider con JWT storage (localStorage + httpOnly cookies)
+- [ ] Axios interceptor para agregar auth header automáticamente
+- [ ] ProtectedRoute component para rutas protegidas
+- [ ] React Router 6 setup con lazy loading
 
 **DevOps**:
 - [ ] Setup CI/CD (GitHub Actions)
@@ -226,11 +228,12 @@ Total: ~74 weeks (~17 months)
 - [ ] Encriptación de campos password (AES-256)
 - [ ] Validación de límites por plan
 
-**Frontend Cliente** (Angular):
-- [ ] Projects list view
-- [ ] Project detail con sidebar de secciones
-- [ ] Item CRUD con modal forms
-- [ ] Password field con reveal/hide
+**Frontend Cliente** (React + Vite + TypeScript):
+- [ ] Projects list view con TanStack Query (caching)
+- [ ] Project detail con sidebar de secciones (Zustand para estado local)
+- [ ] Item CRUD con React Hook Form + Zod validation
+- [ ] Password field con reveal/hide (useState + useEffect timer)
+- [ ] Drag & drop para reordenar items (dnd-kit)
 
 ---
 
@@ -281,14 +284,15 @@ Total: ~74 weeks (~17 months)
 - [ ] Validación de username único con sugerencias
 - [ ] Post-save hooks para invalidar cache Redis
 
-**Frontend SSR (Angular Universal)**:
-- [ ] Setup Angular 17+ con SSR support
-- [ ] Configurar Express server con `@nguniversal/express-engine`
-- [ ] Integración con Redis para caching (TTL 5min)
-- [ ] Componentes base: DigitalCard, LandingPage, Portfolio, CV
+**Frontend SSR (Next.js App Router)**:
+- [ ] Setup Next.js 14+ con App Router (`npx create-next-app@latest`)
+- [ ] Configurar TypeScript + Tailwind CSS
+- [ ] Setup next-intl para i18n con SSR
+- [ ] Componentes Server Components: DigitalCard, LandingPage, Portfolio, CV
 - [ ] 1 template básico por servicio
-- [ ] Service para meta tags (SEO)
-- [ ] TransferState para evitar duplicate API calls
+- [ ] Metadata API para SEO (generateMetadata)
+- [ ] ISR con revalidate: 60 (Incremental Static Regeneration)
+- [ ] Dynamic routes: `app/[locale]/[username]/page.tsx`
 
 **DevOps**:
 - [ ] Deploy SSR service en servidor Node separado (puerto 4000)
