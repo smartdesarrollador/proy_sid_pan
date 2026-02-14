@@ -1,0 +1,336 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Translation Structure Example",
+  "description": "Comprehensive translation file structure for multi-language apps",
+
+  "common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "create": "Create",
+      "update": "Update",
+      "confirm": "Confirm",
+      "close": "Close",
+      "back": "Back",
+      "next": "Next",
+      "previous": "Previous",
+      "submit": "Submit",
+      "search": "Search",
+      "filter": "Filter",
+      "export": "Export",
+      "import": "Import",
+      "download": "Download",
+      "upload": "Upload"
+    },
+    "states": {
+      "loading": "Loading...",
+      "saving": "Saving...",
+      "deleting": "Deleting...",
+      "processing": "Processing...",
+      "success": "Success!",
+      "error": "Error occurred",
+      "empty": "No data available",
+      "noResults": "No results found"
+    },
+    "labels": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "phone": "Phone",
+      "address": "Address",
+      "city": "City",
+      "country": "Country",
+      "zipCode": "Zip Code",
+      "status": "Status",
+      "date": "Date",
+      "time": "Time",
+      "description": "Description",
+      "notes": "Notes"
+    },
+    "messages": {
+      "welcome": "Welcome to {{appName}}",
+      "goodbye": "Goodbye, {{name}}!",
+      "confirmDelete": "Are you sure you want to delete {{item}}?",
+      "unsavedChanges": "You have unsaved changes. Do you want to leave?",
+      "sessionExpired": "Your session has expired. Please log in again."
+    }
+  },
+
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "about": "About",
+    "contact": "Contact",
+    "help": "Help",
+    "logout": "Logout"
+  },
+
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Welcome back! Please enter your credentials",
+      "email": "Email address",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign Up",
+      "socialLogin": "Or continue with"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join us today",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "terms": "I agree to the Terms and Conditions",
+      "privacy": "I agree to the Privacy Policy",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign In"
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email to receive reset instructions",
+      "email": "Email address",
+      "submit": "Send Reset Link",
+      "backToLogin": "Back to Sign In",
+      "checkEmail": "Check your email for reset instructions"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "emailTaken": "Email already in use",
+      "weakPassword": "Password is too weak",
+      "networkError": "Network error. Please try again.",
+      "sessionExpired": "Your session has expired"
+    }
+  },
+
+  "validation": {
+    "required": "This field is required",
+    "email": "Invalid email address",
+    "emailFormat": "Please enter a valid email",
+    "minLength": "Minimum {{count}} characters required",
+    "maxLength": "Maximum {{count}} characters allowed",
+    "min": "Minimum value is {{min}}",
+    "max": "Maximum value is {{max}}",
+    "pattern": "Invalid format",
+    "passwordMatch": "Passwords do not match",
+    "phoneFormat": "Invalid phone number",
+    "urlFormat": "Invalid URL",
+    "dateFormat": "Invalid date format",
+    "futureDate": "Date must be in the future",
+    "pastDate": "Date must be in the past",
+    "fileSize": "File size must be less than {{size}}MB",
+    "fileType": "Invalid file type. Allowed: {{types}}"
+  },
+
+  "errors": {
+    "network": {
+      "timeout": "Connection timeout",
+      "offline": "No internet connection",
+      "serverError": "Server error. Please try again later"
+    },
+    "server": {
+      "internal": "Internal server error",
+      "notFound": "Resource not found",
+      "unauthorized": "Unauthorized access",
+      "forbidden": "Access forbidden",
+      "badRequest": "Bad request"
+    },
+    "form": {
+      "invalidData": "Invalid form data",
+      "missingFields": "Please fill all required fields",
+      "submitFailed": "Failed to submit form"
+    },
+    "generic": "Something went wrong. Please try again."
+  },
+
+  "notifications": {
+    "success": {
+      "saved": "Successfully saved",
+      "deleted": "Successfully deleted",
+      "created": "Successfully created",
+      "updated": "Successfully updated",
+      "sent": "Successfully sent"
+    },
+    "info": {
+      "processing": "Processing your request...",
+      "uploading": "Uploading file...",
+      "downloading": "Downloading file..."
+    },
+    "warning": {
+      "unsavedChanges": "You have unsaved changes",
+      "slowConnection": "Slow network connection detected",
+      "limitReached": "You have reached the limit"
+    },
+    "error": {
+      "failedToLoad": "Failed to load data",
+      "failedToSave": "Failed to save changes",
+      "failedToDelete": "Failed to delete item"
+    },
+    "newMessages_zero": "No new messages",
+    "newMessages_one": "{{count}} new message",
+    "newMessages_other": "{{count}} new messages"
+  },
+
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "first": "First",
+    "last": "Last",
+    "page": "Page",
+    "of": "of",
+    "showing": "Showing {{from}} to {{to}} of {{total}} results",
+    "perPage": "Per page",
+    "goToPage": "Go to page"
+  },
+
+  "table": {
+    "noData": "No data available",
+    "actions": "Actions",
+    "selectAll": "Select all",
+    "selected": "{{count}} selected",
+    "sortBy": "Sort by",
+    "filterBy": "Filter by",
+    "columns": "Columns",
+    "export": "Export",
+    "refresh": "Refresh"
+  },
+
+  "date": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "custom": "Custom Range",
+    "timeAgo": {
+      "justNow": "Just now",
+      "minuteAgo": "1 minute ago",
+      "minutesAgo": "{{count}} minutes ago",
+      "hourAgo": "1 hour ago",
+      "hoursAgo": "{{count}} hours ago",
+      "dayAgo": "1 day ago",
+      "daysAgo": "{{count}} days ago"
+    }
+  },
+
+  "products": {
+    "list": {
+      "title": "Products",
+      "subtitle": "Browse our product catalog",
+      "search": "Search products...",
+      "noProducts": "No products found",
+      "filters": {
+        "category": "Category",
+        "price": "Price Range",
+        "availability": "Availability",
+        "brand": "Brand"
+      }
+    },
+    "detail": {
+      "description": "Description",
+      "specifications": "Specifications",
+      "reviews": "Reviews",
+      "relatedProducts": "Related Products",
+      "addToCart": "Add to Cart",
+      "buyNow": "Buy Now",
+      "outOfStock": "Out of Stock",
+      "inStock": "In Stock",
+      "price": "Price",
+      "quantity": "Quantity"
+    },
+    "cart": {
+      "title": "Shopping Cart",
+      "empty": "Your cart is empty",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "shipping": "Shipping",
+      "total": "Total",
+      "checkout": "Proceed to Checkout",
+      "continueShopping": "Continue Shopping",
+      "removeItem": "Remove item",
+      "updateQuantity": "Update quantity",
+      "items_zero": "No items in cart",
+      "items_one": "{{count}} item in cart",
+      "items_other": "{{count}} items in cart"
+    }
+  },
+
+  "user": {
+    "profile": {
+      "title": "Profile",
+      "edit": "Edit Profile",
+      "personalInfo": "Personal Information",
+      "contactInfo": "Contact Information",
+      "securitySettings": "Security Settings",
+      "privacySettings": "Privacy Settings",
+      "notificationSettings": "Notification Settings",
+      "preferences": "Preferences",
+      "avatar": "Profile Picture",
+      "uploadAvatar": "Upload new picture",
+      "deleteAvatar": "Remove picture"
+    },
+    "settings": {
+      "general": {
+        "title": "General Settings",
+        "language": "Language",
+        "timezone": "Timezone",
+        "dateFormat": "Date Format",
+        "timeFormat": "Time Format"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "email": "Email Notifications",
+        "push": "Push Notifications",
+        "sms": "SMS Notifications",
+        "marketing": "Marketing Communications"
+      },
+      "privacy": {
+        "title": "Privacy",
+        "profileVisibility": "Profile Visibility",
+        "activityStatus": "Activity Status",
+        "dataSharing": "Data Sharing"
+      },
+      "security": {
+        "title": "Security",
+        "changePassword": "Change Password",
+        "twoFactor": "Two-Factor Authentication",
+        "sessions": "Active Sessions",
+        "loginHistory": "Login History"
+      }
+    }
+  },
+
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}!",
+    "overview": "Overview",
+    "statistics": "Statistics",
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "metrics": {
+      "users": "Users",
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "growth": "Growth"
+    }
+  },
+
+  "footer": {
+    "copyright": "© {{year}} {{company}}. All rights reserved.",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "contactUs": "Contact Us",
+    "followUs": "Follow Us"
+  }
+}
