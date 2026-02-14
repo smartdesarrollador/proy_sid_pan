@@ -309,7 +309,7 @@ Total: ~74 weeks (~17 months)
 ### Sprint 35-36: Tarjeta Digital + Landing Page (3 weeks)
 
 **Tarjeta Digital**:
-- [ ] Editor de tarjeta en panel cliente (Angular SPA)
+- [ ] Editor de tarjeta en panel cliente (React + Vite SPA)
 - [ ] Campos: info de contacto, redes sociales, colores del tema
 - [ ] Preview en tiempo real
 - [ ] Generación de QR code (backend con qrcode library)
@@ -420,7 +420,7 @@ Total: ~74 weeks (~17 months)
 
 ### Core Team (MVP)
 - **Backend Developer** (2): Django, PostgreSQL, Redis
-- **Frontend Developer** (2): Angular, Tailwind
+- **Frontend Developer** (2): React, Next.js, Tailwind
 - **DevOps Engineer** (1): AWS, CI/CD, monitoring
 - **Product Manager** (1): Roadmap, requirements
 - **Designer** (0.5): UI/UX design

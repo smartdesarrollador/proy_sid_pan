@@ -506,7 +506,7 @@ Usuarios con nivel `admin` o owners pueden revocar acceso a elementos compartido
 **FR-059: Soporte Multi-Idioma (i18n)**
 - El sistema DEBE soportar al menos 2 idiomas: Español (es) e Inglés (en)
 - El sistema DEBE usar Django i18n framework en backend (`django.utils.translation`)
-- El sistema DEBE usar `@angular/localize` o `ngx-translate` en frontend Angular
+- El sistema DEBE usar `react-i18next` en frontends React + Vite y `next-intl` en frontend Next.js
 - El sistema DEBE detectar idioma del navegador en primera visita (`Accept-Language` header)
 - El sistema DEBE permitir usuarios cambiar idioma manualmente desde UI
 - Cambio de idioma DEBE aplicarse inmediatamente sin recargar página (SPA)
@@ -817,7 +817,7 @@ export default function ProfilePage({ config }) {
 
 **NFR-007: OWASP Compliance**
 - SQL Injection: Django ORM exclusivamente, NO raw queries sin sanitización
-- XSS: CSP headers, Angular sanitization, DOMPurify en HTML user-generated
+- XSS: CSP headers, React automatic escaping, DOMPurify en HTML user-generated
 - CSRF: Django CSRF tokens en forms, SameSite cookies
 - Broken Auth: bcrypt para passwords (cost 12), rate limiting en login
 - Sensitive Data: PII encriptado en DB, no logged, enmascarado en UI

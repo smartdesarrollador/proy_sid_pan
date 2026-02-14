@@ -121,8 +121,8 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - **Escalabilidad**: Arquitectura stateless con Redis para cache/sessions
 - **Seguridad**: Encriptación en tránsito (TLS 1.3) y en reposo (AES-256)
 - **Arquitectura Dual Frontend**:
-  - **Frontend Admin** (Angular): Gestión de RBAC, usuarios, suscripciones, billing, auditoría
-  - **Frontend Cliente** (Angular): Servicios productivos para usuarios finales (calendario, tareas, archivos)
+  - **Frontend Admin** (React + Vite): Gestión de RBAC, usuarios, suscripciones, billing, auditoría
+  - **Frontend Cliente** (React + Vite): Servicios productivos para usuarios finales (calendario, tareas, archivos)
   - **Backend Unificado** (Django): API única que sirve a ambos frontends
 
 ### 2.2 Usuarios Objetivo (Personas)
