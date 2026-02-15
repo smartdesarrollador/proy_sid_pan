@@ -112,3 +112,5 @@ logs/
 
 # ---------- Reports (generated) ----------
 # reports/  # Uncomment if you don't want to track generated reports
+
+util/

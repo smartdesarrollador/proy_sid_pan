@@ -18,6 +18,8 @@
 - [CU-011: Gestionar Portafolio de Proyectos](#cu-011-gestionar-portafolio-de-proyectos)
 - [CU-012: Generar CV Digital desde Perfil](#cu-012-generar-cv-digital-desde-perfil)
 - [CU-013: Configurar Dominio Personalizado (Enterprise)](#cu-013-configurar-dominio-personalizado-enterprise)
+- [CU-014: Monitoreo de Métricas de Negocio](#cu-014-monitoreo-de-métricas-de-negocio)
+- [CU-015: Crear Promoción de Descuento Temporal](#cu-015-crear-promoción-de-descuento-temporal)
 
 ---
 
@@ -379,6 +381,114 @@
 
 ---
 
+## CU-014: Monitoreo de Métricas de Negocio
+
+**Actor**: SuperAdmin, OrgAdmin
+
+**Precondiciones**:
+- Usuario autenticado con rol SuperAdmin u OrgAdmin
+- Tenant tiene al menos 1 cliente activo
+- Sistema tiene datos de facturación registrados
+
+**Flujo principal**:
+1. Admin accede a "Analytics" desde menú principal de administración
+2. Sistema carga dashboard con KPIs principales en tiempo real:
+   - **Clientes Activos**: 3 (+12% vs mes anterior)
+   - **MRR Total**: $697.00 (+8% vs mes anterior)
+   - **ARPC**: $232.33 (-2% vs mes anterior)
+   - **Health Score**: 72% (Estable)
+3. Admin visualiza gráficos de distribución:
+   - Distribución por Plan: Professional 40%, Starter 20%, Enterprise 20%, Free 20%
+   - Distribución por Estado: Activo 60%, Prueba 20%, Pago Vencido 20%
+   - MRR por Plan: desglose visual de revenue por tier
+   - Top 5 Clientes por MRR con ranking y detalles
+4. Admin aplica filtros dinámicos:
+   - Dropdown "Plan": Todos, Free, Starter, Professional, Enterprise
+   - Dropdown "Estado": Todos, Activo, Prueba, Pago Vencido, Cancelado
+5. Sistema actualiza todos los gráficos y métricas según filtros seleccionados
+6. Admin identifica cliente con pago vencido y toma acción (email de recordatorio)
+7. Admin exporta reporte mensual a PDF para presentar a stakeholders (Professional+)
+
+**Tiempo objetivo**: <2 segundos de carga del dashboard completo
+
+**Criterios de éxito**:
+- Dashboard carga con datos en tiempo real sin delay perceptible
+- Indicadores de cambio muestran color semántico (verde/rojo) correctamente
+- Filtros actualizan gráficos sin reload de página
+- Top 5 clientes ordenados correctamente por MRR descendente
+- Exportación de reportes disponible para planes Professional+
+
+**Postcondiciones**:
+- Admin tiene visibilidad completa de la salud del negocio
+- Puede tomar decisiones informadas sobre retención, pricing, growth
+- Identifica cuentas en riesgo para intervención proactiva
+
+---
+
+## CU-015: Crear Promoción de Descuento Temporal
+
+**Actor**: SuperAdmin, Marketing Manager
+
+**Precondiciones**:
+- Usuario autenticado con permisos para gestionar promociones
+- Plan Professional o Enterprise (feature gate para promociones)
+
+**Flujo principal**:
+1. Admin accede a "Promociones" desde menú de administración
+2. Dashboard muestra KPIs actuales:
+   - Promociones Activas: 2
+   - Usos Totales: 328
+   - Ingresos Generados: $15,678.50
+3. Admin hace click en botón "+ Nueva Promoción"
+4. Modal de creación se abre con formulario:
+   - **Código**: SUMMER2026 (alfanumérico uppercase, validación de único)
+   - **Nombre**: Promoción de Verano 2026
+   - **Descripción**: Descuento especial para nuevos clientes en verano
+   - **Tipo**: Selecciona "Porcentaje (%)" del dropdown
+   - **Valor**: 20 (validado 1-100 para porcentaje)
+   - **Límite de usos**: 100 (opcional, NULL = ilimitado)
+   - **Vigencia**: 2026-06-01 a 2026-08-31
+   - **Planes aplicables**: Marca "Starter" y "Professional"
+   - **Solo primer pago**: ✅ Activado
+5. Sistema valida en tiempo real:
+   - Código único (async check con debounce 300ms)
+   - Fechas: inicio < fin, fin >= hoy
+   - Valor > 0 según tipo seleccionado
+6. Admin hace click en "Crear Promoción"
+7. Sistema crea promoción con estado "Activa" (ya que fecha inicio <= hoy)
+8. Notificación de éxito muestra código para copiar: "SUMMER2026"
+9. Promoción aparece en tabla con:
+   - Código: SUMMER2026
+   - Tipo: % (badge con ícono)
+   - Valor: 20%
+   - Uso: barra de progreso 0/100 (0%)
+   - Estado: Activa (badge verde)
+   - Acciones: Analytics, Editar, Info, Eliminar
+10. Admin copia código y lo comparte en campaña de email marketing
+
+**Tiempo objetivo**: <2 minutos desde click "Nueva Promoción" hasta código creado
+
+**Criterios de éxito**:
+- Validaciones en tiempo real previenen errores de input
+- Estado calculado automáticamente según fechas (Programada si inicio > hoy)
+- Código promocional inmediatamente aplicable en checkout
+- Tabla actualizada sin reload de página
+- Share URL generada automáticamente para facilitar compartir
+
+**Postcondiciones**:
+- Promoción activa y disponible para aplicar en checkout de nuevos clientes
+- Usuario puede ingresar código SUMMER2026 al suscribirse a Starter/Professional
+- Sistema aplica 20% descuento en primer pago automáticamente
+- Contador de usos incrementa con cada aplicación exitosa
+
+**Flujos alternativos**:
+- **4a. Código duplicado**: Sistema muestra error "Código SUMMER2026 ya existe. Elige otro código único."
+- **4b. Fechas inválidas**: Validación frontend impide submit (fecha fin debe ser >= hoy)
+- **6a. Plan Free**: Sistema muestra upgrade prompt "Las promociones requieren plan Professional o superior"
+- **9a. Sin límite de usos**: Barra de progreso muestra "Ilimitado" en lugar de X/Y
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -387,4 +497,4 @@
 
 ---
 
-**Última actualización**: 2026-02-12
+**Última actualización**: 2026-02-15

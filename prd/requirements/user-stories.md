@@ -13,6 +13,8 @@
 - [3.6 Compartición y Colaboración](#36-compartición-y-colaboración)
 - [3.7 Internacionalización y Experiencia de Usuario](#37-internacionalización-y-experiencia-de-usuario)
 - [3.8 Digital Services (Servicios Públicos)](#38-digital-services-servicios-públicos)
+- [3.9 Analytics de Negocio](#39-analytics-de-negocio)
+- [3.10 Sistema de Promociones](#310-sistema-de-promociones)
 
 ---
 
@@ -1005,6 +1007,255 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
+### 3.9 Analytics de Negocio
+
+**US-061: Ver Dashboard de Analytics con KPIs**
+
+**Como** SuperAdmin u OrgAdmin,
+**Quiero** visualizar un dashboard con métricas clave de negocio (Clientes Activos, MRR, ARPC, Health Score),
+**Para** monitorear la salud financiera y tomar decisiones basadas en datos.
+
+**Criterios de Aceptación:**
+- [ ] Dashboard muestra 4 KPIs principales en cards:
+  - Clientes Activos (count + % cambio vs mes anterior)
+  - MRR Total ($ + % cambio vs mes anterior)
+  - ARPC - Average Revenue Per Customer ($ + % cambio)
+  - Health Score (% + indicador Estable/Crecimiento/Riesgo)
+- [ ] Indicadores de cambio tienen color semántico:
+  - Verde (+% positivo para MRR, Clientes)
+  - Rojo (-% negativo)
+  - Gris (sin cambio o estable)
+- [ ] Métricas se calculan en tiempo real desde BD
+- [ ] Carga inicial < 2 segundos
+- [ ] Soporte responsive para tablet y móvil
+
+**Prioridad:** Alta | **Estimación:** 5 puntos
+
+---
+
+**US-062: Filtrar Analytics por Plan y Estado**
+
+**Como** admin,
+**Quiero** filtrar las métricas por plan de suscripción y estado de cliente,
+**Para** analizar segmentos específicos de mi base de clientes.
+
+**Criterios de Aceptación:**
+- [ ] Filtros disponibles en header de dashboard:
+  - Dropdown "Plan": Todos, Free, Starter, Professional, Enterprise
+  - Dropdown "Estado": Todos, Activo, Prueba, Pago Vencido, Cancelado
+- [ ] Al cambiar filtro, todos los gráficos y KPIs se actualizan
+- [ ] Filtros persisten en query params para compartir URL
+- [ ] Combinación de filtros (ej: Professional + Activo)
+- [ ] Indicador visual de filtros activos
+- [ ] Botón "Limpiar filtros" para resetear a "Todos"
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+**US-063: Visualizar Distribución de Clientes por Plan**
+
+**Como** admin,
+**Quiero** ver un gráfico de barras con distribución de clientes por plan,
+**Para** entender la composición de mi base de clientes.
+
+**Criterios de Aceptación:**
+- [ ] Gráfico de barras horizontales con:
+  - Eje X: Cantidad de clientes
+  - Eje Y: Plan (Free, Starter, Professional, Enterprise)
+  - Color único por plan (consistente con branding)
+- [ ] Cada barra muestra:
+  - Cantidad absoluta de clientes
+  - Porcentaje del total (ej: "40.0%")
+- [ ] Barras ordenadas de mayor a menor cantidad
+- [ ] Tooltip al hover con detalles adicionales
+- [ ] Animación de carga progresiva
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-064: Identificar Top 5 Clientes por MRR**
+
+**Como** admin,
+**Quiero** ver un ranking de mis top 5 clientes ordenados por MRR,
+**Para** identificar cuentas estratégicas y priorizar atención comercial.
+
+**Criterios de Aceptación:**
+- [ ] Tabla muestra columnas:
+  - # (ranking 1-5)
+  - Cliente (nombre con avatar)
+  - Plan (badge con color)
+  - MRR ($ formateado)
+  - Usuarios (count de miembros del tenant)
+- [ ] Ordenado descendente por MRR
+- [ ] Click en fila navega a detalle de cliente
+- [ ] Destacar visualmente #1 (ej: icono de corona)
+- [ ] Si hay empate en MRR, ordenar alfabéticamente
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+**US-065: Exportar Reportes de Analytics (Professional+)**
+
+**Como** admin con plan Professional o Enterprise,
+**Quiero** exportar reportes de analytics a PDF o Excel,
+**Para** compartir métricas con stakeholders externos.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Exportar" en header de dashboard
+- [ ] Opciones de formato: PDF, Excel (XLSX)
+- [ ] Reporte incluye:
+  - Fecha de generación
+  - Filtros aplicados
+  - Todos los KPIs y gráficos visibles
+  - Tabla de top 10 clientes (vs 5 en UI)
+- [ ] Feature gate: solo Professional y Enterprise
+- [ ] Plan Free/Starter muestra upgrade prompt
+- [ ] Descarga archivo con nombre: `analytics-{tenant}-{fecha}.{ext}`
+- [ ] Generación async con notificación al completar
+
+**Prioridad:** Baja | **Estimación:** 5 puntos
+
+---
+
+### 3.10 Sistema de Promociones
+
+**US-066: Crear Nueva Promoción**
+
+**Como** admin con permisos de marketing,
+**Quiero** crear códigos promocionales con descuentos personalizados,
+**Para** ejecutar campañas de adquisición y retención sin soporte técnico.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Nueva Promoción" abre modal de creación
+- [ ] Formulario requiere:
+  - Código (alfanumérico, 3-20 chars, uppercase, único)
+  - Nombre (display name, 5-100 chars)
+  - Descripción opcional (hasta 255 chars)
+  - Tipo: Porcentaje (%), Monto ($), Días adicionales
+  - Valor según tipo: % (1-100), $ (> 0), Días (1-365)
+  - Límite de usos (1-9999, opcional = ilimitado)
+  - Vigencia: fecha inicio + fecha fin (obligatorias)
+  - Planes aplicables: multi-select (Free, Starter, Pro, Enterprise)
+  - Checkbox "Solo primer pago" (default: true)
+- [ ] Validaciones en tiempo real:
+  - Código único (async check con debounce 300ms)
+  - Fechas: inicio < fin, fin >= hoy
+  - Valor > 0 según tipo
+- [ ] Al guardar, promoción tiene estado "Activa" si hoy >= fecha_inicio
+- [ ] Si fecha_inicio > hoy, estado es "Programada"
+- [ ] Notificación de éxito con código para copiar
+
+**Prioridad:** Alta | **Estimación:** 5 puntos
+
+---
+
+**US-067: Gestionar Estados de Promociones**
+
+**Como** admin,
+**Quiero** pausar, reanudar o finalizar promociones activas,
+**Para** controlar manualmente la disponibilidad de códigos.
+
+**Criterios de Aceptación:**
+- [ ] Columna "Estado" muestra badge con color semántico:
+  - Activa (verde), Pausada (amarillo), Agotada (gris), Expirada (rojo), Programada (azul)
+- [ ] Menú de acciones incluye:
+  - "Pausar" (solo si Activa) → cambia estado a Pausada
+  - "Reanudar" (solo si Pausada) → vuelve a Activa
+  - "Finalizar" (si Activa/Pausada) → marca como Expirada manualmente
+- [ ] Estados automáticos:
+  - Si usos >= límite → Agotada (no editable)
+  - Si hoy > fecha_fin → Expirada (no editable)
+  - Si hoy < fecha_inicio → Programada
+- [ ] Confirmación antes de finalizar manualmente
+- [ ] Al pausar, código no aplicable en checkout (error user-friendly)
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+**US-068: Filtrar y Buscar Promociones**
+
+**Como** admin,
+**Quiero** buscar promociones por código/nombre y filtrar por estado/tipo,
+**Para** encontrar rápidamente códigos específicos en listas largas.
+
+**Criterios de Aceptación:**
+- [ ] Barra de búsqueda con placeholder "Buscar por código o nombre..."
+- [ ] Búsqueda en tiempo real con debounce 300ms
+- [ ] Búsqueda case-insensitive en: Código, Nombre, Descripción
+- [ ] Filtros dropdown:
+  - Estado: Todos, Activa, Pausada, Agotada, Expirada, Programada
+  - Tipo: Todos, Porcentaje (%), Monto ($), Días adicionales
+- [ ] Filtros combinables (búsqueda + estado + tipo)
+- [ ] Indicador de "X resultados encontrados"
+- [ ] Botón "Limpiar filtros" si hay filtros activos
+- [ ] Persistencia de filtros en URL query params
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+**US-069: Monitorear Métricas de Promociones**
+
+**Como** admin,
+**Quiero** ver KPIs de promociones (activas, usos totales, ingresos generados),
+**Para** medir la efectividad de mis campañas.
+
+**Criterios de Aceptación:**
+- [ ] Header de página muestra 3 KPIs en cards:
+  - Promociones Activas (count de estado = Activa)
+  - Usos Totales (sum de `current_uses` de todas las promos)
+  - Ingresos Generados (sum de discounts aplicados)
+- [ ] Tabla muestra columna "Uso" con:
+  - Barra de progreso (current_uses / max_uses)
+  - Indicador numérico "X/Y" (ej: 23/100)
+  - % de utilización
+- [ ] Click en icono "Analytics" de fila muestra modal con:
+  - Gráfico de usos en el tiempo (line chart)
+  - Conversión: % de usuarios que aplicaron el código y pagaron
+  - Planes donde más se usó (pie chart)
+  - Revenue impactado ($ total de descuentos)
+- [ ] Feature gate Analytics detallado: Professional+
+- [ ] Exportar reporte de promoción individual (PDF/Excel)
+
+**Prioridad:** Media | **Estimación:** 5 puntos
+
+---
+
+**US-070: Aplicar Código Promocional en Checkout**
+
+**Como** usuario nuevo,
+**Quiero** ingresar un código promocional durante el checkout,
+**Para** obtener descuentos en mi suscripción.
+
+**Criterios de Aceptación:**
+- [ ] Checkout muestra campo "Código promocional" (colapsable)
+- [ ] Al ingresar código y hacer click "Aplicar":
+  - Validación async con backend
+  - Spinner durante validación
+- [ ] Si código válido:
+  - Mensaje de éxito: "Código SUMMER2026 aplicado: 20% de descuento"
+  - Actualizar precio final con descuento
+  - Mostrar precio original tachado + precio con descuento
+- [ ] Si código inválido: Error "Código inválido o expirado"
+- [ ] Validaciones backend:
+  - Código existe y estado = Activa
+  - No supera límite de usos
+  - Vigencia válida (hoy entre fecha_inicio y fecha_fin)
+  - Plan seleccionado incluido en planes_aplicables
+- [ ] Al completar pago:
+  - Incrementar `current_uses` de promoción
+  - Crear registro en PromoUsage
+  - Aplicar descuento en invoice
+- [ ] Promoción aplicable también en upgrades (si configurado)
+
+**Prioridad:** Alta | **Estimación:** 5 puntos
+
+---
+
 
 ---
 
@@ -1016,4 +1267,4 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
-**Última actualización**: 2026-02-12
+**Última actualización**: 2026-02-15

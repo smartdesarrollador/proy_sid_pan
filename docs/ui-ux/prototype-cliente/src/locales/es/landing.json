@@ -55,6 +55,12 @@
       }
     }
   },
+  "promotions": {
+    "badge": "Ofertas Especiales",
+    "heading": "Aprovecha Nuestras Promociones",
+    "subheading": "Descuentos exclusivos y ofertas por tiempo limitado para nuevos clientes",
+    "note": "* Promociones sujetas a términos y condiciones. Válido solo para nuevos clientes."
+  },
   "pricing": {
     "title": "Planes simples y transparentes",
     "subtitle": "Elige el plan que mejor se adapte a las necesidades de tu equipo",

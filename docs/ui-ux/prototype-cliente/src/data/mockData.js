@@ -1723,3 +1723,73 @@ export const landingPageData = {
     }
   ]
 };
+
+// Promociones activas para Landing Page
+export const specialPromotions = [
+  {
+    id: 'promo-summer-2026',
+    discount: '20% OFF',
+    title: {
+      es: 'Promoción de Verano 2026',
+      en: 'Summer Promotion 2026'
+    },
+    description: {
+      es: 'Descuento especial para nuevos clientes durante la temporada de verano',
+      en: 'Special discount for new customers during summer season'
+    },
+    code: 'SUMMER2026',
+    validUntil: {
+      es: '31 Ago 2026',
+      en: 'Aug 31, 2026'
+    },
+    limited: true,
+    cta: {
+      es: 'Aprovechar oferta',
+      en: 'Claim offer'
+    }
+  },
+  {
+    id: 'promo-startup-50',
+    discount: '$50 OFF',
+    title: {
+      es: 'Descuento para Startups',
+      en: 'Startup Discount'
+    },
+    description: {
+      es: '$50 de descuento en el primer mes para startups verificadas',
+      en: '$50 off first month for verified startups'
+    },
+    code: 'STARTUP50',
+    validUntil: {
+      es: '31 Dic 2026',
+      en: 'Dec 31, 2026'
+    },
+    limited: false,
+    cta: {
+      es: 'Obtener descuento',
+      en: 'Get discount'
+    }
+  },
+  {
+    id: 'promo-trial-30',
+    discount: '+30 DÍAS',
+    title: {
+      es: 'Trial Extendido',
+      en: 'Extended Trial'
+    },
+    description: {
+      es: '30 días adicionales de prueba gratuita para nuevos usuarios',
+      en: '30 additional days of free trial for new users'
+    },
+    code: 'TRIAL30',
+    validUntil: {
+      es: '31 May 2026',
+      en: 'May 31, 2026'
+    },
+    limited: true,
+    cta: {
+      es: 'Activar trial',
+      en: 'Activate trial'
+    }
+  }
+];

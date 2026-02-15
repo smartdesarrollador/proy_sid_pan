@@ -776,6 +776,241 @@ export default function ProfilePage({ config }) {
 
 ---
 
+### 4.7 Analytics de Negocio
+
+**FR-083: Dashboard de Analytics en Tiempo Real**
+
+**Descripción:**
+El sistema debe proporcionar un dashboard de analytics con métricas de negocio calculadas en tiempo real desde la base de datos.
+
+**Reglas de Negocio:**
+- Cálculo de métricas:
+  - **Clientes Activos**: Count de tenants con `status = 'active'`
+  - **MRR Total**: Sum de `subscription.amount` donde `billing_cycle = 'monthly'` y `status = 'active'` + (annual/12)
+  - **ARPC**: MRR Total / Clientes Activos
+  - **Health Score**: Weighted average de factores (payment_on_time 40%, usage 30%, support_tickets 20%, nps 10%)
+- % cambio vs mes anterior: comparar con snapshot del día 1 del mes anterior
+- Gráficos actualizados con filtros sin reload de página
+- Cache de métricas con TTL 5 minutos (invalidar en cambios de suscripción)
+
+**Prioridad:** Alta
+
+---
+
+**FR-084: Filtros Dinámicos de Analytics**
+
+**Descripción:**
+Permitir filtrar todas las métricas y gráficos por plan de suscripción y estado de cliente.
+
+**Reglas de Negocio:**
+- Filtros disponibles:
+  - Plan: `all`, `free`, `starter`, `professional`, `enterprise`
+  - Estado: `all`, `active`, `trial`, `past_due`, `canceled`
+- Combinación de filtros con lógica AND
+- Filtros persisten en URL query params: `?plan=professional&status=active`
+- Si filtros vacíos o inválidos, usar defaults: `plan=all&status=all`
+- Al cambiar filtro, trigger query a backend con nuevos parámetros
+
+**Prioridad:** Alta
+
+---
+
+**FR-085: Distribución Visual de Clientes**
+
+**Descripción:**
+Proveer gráficos de distribución de clientes por plan, estado, y MRR.
+
+**Reglas de Negocio:**
+- Gráficos requeridos:
+  1. **Distribución por Plan**: Horizontal bar chart (count + %)
+  2. **Distribución por Estado**: Horizontal bar chart (count + %)
+  3. **MRR por Plan**: Stacked bar o pie chart con desglose $
+- Colores semánticos:
+  - Free: Gris, Starter: Azul, Professional: Púrpura, Enterprise: Naranja
+  - Activo: Verde, Prueba: Azul, Pago Vencido: Rojo, Cancelado: Gris
+- Totales deben sumar 100% para gráficos de porcentaje
+- Si un plan tiene 0 clientes, no mostrarlo en gráfico
+
+**Prioridad:** Alta
+
+---
+
+**FR-086: Ranking de Top Clientes**
+
+**Descripción:**
+Mostrar tabla con top 5 (o más) clientes ordenados por MRR descendente.
+
+**Reglas de Negocio:**
+- Ranking muestra:
+  - Top 5 en dashboard principal
+  - Top 10 en reporte exportado
+- Criterio de ordenamiento: MRR descendente, alfabético en empates
+- Columnas: ranking, nombre, plan, MRR, usuarios count
+- Click en fila navega a `/admin/tenants/{tenant_id}`
+- Permisos: Solo SuperAdmin y OrgAdmin ven este ranking
+
+**Prioridad:** Media
+
+---
+
+**FR-087: Exportación de Reportes (Feature Gate)**
+
+**Descripción:**
+Permitir exportar reportes de analytics a PDF y Excel, gated por plan Professional+.
+
+**Reglas de Negocio:**
+- Feature gate:
+  - Free/Starter: Botón deshabilitado con tooltip "Upgrade to Professional"
+  - Professional/Enterprise: Funcionalidad completa
+- Formato PDF:
+  - Header con logo y nombre del tenant
+  - KPIs en tabla resumen
+  - Gráficos como imágenes PNG
+  - Footer con fecha de generación
+- Formato Excel:
+  - Sheet 1: KPIs y métricas
+  - Sheet 2: Tabla de clientes completa
+  - Sheet 3: Datos raw para pivot tables
+- Generación async con Celery task
+- Notificación push cuando reporte está listo
+- Link de descarga expira en 24h
+
+**Prioridad:** Baja
+
+---
+
+### 4.8 Sistema de Promociones
+
+**FR-088: CRUD de Promociones**
+
+**Descripción:**
+Sistema debe permitir crear, leer, actualizar y eliminar códigos promocionales con validaciones de negocio.
+
+**Reglas de Negocio:**
+- **Crear**:
+  - Código único a nivel global (no solo por tenant)
+  - Código alfanumérico: `^[A-Z0-9]{3,20}$` (uppercase)
+  - Fechas: inicio < fin, fin >= hoy
+  - Valor > 0 según tipo
+  - Estado inicial: "Programada" si inicio > hoy, sino "Activa"
+- **Actualizar**:
+  - Solo editable si estado = Activa o Pausada
+  - No permitir cambiar código (inmutable)
+  - No permitir reducir límite de usos por debajo de usos actuales
+  - Al editar fecha_fin, validar que sea >= hoy
+- **Eliminar**:
+  - Soft delete: set `deleted_at` timestamp
+  - Solo eliminable si usos = 0
+  - Si usos > 0, mostrar confirmación "Promoción tiene X usos registrados. ¿Eliminar de todos modos?"
+- **Permisos**: SuperAdmin, Marketing Manager (custom role)
+
+**Prioridad:** Alta
+
+---
+
+**FR-089: Estados Automáticos de Promociones**
+
+**Descripción:**
+Sistema debe actualizar automáticamente estados de promociones según reglas de negocio.
+
+**Reglas de Negocio:**
+- **Activa**: hoy >= fecha_inicio && hoy <= fecha_fin && current_uses < max_uses && !paused
+- **Programada**: hoy < fecha_inicio
+- **Agotada**: current_uses >= max_uses
+- **Expirada**: hoy > fecha_fin
+- **Pausada**: admin pausó manualmente (independiente de fechas/usos)
+- Tarea Celery cada 1 hora actualiza estados de todas las promociones
+- Eventos de webhook cuando promoción cambia de estado:
+  - `promotion.activated`
+  - `promotion.depleted` (agotada)
+  - `promotion.expired`
+
+**Prioridad:** Alta
+
+---
+
+**FR-090: Validación de Códigos en Checkout**
+
+**Descripción:**
+Backend debe validar códigos promocionales al aplicar en checkout y upgrades.
+
+**Reglas de Negocio:**
+- Validaciones en orden:
+  1. Código existe y no eliminado
+  2. Estado = Activa (400 Bad Request si otro estado)
+  3. Vigencia: hoy >= fecha_inicio && hoy <= fecha_fin
+  4. Usos: current_uses < max_uses (o max_uses = NULL = ilimitado)
+  5. Plan seleccionado en planes_aplicables
+  6. Si first_payment_only = true, validar que usuario no tiene suscripción previa
+- Si todas las validaciones pasan:
+  - Calcular descuento según tipo
+  - Retornar precio original + precio con descuento
+  - Reservar uso (increment tentative_uses, expira en 15min)
+- Si pago exitoso:
+  - Confirm uso: increment current_uses, clear tentative_uses
+  - Crear registro PromoUsage
+  - Aplicar descuento en invoice
+- Si pago falla o expira:
+  - Rollback: decrement tentative_uses
+
+**Prioridad:** Alta
+
+---
+
+**FR-091: Tipos de Descuentos**
+
+**Descripción:**
+Soportar 3 tipos de promociones con lógica de cálculo diferenciada.
+
+**Reglas de Negocio:**
+- **Porcentaje (%)**:
+  - Valor entre 1-100
+  - Cálculo: `precio_final = precio_original * (1 - valor/100)`
+  - Ejemplo: 20% sobre $100 = $80
+  - Aplicable a cualquier plan
+- **Monto fijo ($)**:
+  - Valor en USD (u otra currency)
+  - Cálculo: `precio_final = max(0, precio_original - valor)`
+  - Ejemplo: $50 de descuento sobre $100 = $50
+  - Si descuento > precio, precio final = $0 (free month)
+- **Días adicionales**:
+  - Valor en días (1-365)
+  - Cálculo: Extender `trial_end_date` del tenant
+  - Ejemplo: +30 días de trial gratuito
+  - Solo aplicable a planes Free o en trial period
+  - No afecta precio, solo extiende trial
+- Campo `first_payment_only`:
+  - true: solo aplica en primer invoice
+  - false: aplica en cada invoice del período configurado
+
+**Prioridad:** Alta
+
+---
+
+**FR-092: Analytics de Promociones**
+
+**Descripción:**
+Proveer métricas de efectividad de promociones para decisiones de marketing.
+
+**Reglas de Negocio:**
+- KPIs principales:
+  - **Promociones Activas**: count(estado = Activa)
+  - **Usos Totales**: sum(current_uses) de todas las promociones
+  - **Ingresos Generados**: sum(discount_amount) de PromoUsage
+- Métricas por promoción individual:
+  - Usos en el tiempo (time series)
+  - Conversión: users_applied / users_paid
+  - Distribución por plan
+  - Revenue impactado ($ descuentos)
+  - Top users que usaron el código
+- Analytics detallado gated por plan Professional+
+- Exportar reporte individual (PDF/Excel)
+- Dashboards visuales con charts (line, pie, bar)
+
+**Prioridad:** Media
+
+---
+
 ## 5. Non-Functional Requirements
 
 ### 5.1 Performance
@@ -882,4 +1117,4 @@ export default function ProfilePage({ config }) {
 
 ---
 
-**Última actualización**: 2026-02-12
+**Última actualización**: 2026-02-15

@@ -1,7 +1,7 @@
 # PRD: Sistema Avanzado de Gestión de Roles, Permisos y Suscripciones Multi-Tenant
 
-**Version:** 2.0.0
-**Date:** 2026-02-12
+**Version:** 2.1.0
+**Date:** 2026-02-15
 **Status:** Draft
 **Owner:** Product Team
 **Tech Stack:** Django REST Framework, PostgreSQL, React + Vite (Admin + Cliente), Next.js (Digital Services), Tailwind CSS
@@ -13,15 +13,17 @@
 Este PRD está organizado en módulos para facilitar la navegación y mantenimiento. A continuación se presenta el índice completo con enlaces a cada sección:
 
 ### 📊 Requirements (Requerimientos)
-- **[Casos de Uso](requirements/use-cases.md)** - CU-001 a CU-008: Onboarding, roles, upgrade, delegación, auditoría, compartición
-- **[User Stories](requirements/user-stories.md)** - US-001 a US-036: Historias de usuario completas organizadas por módulo
-- **[Functional Requirements](requirements/functional-requirements.md)** - FR-001+: Requisitos funcionales detallados + NFRs
+- **[Casos de Uso](requirements/use-cases.md)** - CU-001 a CU-015: Onboarding, roles, upgrade, delegación, auditoría, compartición, analytics, promociones
+- **[User Stories](requirements/user-stories.md)** - US-001 a US-070: Historias de usuario completas organizadas por módulo
+- **[Functional Requirements](requirements/functional-requirements.md)** - FR-001 a FR-092 + NFRs: Requisitos funcionales detallados
 
 ### 🎯 Features (Funcionalidades)
 - **[Sharing & Collaboration](features/sharing-collaboration.md)** - Sistema de compartición con permisos granulares
 - **[Projects/Portafolio](features/projects.md)** - Gestión de proyectos con secciones, items y campos customizables
 - **[Billing & Subscriptions](features/billing.md)** - Planes, facturación, feature gates, límites de uso
 - **[Digital Services](features/digital-services.md)** - Tarjeta digital, Landing page, Portafolio, CV público con SSR
+- **[Analytics de Negocio](features/analytics.md)** - Dashboard con KPIs, métricas de clientes, MRR, ARPC, Health Score
+- **[Sistema de Promociones](features/promotions.md)** - Códigos de descuento, promociones temporales, tracking de usos
 
 ### 🔧 Technical (Documentación Técnica)
 - **[Architecture](technical/architecture.md)** - Arquitectura general del sistema, multi-tenancy, seguridad
