@@ -909,6 +909,58 @@ export const getLandingPageByUser = (userId) => {
   return userLandingPages[userId] || null;
 };
 
+export const createDefaultLandingPage = (userId) => {
+  const newId = `landing-${Date.now()}`;
+  const defaultLanding = {
+    id: newId,
+    userId,
+    isPublished: false,
+    template: 'corporate',
+    meta: {
+      title: 'Mi Landing Page',
+      description: 'Página de aterrizaje profesional',
+      keywords: [],
+      ogImage: null,
+      favicon: null,
+      customCSS: '',
+      googleAnalyticsId: null,
+    },
+    sections: [
+      {
+        id: `hero-${Date.now()}`,
+        type: 'hero',
+        order: 0,
+        visible: true,
+        content: {
+          title: 'Bienvenido',
+          subtitle: 'Esta es tu nueva landing page',
+          ctaText: 'Contactar',
+          ctaLink: '#contact',
+          backgroundImage: null,
+          alignment: 'center',
+        },
+      },
+      {
+        id: `about-${Date.now() + 1}`,
+        type: 'about',
+        order: 1,
+        visible: true,
+        content: {
+          title: 'Acerca de',
+          text: 'Agrega aquí información sobre ti o tu negocio.',
+          image: null,
+          layout: 'image-right',
+        },
+      },
+    ],
+    customDomain: null,
+  };
+
+  // Store in mock data (in real app, would save to database)
+  userLandingPages[userId] = defaultLanding;
+  return defaultLanding;
+};
+
 export const getPortfolioByUser = (userId) => {
   return userPortfolios[userId] || [];
 };
