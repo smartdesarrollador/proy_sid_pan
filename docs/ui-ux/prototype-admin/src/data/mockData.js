@@ -221,6 +221,16 @@ export const permissions = [
   // Customers
   { id: 'perm-040', codename: 'customers.read', name: 'Ver Clientes', resource: 'customers', action: 'read', category: 'Customers' },
   { id: 'perm-041', codename: 'customers.update', name: 'Editar Clientes', resource: 'customers', action: 'update', category: 'Customers' },
+
+  // Analytics
+  { id: 'perm-042', codename: 'analytics.read', name: 'Ver Analytics', resource: 'analytics', action: 'read', category: 'Analytics' },
+
+  // Promotions
+  { id: 'perm-043', codename: 'promotions.read', name: 'Ver Promociones', resource: 'promotions', action: 'read', category: 'Billing' },
+  { id: 'perm-044', codename: 'promotions.create', name: 'Crear Promociones', resource: 'promotions', action: 'create', category: 'Billing' },
+  { id: 'perm-045', codename: 'promotions.update', name: 'Editar Promociones', resource: 'promotions', action: 'update', category: 'Billing' },
+  { id: 'perm-046', codename: 'promotions.delete', name: 'Eliminar Promociones', resource: 'promotions', action: 'delete', category: 'Billing' },
+  { id: 'perm-047', codename: 'promotions.stats', name: 'Ver Estadísticas de Promociones', resource: 'promotions', action: 'stats', category: 'Billing' },
 ];
 
 export const subscriptionPlans = [
@@ -770,16 +780,139 @@ export const userStats = {
   }
 };
 
+// ===========================
+// Promotions / Discounts
+// ===========================
+
+export const promotions = [
+  {
+    id: 'promo-001',
+    code: 'SUMMER2026',
+    name: 'Promoción de Verano 2026',
+    description: 'Descuento especial para nuevos clientes en verano',
+    type: 'percentage',
+    value: 20,
+    maxDiscount: 100,
+    applicablePlans: ['plan-starter', 'plan-professional'],
+    applicableNewCustomersOnly: true,
+    startsAt: '2026-06-01',
+    expiresAt: '2026-08-31',
+    maxUses: 100,
+    currentUses: 23,
+    maxUsesPerCustomer: 1,
+    status: 'active',
+    createdBy: 'user-001',
+    createdAt: '2026-05-15',
+    lastUsedAt: '2026-07-20 14:30',
+    conversionRate: 15.5,
+    totalRevenue: 2340.50,
+    avgDiscountAmount: 18.75
+  },
+  {
+    id: 'promo-002',
+    code: 'STARTUP50',
+    name: 'Descuento para Startups',
+    description: '$50 de descuento en el primer mes para startups verificadas',
+    type: 'fixed_amount',
+    value: 50,
+    maxDiscount: null,
+    applicablePlans: ['plan-professional'],
+    applicableNewCustomersOnly: true,
+    startsAt: '2026-01-01',
+    expiresAt: '2026-12-31',
+    maxUses: null,
+    currentUses: 87,
+    maxUsesPerCustomer: 1,
+    status: 'active',
+    createdBy: 'user-001',
+    createdAt: '2025-12-20',
+    lastUsedAt: '2026-07-22 09:15',
+    conversionRate: 22.3,
+    totalRevenue: 4350.00,
+    avgDiscountAmount: 50.00
+  },
+  {
+    id: 'promo-003',
+    code: 'TRIAL30',
+    name: 'Trial Extendido 30 Días',
+    description: '30 días adicionales de trial gratuito',
+    type: 'trial_extension',
+    value: 30,
+    maxDiscount: null,
+    applicablePlans: [],
+    applicableNewCustomersOnly: true,
+    startsAt: '2026-03-01',
+    expiresAt: '2026-05-31',
+    maxUses: 50,
+    currentUses: 50,
+    maxUsesPerCustomer: 1,
+    status: 'depleted',
+    createdBy: 'user-001',
+    createdAt: '2026-02-25',
+    lastUsedAt: '2026-05-20 16:45',
+    conversionRate: 18.0,
+    totalRevenue: 0,
+    avgDiscountAmount: 0
+  },
+  {
+    id: 'promo-004',
+    code: 'BLACKFRIDAY',
+    name: 'Black Friday 2025',
+    description: '50% de descuento en todos los planes',
+    type: 'percentage',
+    value: 50,
+    maxDiscount: 200,
+    applicablePlans: [],
+    applicableNewCustomersOnly: false,
+    startsAt: '2025-11-29',
+    expiresAt: '2025-11-30',
+    maxUses: 200,
+    currentUses: 156,
+    maxUsesPerCustomer: 1,
+    status: 'expired',
+    createdBy: 'user-001',
+    createdAt: '2025-11-15',
+    lastUsedAt: '2025-11-30 23:59',
+    conversionRate: 42.5,
+    totalRevenue: 7800.00,
+    avgDiscountAmount: 49.50
+  },
+  {
+    id: 'promo-005',
+    code: 'EARLYBIRD',
+    name: 'Early Bird Q1',
+    description: '15% descuento para renovaciones anticipadas',
+    type: 'percentage',
+    value: 15,
+    maxDiscount: 75,
+    applicablePlans: ['plan-professional', 'plan-enterprise'],
+    applicableNewCustomersOnly: false,
+    startsAt: '2026-01-01',
+    expiresAt: '2026-03-31',
+    maxUses: null,
+    currentUses: 12,
+    maxUsesPerCustomer: 1,
+    status: 'paused',
+    createdBy: 'user-001',
+    createdAt: '2025-12-28',
+    lastUsedAt: '2026-02-14 11:20',
+    conversionRate: 8.3,
+    totalRevenue: 1188.00,
+    avgDiscountAmount: 14.85
+  }
+];
+
 // Mapeo de permisos por rol
 export const rolePermissions = {
   'OrgAdmin': [
     'users.*', 'roles.*', 'permissions.*', 'billing.*',
     'audit.*', 'settings.*', 'dashboard.read', 'content.*', 'projects.*',
-    'tasks.*', 'calendar.*'
+    'tasks.*', 'calendar.*', 'customers.*', 'analytics.*', 'promotions.*'
   ],
   'Manager': [
     'users.read', 'users.update', 'roles.read', 'projects.*', 'audit.read',
-    'customers.read', 'dashboard.read', 'content.read', 'tasks.*', 'calendar.*'
+    'customers.read', 'dashboard.read', 'content.read', 'tasks.*', 'calendar.*',
+    'analytics.read', 'promotions.read', 'promotions.stats'
   ],
   'Member': [
     'dashboard.read', 'projects.read', 'projects.create',
@@ -835,4 +968,266 @@ export const matchPermission = (userPermissions, requiredPermission) => {
   });
 
   return !!resourceMatch;
+};
+
+// ===========================
+// Customer Analytics Helpers
+// ===========================
+
+// Helper: Calcular uso promedio de recurso
+const calculateAvgResourceUsage = (customers, resource) => {
+  const validCustomers = customers.filter(c => {
+    const limit = c.usage[resource]?.limit;
+    return limit !== null && limit !== undefined && limit > 0;
+  });
+
+  if (validCustomers.length === 0) return 0;
+
+  const totalPercentage = validCustomers.reduce((sum, c) => {
+    const current = c.usage[resource].current || 0;
+    const limit = c.usage[resource].limit;
+    return sum + (current / limit * 100);
+  }, 0);
+
+  return (totalPercentage / validCustomers.length).toFixed(1);
+};
+
+// Helper: Calcular health score
+const calculateHealthScore = (customers) => {
+  if (customers.length === 0) return 0;
+
+  // 40% basado en clientes activos
+  const activeCustomers = customers.filter(c => c.subscription.status === 'active').length;
+  const activeScore = (activeCustomers / customers.length) * 40;
+
+  // 30% basado en uso bajo de recursos (clientes no cerca del límite)
+  const customersUnderLimit = customers.filter(c => {
+    const usersUsage = c.usage.users.limit ? (c.usage.users.current / c.usage.users.limit) : 0;
+    const storageUsage = c.usage.storage.limit ? (c.usage.storage.current / c.usage.storage.limit) : 0;
+    return usersUsage < 0.8 && storageUsage < 0.8;
+  }).length;
+  const resourceScore = (customersUnderLimit / customers.length) * 30;
+
+  // 30% basado en pagos sanos (no past_due)
+  const healthyPayments = customers.filter(c => c.subscription.status !== 'past_due').length;
+  const paymentScore = (healthyPayments / customers.length) * 30;
+
+  return Math.round(activeScore + resourceScore + paymentScore);
+};
+
+// Helper: Calcular métricas principales
+export const calculateMetrics = (customers, planFilter = 'all', statusFilter = 'all') => {
+  // Filtrar clientes
+  const filtered = customers.filter(c => {
+    const matchesPlan = planFilter === 'all' || c.subscription.planId === planFilter;
+    const matchesStatus = statusFilter === 'all' || c.subscription.status === statusFilter;
+    return matchesPlan && matchesStatus;
+  });
+
+  // Total de clientes activos
+  const totalActiveCustomers = filtered.filter(c => c.subscription.status === 'active').length;
+
+  // Total MRR
+  const totalMRR = filtered.reduce((sum, c) => sum + (c.subscription.mrr || 0), 0);
+
+  // ARPC (Average Revenue Per Customer)
+  const arpc = totalActiveCustomers > 0 ? (totalMRR / totalActiveCustomers).toFixed(2) : 0;
+
+  // Health Score
+  const healthScore = calculateHealthScore(filtered);
+
+  // Uso promedio de recursos
+  const resourceUsage = {
+    avgUsersPercentage: calculateAvgResourceUsage(filtered, 'users'),
+    avgStoragePercentage: calculateAvgResourceUsage(filtered, 'storage'),
+    avgApiCallsPercentage: calculateAvgResourceUsage(filtered, 'apiCalls')
+  };
+
+  return {
+    totalActiveCustomers,
+    totalMRR: totalMRR.toFixed(2),
+    arpc,
+    healthScore,
+    resourceUsage
+  };
+};
+
+// Helper: Distribución por plan
+export const calculatePlanDistribution = (customers) => {
+  const distribution = {};
+
+  customers.forEach(c => {
+    const plan = c.subscription.planName;
+    if (!distribution[plan]) {
+      distribution[plan] = {
+        plan,
+        count: 0,
+        mrr: 0
+      };
+    }
+    distribution[plan].count++;
+    distribution[plan].mrr += c.subscription.mrr || 0;
+  });
+
+  // Convertir a array y calcular porcentajes
+  const total = customers.length;
+  return Object.values(distribution).map(item => ({
+    ...item,
+    percentage: total > 0 ? ((item.count / total) * 100).toFixed(1) : 0,
+    mrr: item.mrr.toFixed(2)
+  })).sort((a, b) => b.count - a.count);
+};
+
+// Helper: Distribución por status
+export const calculateStatusDistribution = (customers) => {
+  const distribution = {};
+
+  customers.forEach(c => {
+    const status = c.subscription.status;
+    if (!distribution[status]) {
+      distribution[status] = {
+        status,
+        count: 0
+      };
+    }
+    distribution[status].count++;
+  });
+
+  // Convertir a array y calcular porcentajes
+  const total = customers.length;
+  return Object.values(distribution).map(item => ({
+    ...item,
+    percentage: total > 0 ? ((item.count / total) * 100).toFixed(1) : 0
+  })).sort((a, b) => b.count - a.count);
+};
+
+// Helper: Top clientes por MRR
+export const getTopCustomersByMRR = (customers, limit = 5) => {
+  return [...customers]
+    .sort((a, b) => (b.subscription.mrr || 0) - (a.subscription.mrr || 0))
+    .slice(0, limit);
+};
+
+// Helper: Clientes en riesgo
+export const getAtRiskCustomers = (customers) => {
+  return customers.filter(c => {
+    // Pago vencido
+    if (c.subscription.status === 'past_due') {
+      return true;
+    }
+
+    // Uso alto de usuarios (>80%)
+    if (c.usage.users.limit && (c.usage.users.current / c.usage.users.limit) > 0.8) {
+      return true;
+    }
+
+    // Uso alto de storage (>80%)
+    if (c.usage.storage.limit && (c.usage.storage.current / c.usage.storage.limit) > 0.8) {
+      return true;
+    }
+
+    return false;
+  }).map(c => {
+    // Determinar el motivo del riesgo
+    const reasons = [];
+    if (c.subscription.status === 'past_due') {
+      reasons.push('Pago vencido');
+    }
+    if (c.usage.users.limit && (c.usage.users.current / c.usage.users.limit) > 0.8) {
+      reasons.push(`Usuarios: ${Math.round((c.usage.users.current / c.usage.users.limit) * 100)}%`);
+    }
+    if (c.usage.storage.limit && (c.usage.storage.current / c.usage.storage.limit) > 0.8) {
+      reasons.push(`Storage: ${Math.round((c.usage.storage.current / c.usage.storage.limit) * 100)}%`);
+    }
+
+    return {
+      ...c,
+      riskReasons: reasons
+    };
+  });
+};
+
+// ===========================
+// Promotions Helpers
+// ===========================
+
+// Helper: Generar código promocional aleatorio
+export const generatePromoCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sin O,0,I,1 para evitar confusión
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+// Helper: Validar código único
+export const isPromoCodeUnique = (code, promotions, excludeId = null) => {
+  return !promotions.some(p =>
+    p.code.toLowerCase() === code.toLowerCase() && p.id !== excludeId
+  );
+};
+
+// Helper: Calcular descuento aplicado
+export const calculateDiscount = (promotion, planPrice) => {
+  switch (promotion.type) {
+    case 'percentage':
+      const percentDiscount = planPrice * (promotion.value / 100);
+      return promotion.maxDiscount
+        ? Math.min(percentDiscount, promotion.maxDiscount)
+        : percentDiscount;
+    case 'fixed_amount':
+      return Math.min(promotion.value, planPrice); // No exceder precio
+    case 'trial_extension':
+      return 0; // No afecta precio, solo trial
+    default:
+      return 0;
+  }
+};
+
+// Helper: Verificar si promoción está vigente
+export const isPromotionValid = (promotion, customerId = null) => {
+  const now = new Date();
+  const start = new Date(promotion.startsAt);
+  const end = new Date(promotion.expiresAt);
+
+  // Verificar estado
+  if (promotion.status !== 'active') return false;
+
+  // Verificar fechas
+  if (now < start || now > end) return false;
+
+  // Verificar límite de usos
+  if (promotion.maxUses && promotion.currentUses >= promotion.maxUses) return false;
+
+  // Verificar límite por cliente (requeriría lookup de uso del cliente)
+  // Por ahora retornamos true, en producción se validaría con backend
+
+  return true;
+};
+
+// Helper: Filtrar promociones
+export const filterPromotions = (promotions, filters) => {
+  return promotions.filter(promo => {
+    // Filtro de búsqueda
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+      if (!promo.code.toLowerCase().includes(search) &&
+          !promo.name.toLowerCase().includes(search)) {
+        return false;
+      }
+    }
+
+    // Filtro de status
+    if (filters.status !== 'all' && promo.status !== filters.status) {
+      return false;
+    }
+
+    // Filtro de tipo
+    if (filters.type !== 'all' && promo.type !== filters.type) {
+      return false;
+    }
+
+    return true;
+  });
 };

@@ -21,6 +21,13 @@ export const featuresByPlan = {
     advancedFiltering: false,
     exportData: false,
     customFields: false,
+
+    // Analytics
+    advancedAnalytics: false,
+
+    // Promotions
+    promotionsManagement: false,
+    maxActivePromotions: 0,
   },
 
   starter: {
@@ -42,6 +49,13 @@ export const featuresByPlan = {
     advancedFiltering: true,
     exportData: false,
     customFields: false,
+
+    // Analytics
+    advancedAnalytics: false,
+
+    // Promotions
+    promotionsManagement: false,
+    maxActivePromotions: 0,
   },
 
   professional: {
@@ -63,6 +77,13 @@ export const featuresByPlan = {
     advancedFiltering: true,
     exportData: true,
     customFields: true,
+
+    // Analytics
+    advancedAnalytics: true,
+
+    // Promotions
+    promotionsManagement: true,
+    maxActivePromotions: 5,
   },
 
   enterprise: {
@@ -84,6 +105,13 @@ export const featuresByPlan = {
     advancedFiltering: true,
     exportData: true,
     customFields: true,
+
+    // Analytics
+    advancedAnalytics: true,
+
+    // Promotions
+    promotionsManagement: true,
+    maxActivePromotions: Infinity,
   }
 };
 
@@ -159,6 +187,18 @@ export const upgradeMessages = {
     title: 'Campos personalizados no disponibles',
     message: 'Los campos personalizados están disponibles en el plan Professional.',
     feature: 'Campos personalizados',
+    requiredPlan: 'professional'
+  },
+  advancedAnalytics: {
+    title: 'Análisis Avanzado',
+    message: 'Los gráficos de distribución y análisis avanzados están disponibles en el plan Professional.',
+    feature: 'Análisis avanzado de clientes',
+    requiredPlan: 'professional'
+  },
+  promotionsManagement: {
+    title: 'Gestión de Promociones',
+    message: 'La gestión de promociones y descuentos está disponible en el plan Professional.',
+    feature: 'Gestión completa de promociones y descuentos',
     requiredPlan: 'professional'
   }
 };

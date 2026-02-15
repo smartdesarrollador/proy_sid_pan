@@ -11,6 +11,9 @@ import RoleManagement from './components/RoleManagement';
 import PermissionManagement from './components/PermissionManagement';
 import SubscriptionManagement from './components/SubscriptionManagement';
 import AuditLogs from './components/AuditLogs';
+import CustomerAnalytics from './components/CustomerAnalytics';
+import PromotionManagement from './components/PromotionManagement';
+
 function AppContent() {
   const { isAuthenticated } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');
@@ -32,6 +35,10 @@ function AppContent() {
         return <SubscriptionManagement />;
       case 'audit':
         return <AuditLogs />;
+      case 'analytics':
+        return <CustomerAnalytics />;
+      case 'promotions':
+        return <PromotionManagement />;
       default:
         return <Dashboard />;
     }

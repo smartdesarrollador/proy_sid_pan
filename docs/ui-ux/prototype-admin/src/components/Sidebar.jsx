@@ -6,7 +6,9 @@ import {
   CreditCard,
   FileText,
   Settings,
-  Building2
+  Building2,
+  BarChart3,
+  Tag
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -20,9 +22,11 @@ function Sidebar({ isOpen, activeView, onNavigate }) {
     { id: 'dashboard', label: t('menu.dashboard'), icon: LayoutDashboard, permission: 'dashboard.read' },
     { id: 'users', label: t('menu.users'), icon: Users, permission: 'users.read' },
     { id: 'clients', label: t('menu.clients'), icon: Building2, permission: 'customers.read' },
+    { id: 'analytics', label: t('menu.analytics'), icon: BarChart3, permission: 'analytics.read' },
     { id: 'roles', label: t('menu.roles'), icon: Shield, permission: 'roles.read' },
     { id: 'permissions', label: t('menu.permissions'), icon: Key, permission: 'permissions.read' },
     { id: 'subscription', label: t('menu.subscription'), icon: CreditCard, permission: 'billing.read' },
+    { id: 'promotions', label: t('menu.promotions'), icon: Tag, permission: 'promotions.read' },
     { id: 'audit', label: t('menu.audit'), icon: FileText, permission: 'audit.read' },
     { id: 'settings', label: t('menu.settings'), icon: Settings, permission: 'settings.read' },
   ];

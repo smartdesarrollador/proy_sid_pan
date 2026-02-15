@@ -3,9 +3,11 @@
     "dashboard": "Dashboard",
     "users": "Users",
     "clients": "Clients",
+    "analytics": "Analytics",
     "roles": "Roles",
     "permissions": "Permissions",
     "subscription": "Subscription",
+    "promotions": "Promotions",
     "audit": "Audit",
     "settings": "Settings"
   },
