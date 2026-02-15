@@ -82,7 +82,7 @@ src/
 
 - Skills: `.claude/skills/` (django-db-models, drf-auth, drf-core-api, drf-docs, drf-errors, drf-performance, drf-security, drf-testing, drf-utils, find-skills, nextjs-deployment, nextjs-routing-data, nextjs-seo-optimization, nextjs-server-components, nextjs-static-generation, react-accessibility, react-api-authentication, react-context-state, react-data-visualization, react-e2e-testing, react-error-handling, react-forms-validation, react-hooks-patterns, react-internationalization, react-performance-optimization, react-project-structure, react-router-patterns, react-suspense-streaming, react-tailwind-animations, react-tailwind-components, react-tanstack-query, react-testing-library, react-typescript-foundations, skill-creator, vite-react-configuration)
 - Commands: `.claude/commands/` (create-prd, generate-report, onboard, pr-review)
-- Agents: `.claude/agents/` (api-documenter, billing-validator, code-reviewer, compliance-checker, database-optimizer, frontend-builder, migration-manager, planner, researcher, security-auditor, test-generator)
+- Agents: `.claude/agents/` (api-documenter, billing-validator, code-reviewer, compliance-checker, database-optimizer, migration-manager, nextjs-builder, planner, react-vite-builder, researcher, security-auditor, test-generator)
 - Rules: `.claude/rules/` (ai-development, code-style, security)
 - Hooks: `.claude/hooks/` (detect-doc-changes.sh, sync-claude-md.sh, task-finished-alert.py)
 - See `.claude/README.md` for full configuration reference

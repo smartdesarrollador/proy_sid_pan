@@ -192,21 +192,40 @@ Danger:    #ef4444 (Red 500)
 
 ### Tech Stack del Prototipo
 
-- **Framework**: React 18.2
+- **Framework**: React 18.2 (JSX)
 - **Build Tool**: Vite 5.1
 - **Styling**: Tailwind CSS 3.4
 - **Icons**: Lucide React
 - **Utilities**: clsx
 
+> **Nota**: Los prototipos usan React con JSX para rapidez de desarrollo. El código de producción usará TypeScript.
+
 ### Migración a Producción
 
-El prototipo React será **reemplazado** por:
+El prototipo React (JSX) será **reemplazado** por código de producción con:
 
-- **Frontend Final**: Angular 16+ standalone components
-- **Backend**: Django REST Framework
-- **Database**: PostgreSQL con RLS
+#### Frontend (según necesidades):
+
+**Opción 1: React + Vite + TypeScript + Tailwind** (sin SEO)
+- Aplicaciones internas (admin panels, dashboards)
+- SPA donde SEO no es crítico
+- Máxima velocidad de desarrollo y HMR
+- TanStack Query para data fetching
+- react-hook-form + Zod para validación
+
+**Opción 2: Next.js + TypeScript + Tailwind** (con SEO)
+- Páginas públicas (landing, marketing, docs)
+- Aplicaciones donde SEO es crítico
+- Server Components + Server Actions
+- Metadata API para SEO completo
+- ISR + Streaming para performance
+
+#### Backend:
+- **API**: Django REST Framework
+- **Database**: PostgreSQL con RLS (Row Level Security)
 - **Auth**: JWT + refresh tokens
 - **Payments**: Stripe API
+- **Cache**: Redis
 
 ---
 
@@ -239,11 +258,16 @@ Para agregar nuevas vistas al prototipo:
 
 ## ❓ FAQ
 
-**P: ¿Por qué React si el proyecto final es Angular?**
-R: React + Vite permite prototipado rápido. Angular se usará en producción con arquitectura completa.
+**P: ¿Por qué React JSX en prototipos y TypeScript en producción?**
+R: Los prototipos usan JSX para velocidad de desarrollo y validación rápida de UX. El código de producción usará TypeScript para type safety, mejor DX y mantenibilidad.
+
+**P: ¿Cuándo usar React+Vite vs Next.js?**
+R:
+- **React+Vite**: Admin panels, dashboards internos, herramientas donde SEO no es necesario
+- **Next.js**: Landing pages, sitios públicos, documentación, donde SEO es crítico
 
 **P: ¿Los datos se persisten?**
-R: No, es mock data. Refresh resetea todo. Para persistencia, usar localStorage (no implementado).
+R: No, es mock data. Refresh resetea todo. Para persistencia, usar localStorage (no implementado en prototipos).
 
 **P: ¿Puedo modificar los colores?**
 R: Sí, edita `tailwind.config.js` en la sección `theme.extend.colors`.
@@ -251,8 +275,46 @@ R: Sí, edita `tailwind.config.js` en la sección `theme.extend.colors`.
 **P: ¿Cómo agrego más usuarios/roles mock?**
 R: Edita `src/data/mockData.js` y agrega entries a los arrays correspondientes.
 
+**P: ¿Se pueden reutilizar componentes del prototipo en producción?**
+R: Parcialmente. La estructura y lógica de UI se pueden portar, pero se reescribirán con TypeScript, validación Zod y patrones de producción (custom hooks, Server Actions, etc.).
+
 ---
 
-**Última actualización**: 2026-02-09
+**Última actualización**: 2026-02-15
 **Versión del Prototipo**: 1.0.0
 **Estado**: ✅ Listo para revisión
+
+---
+
+## 🏗️ Stack Tecnológico del Proyecto
+
+### Prototipos (Actual)
+- React 18.2 + JSX
+- Vite 5.1
+- Tailwind CSS 3.4
+
+### Producción (Desarrollo Real)
+
+**Frontend SIN SEO** (Admin Panels, Dashboards):
+- React 18+ + Vite 5+
+- TypeScript 5+ (strict mode)
+- Tailwind CSS 3+
+- TanStack Query v5
+- react-hook-form + Zod
+- Zustand (state)
+
+**Frontend CON SEO** (Landing, Docs, Marketing):
+- Next.js 14+ (App Router)
+- TypeScript 5+ (strict mode)
+- Tailwind CSS 3+
+- Server Components + Server Actions
+- Metadata API + SEO optimization
+- NextAuth.js v5
+
+**Backend**:
+- Django REST Framework
+- PostgreSQL + Redis
+- JWT Authentication
+- Stripe API
+
+> **Agentes disponibles**: Usa `react-vite-builder` para React+Vite o `nextjs-builder` para Next.js cuando desarrolles features de producción.
