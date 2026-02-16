@@ -1,0 +1,82 @@
+{
+  "title": "Settings",
+  "subtitle": "Manage your profile, organization and preferences",
+  "tabs": {
+    "profile": "My Profile",
+    "organization": "Organization",
+    "interface": "Interface",
+    "security": "Security",
+    "notifications": "Notifications"
+  },
+  "profile": {
+    "title": "Personal Information",
+    "description": "Update your profile information and photo",
+    "upload_avatar": "Upload photo",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email",
+    "change_password": "Change password",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "confirm_password": "Confirm password",
+    "save_success": "Profile updated successfully"
+  },
+  "organization": {
+    "title": "Organization Settings",
+    "description": "Manage your organization information",
+    "admin_only": "Admins only",
+    "admin_only_desc": "You need administrator permissions to access this section",
+    "organization_name": "Organization name",
+    "subdomain": "Subdomain",
+    "logo": "Organization logo",
+    "upload_logo": "Upload logo",
+    "primary_color": "Primary color",
+    "current_plan": "Current plan",
+    "manage_subscription": "Manage subscription"
+  },
+  "interface": {
+    "title": "Interface Preferences",
+    "description": "Customize appearance and regional settings",
+    "language": "Language",
+    "theme": "Theme",
+    "light_mode": "Light mode",
+    "dark_mode": "Dark mode",
+    "date_format": "Date format",
+    "timezone": "Time zone"
+  },
+  "security": {
+    "title": "Security",
+    "mfa_title": "Two-Factor Authentication",
+    "mfa_description": "Add an extra layer of security to your account",
+    "mfa_enabled": "Enabled",
+    "disable_mfa_confirm": "Are you sure you want to disable two-factor authentication?",
+    "active_sessions": "Active Sessions",
+    "active_sessions_desc": "Manage devices where you're signed in",
+    "current_session": "Current session",
+    "last_active": "Last active",
+    "revoke": "Revoke",
+    "sign_out_all": "Sign out all sessions",
+    "sign_out_all_confirm": "Sign out from all devices except this one?",
+    "signed_out_all": "Sessions signed out successfully",
+    "session_revoked": "Session revoked",
+    "password": "Password",
+    "last_changed": "Last changed"
+  },
+  "notifications": {
+    "email_title": "Email Notifications",
+    "security_alerts": "Security alerts",
+    "security_desc": "Critical security events (always enabled)",
+    "account_updates": "Account updates",
+    "account_desc": "Changes to subscription, billing and settings",
+    "team_activity": "Team activity",
+    "team_desc": "New users, role and permission changes",
+    "marketing": "Marketing and promotions",
+    "marketing_desc": "Product news and special offers",
+    "push_title": "Push Notifications",
+    "push_description": "Receive real-time notifications in your browser",
+    "frequency_title": "Notification Frequency",
+    "frequency_instant": "Instant",
+    "frequency_daily": "Daily digest",
+    "frequency_weekly": "Weekly digest"
+  }
+}

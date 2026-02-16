@@ -1,0 +1,10 @@
+{
+  "title": "Today's Events",
+  "empty": "You have no events scheduled for today",
+  "viewCalendar": "View full calendar",
+  "sections": {
+    "now": "Now",
+    "upcoming": "Upcoming",
+    "later": "Later Today"
+  }
+}

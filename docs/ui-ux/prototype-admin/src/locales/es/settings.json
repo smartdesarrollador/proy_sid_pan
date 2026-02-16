@@ -1,0 +1,82 @@
+{
+  "title": "Configuración",
+  "subtitle": "Administra tu perfil, organización y preferencias",
+  "tabs": {
+    "profile": "Mi Perfil",
+    "organization": "Organización",
+    "interface": "Interfaz",
+    "security": "Seguridad",
+    "notifications": "Notificaciones"
+  },
+  "profile": {
+    "title": "Información Personal",
+    "description": "Actualiza tu información de perfil y foto",
+    "upload_avatar": "Subir foto",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "email": "Correo electrónico",
+    "change_password": "Cambiar contraseña",
+    "current_password": "Contraseña actual",
+    "new_password": "Nueva contraseña",
+    "confirm_password": "Confirmar contraseña",
+    "save_success": "Perfil actualizado exitosamente"
+  },
+  "organization": {
+    "title": "Configuración de Organización",
+    "description": "Administra la información de tu organización",
+    "admin_only": "Solo administradores",
+    "admin_only_desc": "Necesitas permisos de administrador para acceder a esta sección",
+    "organization_name": "Nombre de la organización",
+    "subdomain": "Subdominio",
+    "logo": "Logo de la organización",
+    "upload_logo": "Subir logo",
+    "primary_color": "Color primario",
+    "current_plan": "Plan actual",
+    "manage_subscription": "Administrar suscripción"
+  },
+  "interface": {
+    "title": "Preferencias de Interfaz",
+    "description": "Personaliza la apariencia y configuración regional",
+    "language": "Idioma",
+    "theme": "Tema",
+    "light_mode": "Modo claro",
+    "dark_mode": "Modo oscuro",
+    "date_format": "Formato de fecha",
+    "timezone": "Zona horaria"
+  },
+  "security": {
+    "title": "Seguridad",
+    "mfa_title": "Autenticación de Dos Factores",
+    "mfa_description": "Agrega una capa extra de seguridad a tu cuenta",
+    "mfa_enabled": "Activa",
+    "disable_mfa_confirm": "¿Estás seguro de desactivar la autenticación de dos factores?",
+    "active_sessions": "Sesiones Activas",
+    "active_sessions_desc": "Administra los dispositivos donde has iniciado sesión",
+    "current_session": "Sesión actual",
+    "last_active": "Última actividad",
+    "revoke": "Revocar",
+    "sign_out_all": "Cerrar todas las sesiones",
+    "sign_out_all_confirm": "¿Cerrar sesión en todos los dispositivos excepto este?",
+    "signed_out_all": "Sesiones cerradas exitosamente",
+    "session_revoked": "Sesión revocada",
+    "password": "Contraseña",
+    "last_changed": "Última modificación"
+  },
+  "notifications": {
+    "email_title": "Notificaciones por Email",
+    "security_alerts": "Alertas de seguridad",
+    "security_desc": "Eventos críticos de seguridad (siempre activo)",
+    "account_updates": "Actualizaciones de cuenta",
+    "account_desc": "Cambios en suscripción, facturación y configuración",
+    "team_activity": "Actividad del equipo",
+    "team_desc": "Nuevos usuarios, cambios de roles y permisos",
+    "marketing": "Marketing y promociones",
+    "marketing_desc": "Noticias del producto y ofertas especiales",
+    "push_title": "Notificaciones Push",
+    "push_description": "Recibe notificaciones en tiempo real en tu navegador",
+    "frequency_title": "Frecuencia de Notificaciones",
+    "frequency_instant": "Instantáneas",
+    "frequency_daily": "Resumen diario",
+    "frequency_weekly": "Resumen semanal"
+  }
+}

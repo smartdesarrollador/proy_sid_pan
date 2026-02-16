@@ -592,6 +592,62 @@ export const events = [
     ],
     createdBy: 'user-002',
     createdAt: '2026-01-20'
+  },
+  // Eventos de PRUEBA para hoy (2026-02-15)
+  {
+    id: 'event-today-1',
+    title: 'Daily Standup',
+    description: 'Reunión diaria del equipo',
+    startDate: '2026-02-15',
+    startTime: '09:15',
+    endDate: '2026-02-15',
+    endTime: '09:30',
+    location: 'Zoom',
+    category: 'standup',
+    categoryColor: '#10b981',
+    participants: ['user-001', 'user-002'],
+    isRecurring: true,
+    recurrencePattern: 'daily',
+    reminders: [{ type: 'notification', minutesBefore: 5 }],
+    createdBy: 'user-001',
+    createdAt: '2026-02-10'
+  },
+  {
+    id: 'event-today-2',
+    title: 'Code Review - Auth Module',
+    description: 'Revisión del módulo de autenticación',
+    startDate: '2026-02-15',
+    startTime: '14:00',
+    endDate: '2026-02-15',
+    endTime: '15:00',
+    location: 'Sala Dev',
+    category: 'review',
+    categoryColor: '#8b5cf6',
+    participants: ['user-001', 'user-003'],
+    isRecurring: false,
+    reminders: [{ type: 'notification', minutesBefore: 15 }],
+    createdBy: 'user-003',
+    createdAt: '2026-02-14'
+  },
+  {
+    id: 'event-today-3',
+    title: 'Planning - Q1 Goals',
+    description: 'Definición de objetivos Q1',
+    startDate: '2026-02-15',
+    startTime: '16:30',
+    endDate: '2026-02-15',
+    endTime: '18:00',
+    location: 'Sala de Conferencias B',
+    category: 'meeting',
+    categoryColor: '#3b82f6',
+    participants: ['user-001', 'user-002', 'user-003', 'user-004'],
+    isRecurring: false,
+    reminders: [
+      { type: 'email', minutesBefore: 60 },
+      { type: 'notification', minutesBefore: 30 }
+    ],
+    createdBy: 'user-002',
+    createdAt: '2026-02-10'
   }
 ];
 

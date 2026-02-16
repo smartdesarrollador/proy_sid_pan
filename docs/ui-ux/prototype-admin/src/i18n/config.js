@@ -12,6 +12,7 @@ import featuresES from '../locales/es/features.json';
 import usersES from '../locales/es/users.json';
 import rolesES from '../locales/es/roles.json';
 import clientsES from '../locales/es/clients.json';
+import settingsES from '../locales/es/settings.json';
 
 // Import English translations
 import commonEN from '../locales/en/common.json';
@@ -23,6 +24,7 @@ import featuresEN from '../locales/en/features.json';
 import usersEN from '../locales/en/users.json';
 import rolesEN from '../locales/en/roles.json';
 import clientsEN from '../locales/en/clients.json';
+import settingsEN from '../locales/en/settings.json';
 
 i18n
   .use(LanguageDetector)
@@ -39,6 +41,7 @@ i18n
         users: usersES,
         roles: rolesES,
         clients: clientsES,
+        settings: settingsES,
       },
       en: {
         common: commonEN,
@@ -50,6 +53,7 @@ i18n
         users: usersEN,
         roles: rolesEN,
         clients: clientsEN,
+        settings: settingsEN,
       }
     },
     fallbackLng: 'es',

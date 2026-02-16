@@ -1,15 +1,22 @@
 import { Menu, Bell, Settings, User, LogOut, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { currentTenant } from '../data/mockData';
+import { currentTenant, events } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
 import ThemeToggle from './shared/ThemeToggle';
 import LanguageSwitcher from './LanguageSwitcher';
+import { getTodayEvents } from '../utils/dateUtils';
+import NotificationDropdown from './notifications/NotificationDropdown';
 
 function Navbar({ onMenuClick }) {
   const { t } = useTranslation('navbar');
   const { currentUser, logout } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  // Calculate today's events and notification count
+  const todayEvents = getTodayEvents(events);
+  const notificationCount = todayEvents.length;
 
   const handleLogout = () => {
     logout();
@@ -52,10 +59,30 @@ function Navbar({ onMenuClick }) {
           <ThemeToggle />
 
           {/* Notifications */}
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-            <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setNotificationsOpen(!notificationsOpen)}
+              className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] text-center font-semibold">
+                  {notificationCount}
+                </span>
+              )}
+            </button>
+
+            {notificationsOpen && (
+              <NotificationDropdown
+                events={todayEvents}
+                onClose={() => setNotificationsOpen(false)}
+                onEventClick={(eventId) => {
+                  setNotificationsOpen(false);
+                  // TODO Future: Navigate to calendar and highlight event
+                }}
+              />
+            )}
+          </div>
 
           {/* User menu */}
           <div className="relative">

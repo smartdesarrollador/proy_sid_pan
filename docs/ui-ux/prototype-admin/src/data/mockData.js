@@ -1231,3 +1231,78 @@ export const filterPromotions = (promotions, filters) => {
     return true;
   });
 };
+
+// ============================================================================
+// Settings Mock Data
+// ============================================================================
+
+export const userSettings = {
+  userId: 'user-001',
+  profile: {
+    avatar: null,
+    firstName: 'John',
+    lastName: 'Smith',
+    email: 'admin@acme.com'
+  },
+  lastPasswordChange: '2025-11-15'
+};
+
+export const organizationSettings = {
+  name: 'Acme Corporation',
+  subdomain: 'acme',
+  logo: null,
+  primaryColor: '#3b82f6',
+  brandingEnabled: true
+};
+
+export const interfaceSettings = {
+  dateFormat: 'DD/MM/YYYY',
+  timezone: 'America/Mexico_City',
+  sidebarCollapsed: false
+};
+
+export const securitySettings = {
+  mfaEnabled: true,
+  mfaMethod: 'authenticator',
+  sessions: [
+    {
+      id: 'session-001',
+      device: 'Chrome on Windows',
+      location: 'México, CDMX',
+      ipAddress: '192.168.1.100',
+      lastActive: '2026-02-15 14:30',
+      isCurrent: true
+    },
+    {
+      id: 'session-002',
+      device: 'Safari on iPhone',
+      location: 'México, CDMX',
+      ipAddress: '192.168.1.105',
+      lastActive: '2026-02-15 10:15',
+      isCurrent: false
+    },
+    {
+      id: 'session-003',
+      device: 'Firefox on Ubuntu',
+      location: 'México, Guadalajara',
+      ipAddress: '10.0.0.45',
+      lastActive: '2026-02-14 18:22',
+      isCurrent: false
+    }
+  ],
+  lastPasswordChange: '2025-11-15'
+};
+
+export const notificationSettings = {
+  email: {
+    security: true,
+    account: true,
+    team: false,
+    marketing: false
+  },
+  push: {
+    enabled: false,
+    browserPermission: 'default'
+  },
+  frequency: 'instant'
+};

@@ -13,6 +13,7 @@ import SubscriptionManagement from './components/SubscriptionManagement';
 import AuditLogs from './components/AuditLogs';
 import CustomerAnalytics from './components/CustomerAnalytics';
 import PromotionManagement from './components/PromotionManagement';
+import Settings from './components/Settings';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -39,6 +40,8 @@ function AppContent() {
         return <CustomerAnalytics />;
       case 'promotions':
         return <PromotionManagement />;
+      case 'settings':
+        return <Settings />;
       default:
         return <Dashboard />;
     }
@@ -50,7 +53,10 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+      <Navbar
+        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+        onNavigate={setActiveView}
+      />
 
       <div className="flex">
         <Sidebar
