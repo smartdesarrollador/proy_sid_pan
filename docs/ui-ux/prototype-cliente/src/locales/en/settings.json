@@ -1,0 +1,48 @@
+{
+  "title": "Settings",
+  "subtitle": "Manage your profile and preferences",
+  "profile": {
+    "title": "My Profile",
+    "description": "Personal information and profile picture",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "uploadAvatar": "Upload photo",
+    "saveChanges": "Save changes"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "description": "Customize your experience",
+    "language": "Language",
+    "theme": "Theme",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "dateFormat": "Date format",
+    "timezone": "Timezone"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Control how you receive notifications",
+    "emailNotifications": "Email notifications",
+    "taskReminders": "Task reminders",
+    "projectUpdates": "Project updates",
+    "sharedItems": "Shared items",
+    "inAppNotifications": "In-app notifications"
+  },
+  "security": {
+    "title": "Security",
+    "description": "Protect your account",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "twoFactor": "Two-factor authentication",
+    "enable2FA": "Enable 2FA",
+    "disable2FA": "Disable 2FA"
+  },
+  "messages": {
+    "saveSuccess": "Changes saved successfully",
+    "passwordChanged": "Password updated",
+    "error": "Error saving changes"
+  }
+}

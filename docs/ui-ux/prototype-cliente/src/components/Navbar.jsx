@@ -116,7 +116,13 @@ function Navbar({ onMenuClick }) {
                   {t('userMenu.profile')}
                 </button>
 
-                <button className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    onNavigate('settings');
+                    setUserMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                >
                   <Settings className="w-4 h-4" />
                   {t('userMenu.settings')}
                 </button>

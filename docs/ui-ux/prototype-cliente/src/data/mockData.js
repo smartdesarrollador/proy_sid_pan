@@ -1849,3 +1849,41 @@ export const specialPromotions = [
     }
   }
 ];
+
+// ============================================================================
+// Settings Mock Data
+// ============================================================================
+
+export const userSettings = {
+  id: 'settings-001',
+  userId: 'user-001', // Matches currentUser.id
+  profile: {
+    firstName: 'John',
+    lastName: 'Smith',
+    email: 'john.smith@acme.com',
+    avatar: null
+  },
+  preferences: {
+    language: 'es', // 'es' | 'en'
+    theme: 'light', // 'light' | 'dark' | 'auto'
+    dateFormat: 'DD/MM/YYYY', // 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD'
+    timezone: 'America/Mexico_City'
+  },
+  notifications: {
+    emailNotifications: true,
+    taskReminders: true,
+    projectUpdates: true,
+    sharedItems: true,
+    inAppNotifications: true
+  },
+  security: {
+    twoFactorEnabled: false,
+    lastPasswordChange: '2025-11-15'
+  }
+};
+
+// Helper function para obtener settings del usuario actual
+export const getUserSettings = (userId) => {
+  // En producción, esto haría fetch a /api/users/{userId}/settings
+  return userSettings;
+};

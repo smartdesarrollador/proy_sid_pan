@@ -1,0 +1,48 @@
+{
+  "title": "Configuración",
+  "subtitle": "Administra tu perfil y preferencias",
+  "profile": {
+    "title": "Mi Perfil",
+    "description": "Información personal y foto de perfil",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo electrónico",
+    "uploadAvatar": "Subir foto",
+    "saveChanges": "Guardar cambios"
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "description": "Personaliza tu experiencia",
+    "language": "Idioma",
+    "theme": "Tema",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo oscuro",
+    "dateFormat": "Formato de fecha",
+    "timezone": "Zona horaria"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "description": "Controla cómo recibes notificaciones",
+    "emailNotifications": "Notificaciones por email",
+    "taskReminders": "Recordatorios de tareas",
+    "projectUpdates": "Actualizaciones de proyectos",
+    "sharedItems": "Elementos compartidos",
+    "inAppNotifications": "Notificaciones in-app"
+  },
+  "security": {
+    "title": "Seguridad",
+    "description": "Protege tu cuenta",
+    "changePassword": "Cambiar contraseña",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "twoFactor": "Autenticación de dos factores",
+    "enable2FA": "Activar 2FA",
+    "disable2FA": "Desactivar 2FA"
+  },
+  "messages": {
+    "saveSuccess": "Cambios guardados exitosamente",
+    "passwordChanged": "Contraseña actualizada",
+    "error": "Error al guardar cambios"
+  }
+}
