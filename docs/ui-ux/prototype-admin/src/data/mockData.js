@@ -25,10 +25,10 @@ export const currentUser = {
   email: 'admin@acme.com',
   firstName: 'John',
   lastName: 'Smith',
-  role: 'OrgAdmin',
+  role: 'Owner',
   avatar: null,
   mfaEnabled: true,
-  permissions: ['users.*', 'roles.*', 'permissions.*', 'billing.*', 'settings.*']
+  permissions: ['users.*', 'roles.*', 'tasks.*', 'boards.*', 'calendar.*', 'landing.*', 'branding.*', 'forms.*', 'projects.*', 'credentials.*', 'portfolio.*', 'digital_services.*', 'billing.*', 'promotions.*', 'analytics.*', 'settings.*', 'audit.*', 'dashboard.*']
 };
 
 export const users = [
@@ -37,7 +37,7 @@ export const users = [
     email: 'admin@acme.com',
     firstName: 'John',
     lastName: 'Smith',
-    roles: ['OrgAdmin'],
+    roles: ['Owner'],
     status: 'active',
     lastLogin: '2026-02-09 14:30',
     mfaEnabled: true,
@@ -48,18 +48,19 @@ export const users = [
     email: 'sarah.johnson@acme.com',
     firstName: 'Sarah',
     lastName: 'Johnson',
-    roles: ['Manager', 'HR Access'],
+    roles: ['Service Manager'],
     status: 'active',
     lastLogin: '2026-02-09 09:15',
     mfaEnabled: true,
-    createdAt: '2025-12-03'
+    createdAt: '2025-12-03',
+    migration_review_required: true // HR Access deprecado
   },
   {
     id: 'user-003',
     email: 'mike.chen@acme.com',
     firstName: 'Mike',
     lastName: 'Chen',
-    roles: ['Member', 'Engineering'],
+    roles: ['Member', 'Portfolio Admin'],
     status: 'active',
     lastLogin: '2026-02-08 16:45',
     mfaEnabled: false,
@@ -81,7 +82,7 @@ export const users = [
     email: 'david.wilson@acme.com',
     firstName: 'David',
     lastName: 'Wilson',
-    roles: ['Guest'],
+    roles: ['Viewer'],
     status: 'pending',
     lastLogin: null,
     mfaEnabled: false,
@@ -90,147 +91,211 @@ export const users = [
 ];
 
 export const roles = [
+  // === SYSTEM ROLES ===
   {
     id: 'role-001',
-    name: 'OrgAdmin',
-    description: 'Administrador de la organización con acceso completo',
+    name: 'Owner',
+    description: 'Propietario con acceso administrativo completo a todos los servicios',
     isSystemRole: true,
     usersCount: 1,
-    permissionsCount: 48,
+    permissionsCount: 60,
     color: '#dc2626',
     parentRole: null,
     createdAt: '2025-12-01'
   },
   {
     id: 'role-002',
-    name: 'Manager',
-    description: 'Gestión de equipo y aprobaciones',
+    name: 'Service Manager',
+    description: 'Gestiona equipo y supervisa todos los servicios web',
     isSystemRole: true,
     usersCount: 3,
-    permissionsCount: 32,
+    permissionsCount: 40,
     color: '#ea580c',
-    parentRole: 'Member',
+    parentRole: null,
     createdAt: '2025-12-01'
   },
   {
     id: 'role-003',
     name: 'Member',
-    description: 'Miembro estándar del equipo',
+    description: 'Miembro estándar con acceso a servicios principales',
     isSystemRole: true,
     usersCount: 15,
-    permissionsCount: 18,
+    permissionsCount: 20,
     color: '#3b82f6',
     parentRole: null,
     createdAt: '2025-12-01'
   },
   {
     id: 'role-004',
-    name: 'Guest',
-    description: 'Acceso limitado de solo lectura',
+    name: 'Viewer',
+    description: 'Acceso de solo lectura a dashboards y contenido compartido',
     isSystemRole: true,
     usersCount: 4,
-    permissionsCount: 5,
+    permissionsCount: 8,
     color: '#6b7280',
     parentRole: null,
     createdAt: '2025-12-01'
   },
+
+  // === SERVICE-SPECIFIC ROLES ===
   {
     id: 'role-005',
-    name: 'Content Editor',
-    description: 'Crear y editar contenido, requiere aprobación para publicar',
+    name: 'Landing Manager',
+    description: 'Control total de landing pages, branding y formularios',
     isSystemRole: false,
-    usersCount: 8,
-    permissionsCount: 12,
+    usersCount: 0,
+    permissionsCount: 25,
     color: '#8b5cf6',
     parentRole: 'Member',
-    createdAt: '2026-01-20'
+    createdAt: '2026-02-16'
   },
   {
     id: 'role-006',
-    name: 'HR Access',
-    description: 'Acceso a información de recursos humanos',
+    name: 'Portfolio Admin',
+    description: 'Gestión de proyectos, credenciales y portfolios públicos',
     isSystemRole: false,
-    usersCount: 2,
-    permissionsCount: 8,
+    usersCount: 0,
+    permissionsCount: 22,
     color: '#10b981',
     parentRole: 'Member',
-    createdAt: '2026-01-25'
+    createdAt: '2026-02-16'
+  },
+  {
+    id: 'role-007',
+    name: 'Task Coordinator',
+    description: 'Gestión de tareas, tableros Kanban y calendario',
+    isSystemRole: false,
+    usersCount: 0,
+    permissionsCount: 18,
+    color: '#f59e0b',
+    parentRole: 'Member',
+    createdAt: '2026-02-16'
+  },
+  {
+    id: 'role-008',
+    name: 'Content Editor',
+    description: 'Edición de contenido y páginas (requiere aprobación para publicar)',
+    isSystemRole: false,
+    usersCount: 8,
+    permissionsCount: 15,
+    color: '#ec4899',
+    parentRole: 'Member',
+    createdAt: '2026-01-20'
+  },
+
+  // === CUSTOMER/BILLING ROLES ===
+  {
+    id: 'role-009',
+    name: 'Customer Success Manager',
+    description: 'Gestión de clientes, onboarding, soporte y retención',
+    isSystemRole: false,
+    usersCount: 0,
+    permissionsCount: 18,
+    color: '#06b6d4',
+    parentRole: null,
+    createdAt: '2026-02-16'
+  },
+  {
+    id: 'role-010',
+    name: 'Billing Manager',
+    description: 'Gestión de facturación, planes, promociones y pagos',
+    isSystemRole: false,
+    usersCount: 0,
+    permissionsCount: 14,
+    color: '#0ea5e9',
+    parentRole: null,
+    createdAt: '2026-02-16'
   }
 ];
 
 export const permissions = [
-  // Users
+  // === Users & Authentication (5) ===
   { id: 'perm-001', codename: 'users.create', name: 'Crear Usuarios', resource: 'users', action: 'create', category: 'Users' },
   { id: 'perm-002', codename: 'users.read', name: 'Ver Usuarios', resource: 'users', action: 'read', category: 'Users' },
   { id: 'perm-003', codename: 'users.update', name: 'Editar Usuarios', resource: 'users', action: 'update', category: 'Users' },
   { id: 'perm-004', codename: 'users.delete', name: 'Eliminar Usuarios', resource: 'users', action: 'delete', category: 'Users' },
   { id: 'perm-005', codename: 'users.invite', name: 'Invitar Usuarios', resource: 'users', action: 'invite', category: 'Users' },
 
-  // Roles
+  // === Roles & Permissions (5) ===
   { id: 'perm-006', codename: 'roles.create', name: 'Crear Roles', resource: 'roles', action: 'create', category: 'Roles' },
   { id: 'perm-007', codename: 'roles.read', name: 'Ver Roles', resource: 'roles', action: 'read', category: 'Roles' },
   { id: 'perm-008', codename: 'roles.update', name: 'Editar Roles', resource: 'roles', action: 'update', category: 'Roles' },
   { id: 'perm-009', codename: 'roles.delete', name: 'Eliminar Roles', resource: 'roles', action: 'delete', category: 'Roles' },
   { id: 'perm-010', codename: 'roles.assign', name: 'Asignar Roles', resource: 'roles', action: 'assign', category: 'Roles' },
 
-  // Content
-  { id: 'perm-011', codename: 'content.create', name: 'Crear Contenido', resource: 'content', action: 'create', category: 'Content' },
-  { id: 'perm-012', codename: 'content.read', name: 'Ver Contenido', resource: 'content', action: 'read', category: 'Content' },
-  { id: 'perm-013', codename: 'content.edit_own', name: 'Editar Contenido Propio', resource: 'content', action: 'edit', category: 'Content', scope: 'own' },
-  { id: 'perm-014', codename: 'content.edit_all', name: 'Editar Todo el Contenido', resource: 'content', action: 'edit', category: 'Content', scope: 'all' },
-  { id: 'perm-015', codename: 'content.publish', name: 'Publicar Contenido', resource: 'content', action: 'publish', category: 'Content' },
-  { id: 'perm-016', codename: 'content.delete', name: 'Eliminar Contenido', resource: 'content', action: 'delete', category: 'Content' },
+  // === Tasks Service (7) ===
+  { id: 'perm-011', codename: 'tasks.create', name: 'Crear Tareas', resource: 'tasks', action: 'create', category: 'Tasks' },
+  { id: 'perm-012', codename: 'tasks.read', name: 'Ver Tareas', resource: 'tasks', action: 'read', category: 'Tasks' },
+  { id: 'perm-013', codename: 'tasks.update', name: 'Editar Tareas', resource: 'tasks', action: 'update', category: 'Tasks' },
+  { id: 'perm-014', codename: 'tasks.delete', name: 'Eliminar Tareas', resource: 'tasks', action: 'delete', category: 'Tasks' },
+  { id: 'perm-015', codename: 'tasks.assign', name: 'Asignar Tareas', resource: 'tasks', action: 'assign', category: 'Tasks' },
+  { id: 'perm-016', codename: 'boards.admin', name: 'Gestionar Tableros Kanban', resource: 'boards', action: 'admin', category: 'Tasks' },
+  { id: 'perm-017', codename: 'boards.reorder', name: 'Reordenar Tareas/Columnas', resource: 'boards', action: 'reorder', category: 'Tasks' },
 
-  // Projects
-  { id: 'perm-017', codename: 'projects.create', name: 'Crear Proyectos', resource: 'projects', action: 'create', category: 'Projects' },
-  { id: 'perm-018', codename: 'projects.read', name: 'Ver Proyectos', resource: 'projects', action: 'read', category: 'Projects' },
-  { id: 'perm-019', codename: 'projects.update', name: 'Editar Proyectos', resource: 'projects', action: 'update', category: 'Projects' },
-  { id: 'perm-020', codename: 'projects.delete', name: 'Eliminar Proyectos', resource: 'projects', action: 'delete', category: 'Projects' },
+  // === Calendar Service (6) ===
+  { id: 'perm-018', codename: 'calendar.create', name: 'Crear Eventos', resource: 'calendar', action: 'create', category: 'Calendar' },
+  { id: 'perm-019', codename: 'calendar.read', name: 'Ver Calendario', resource: 'calendar', action: 'read', category: 'Calendar' },
+  { id: 'perm-020', codename: 'calendar.update', name: 'Editar Eventos', resource: 'calendar', action: 'update', category: 'Calendar' },
+  { id: 'perm-021', codename: 'calendar.delete', name: 'Eliminar Eventos', resource: 'calendar', action: 'delete', category: 'Calendar' },
+  { id: 'perm-022', codename: 'calendar.share', name: 'Compartir Calendario/Eventos', resource: 'calendar', action: 'share', category: 'Calendar' },
+  { id: 'perm-023', codename: 'calendar.sync', name: 'Sincronizar con Google/Outlook', resource: 'calendar', action: 'sync', category: 'Calendar' },
 
-  // Billing
-  { id: 'perm-021', codename: 'billing.read', name: 'Ver Facturación', resource: 'billing', action: 'read', category: 'Billing' },
-  { id: 'perm-022', codename: 'billing.manage', name: 'Gestionar Facturación', resource: 'billing', action: 'manage', category: 'Billing' },
-  { id: 'perm-023', codename: 'billing.upgrade', name: 'Actualizar Plan', resource: 'billing', action: 'upgrade', category: 'Billing' },
-  { id: 'perm-024', codename: 'billing.cancel', name: 'Cancelar Suscripción', resource: 'billing', action: 'cancel', category: 'Billing' },
+  // === Landing Pages (6) ===
+  { id: 'perm-024', codename: 'landing.create', name: 'Crear Landing Pages', resource: 'landing', action: 'create', category: 'Landing' },
+  { id: 'perm-025', codename: 'landing.read', name: 'Ver Landing Pages', resource: 'landing', action: 'read', category: 'Landing' },
+  { id: 'perm-026', codename: 'landing.edit', name: 'Editar Contenido/Secciones', resource: 'landing', action: 'edit', category: 'Landing' },
+  { id: 'perm-027', codename: 'landing.publish', name: 'Publicar Cambios en Vivo', resource: 'landing', action: 'publish', category: 'Landing' },
+  { id: 'perm-028', codename: 'branding.update', name: 'Modificar Branding (Colores, Logos)', resource: 'branding', action: 'update', category: 'Landing' },
+  { id: 'perm-029', codename: 'forms.manage', name: 'Configurar Formularios de Contacto', resource: 'forms', action: 'manage', category: 'Landing' },
 
-  // Settings
-  { id: 'perm-025', codename: 'settings.read', name: 'Ver Configuración', resource: 'settings', action: 'read', category: 'Settings' },
-  { id: 'perm-026', codename: 'settings.update', name: 'Editar Configuración', resource: 'settings', action: 'update', category: 'Settings' },
+  // === Portfolio & Projects (8) ===
+  { id: 'perm-030', codename: 'projects.create', name: 'Crear Proyectos', resource: 'projects', action: 'create', category: 'Projects' },
+  { id: 'perm-031', codename: 'projects.read', name: 'Ver Proyectos', resource: 'projects', action: 'read', category: 'Projects' },
+  { id: 'perm-032', codename: 'projects.update', name: 'Editar Proyectos', resource: 'projects', action: 'update', category: 'Projects' },
+  { id: 'perm-033', codename: 'projects.delete', name: 'Eliminar Proyectos', resource: 'projects', action: 'delete', category: 'Projects' },
+  { id: 'perm-034', codename: 'projects.sections', name: 'Gestionar Secciones/Tags', resource: 'projects', action: 'sections', category: 'Projects' },
+  { id: 'perm-035', codename: 'credentials.manage', name: 'Crear/Editar Credenciales', resource: 'credentials', action: 'manage', category: 'Projects' },
+  { id: 'perm-036', codename: 'credentials.reveal', name: 'Ver Contraseñas Encriptadas', resource: 'credentials', action: 'reveal', category: 'Projects' },
+  { id: 'perm-037', codename: 'portfolio.publish', name: 'Publicar Items de Portfolio', resource: 'portfolio', action: 'publish', category: 'Projects' },
 
-  // Audit
-  { id: 'perm-027', codename: 'audit.read', name: 'Ver Auditoría', resource: 'audit', action: 'read', category: 'Audit' },
-  { id: 'perm-028', codename: 'audit.export', name: 'Exportar Auditoría', resource: 'audit', action: 'export', category: 'Audit' },
+  // === Digital Services (5) ===
+  { id: 'perm-038', codename: 'digital_services.tarjeta', name: 'Gestionar Tarjeta Digital', resource: 'digital_services', action: 'tarjeta', category: 'Digital Services' },
+  { id: 'perm-039', codename: 'digital_services.landing', name: 'Gestionar Landing Pública', resource: 'digital_services', action: 'landing', category: 'Digital Services' },
+  { id: 'perm-040', codename: 'digital_services.cv', name: 'Gestionar CV Digital', resource: 'digital_services', action: 'cv', category: 'Digital Services' },
+  { id: 'perm-041', codename: 'digital_services.portfolio', name: 'Gestionar Portfolio Público', resource: 'digital_services', action: 'portfolio', category: 'Digital Services' },
+  { id: 'perm-042', codename: 'public_profiles.analytics', name: 'Ver Analytics de Perfil Público', resource: 'public_profiles', action: 'analytics', category: 'Digital Services' },
 
-  // Dashboard
-  { id: 'perm-029', codename: 'dashboard.read', name: 'Ver Dashboard', resource: 'dashboard', action: 'read', category: 'Dashboard' },
+  // === Billing & Subscriptions (4) ===
+  { id: 'perm-043', codename: 'billing.read', name: 'Ver Facturación', resource: 'billing', action: 'read', category: 'Billing' },
+  { id: 'perm-044', codename: 'billing.manage', name: 'Actualizar Métodos de Pago', resource: 'billing', action: 'manage', category: 'Billing' },
+  { id: 'perm-045', codename: 'billing.upgrade', name: 'Cambiar Plan de Suscripción', resource: 'billing', action: 'upgrade', category: 'Billing' },
+  { id: 'perm-046', codename: 'promotions.manage', name: 'Crear/Editar Códigos Promocionales', resource: 'promotions', action: 'manage', category: 'Billing' },
 
-  // Tasks
-  { id: 'perm-030', codename: 'tasks.create', name: 'Crear Tareas', resource: 'tasks', action: 'create', category: 'Tasks' },
-  { id: 'perm-031', codename: 'tasks.read', name: 'Ver Tareas', resource: 'tasks', action: 'read', category: 'Tasks' },
-  { id: 'perm-032', codename: 'tasks.update', name: 'Editar Tareas', resource: 'tasks', action: 'update', category: 'Tasks' },
-  { id: 'perm-033', codename: 'tasks.delete', name: 'Eliminar Tareas', resource: 'tasks', action: 'delete', category: 'Tasks' },
-  { id: 'perm-034', codename: 'tasks.assign', name: 'Asignar Tareas', resource: 'tasks', action: 'assign', category: 'Tasks' },
+  // === Analytics (2) ===
+  { id: 'perm-047', codename: 'analytics.read', name: 'Ver Dashboards de Analytics', resource: 'analytics', action: 'read', category: 'Analytics' },
+  { id: 'perm-048', codename: 'analytics.export', name: 'Exportar Datos de Analytics', resource: 'analytics', action: 'export', category: 'Analytics' },
 
-  // Calendar
-  { id: 'perm-035', codename: 'calendar.create', name: 'Crear Eventos', resource: 'calendar', action: 'create', category: 'Calendar' },
-  { id: 'perm-036', codename: 'calendar.read', name: 'Ver Calendario', resource: 'calendar', action: 'read', category: 'Calendar' },
-  { id: 'perm-037', codename: 'calendar.update', name: 'Editar Eventos', resource: 'calendar', action: 'update', category: 'Calendar' },
-  { id: 'perm-038', codename: 'calendar.delete', name: 'Eliminar Eventos', resource: 'calendar', action: 'delete', category: 'Calendar' },
-  { id: 'perm-039', codename: 'calendar.share', name: 'Compartir Calendario', resource: 'calendar', action: 'share', category: 'Calendar' },
+  // === Settings (2) ===
+  { id: 'perm-049', codename: 'settings.read', name: 'Ver Configuración', resource: 'settings', action: 'read', category: 'Settings' },
+  { id: 'perm-050', codename: 'settings.update', name: 'Modificar Configuración', resource: 'settings', action: 'update', category: 'Settings' },
 
-  // Customers
-  { id: 'perm-040', codename: 'customers.read', name: 'Ver Clientes', resource: 'customers', action: 'read', category: 'Customers' },
-  { id: 'perm-041', codename: 'customers.update', name: 'Editar Clientes', resource: 'customers', action: 'update', category: 'Customers' },
+  // === Audit (2) ===
+  { id: 'perm-051', codename: 'audit.read', name: 'Ver Logs de Auditoría', resource: 'audit', action: 'read', category: 'Audit' },
+  { id: 'perm-052', codename: 'audit.export', name: 'Exportar Trails de Auditoría', resource: 'audit', action: 'export', category: 'Audit' },
 
-  // Analytics
-  { id: 'perm-042', codename: 'analytics.read', name: 'Ver Analytics', resource: 'analytics', action: 'read', category: 'Analytics' },
+  // === Dashboard (1) ===
+  { id: 'perm-053', codename: 'dashboard.read', name: 'Ver Dashboard', resource: 'dashboard', action: 'read', category: 'Dashboard' },
 
-  // Promotions
-  { id: 'perm-043', codename: 'promotions.read', name: 'Ver Promociones', resource: 'promotions', action: 'read', category: 'Billing' },
-  { id: 'perm-044', codename: 'promotions.create', name: 'Crear Promociones', resource: 'promotions', action: 'create', category: 'Billing' },
-  { id: 'perm-045', codename: 'promotions.update', name: 'Editar Promociones', resource: 'promotions', action: 'update', category: 'Billing' },
-  { id: 'perm-046', codename: 'promotions.delete', name: 'Eliminar Promociones', resource: 'promotions', action: 'delete', category: 'Billing' },
-  { id: 'perm-047', codename: 'promotions.stats', name: 'Ver Estadísticas de Promociones', resource: 'promotions', action: 'stats', category: 'Billing' },
+  // === Customers / Tenants (9) ===
+  { id: 'perm-054', codename: 'customers.read', name: 'Ver Clientes', resource: 'customers', action: 'read', category: 'Customers' },
+  { id: 'perm-055', codename: 'customers.create', name: 'Crear Clientes', resource: 'customers', action: 'create', category: 'Customers' },
+  { id: 'perm-056', codename: 'customers.update', name: 'Editar Clientes', resource: 'customers', action: 'update', category: 'Customers' },
+  { id: 'perm-057', codename: 'customers.delete', name: 'Eliminar Clientes', resource: 'customers', action: 'delete', category: 'Customers' },
+  { id: 'perm-058', codename: 'customers.suspend', name: 'Suspender Clientes', resource: 'customers', action: 'suspend', category: 'Customers' },
+  { id: 'perm-059', codename: 'customers.analytics', name: 'Ver Analytics de Clientes', resource: 'customers', action: 'analytics', category: 'Customers' },
+  { id: 'perm-060', codename: 'customers.export', name: 'Exportar Datos de Clientes', resource: 'customers', action: 'export', category: 'Customers' },
+  { id: 'perm-061', codename: 'subscriptions.manage', name: 'Gestionar Suscripciones', resource: 'subscriptions', action: 'manage', category: 'Customers' },
+  { id: 'perm-062', codename: 'subscriptions.cancel', name: 'Cancelar Suscripciones', resource: 'subscriptions', action: 'cancel', category: 'Customers' },
 ];
 
 export const subscriptionPlans = [
@@ -904,37 +969,167 @@ export const promotions = [
 
 // Mapeo de permisos por rol
 export const rolePermissions = {
+  // === SYSTEM ROLES ===
+
+  // Owner: Acceso completo a TODO
+  'Owner': [
+    'users.*', 'roles.*', 'tasks.*', 'boards.*', 'calendar.*',
+    'landing.*', 'branding.*', 'forms.*', 'projects.*', 'credentials.*',
+    'portfolio.*', 'digital_services.*', 'public_profiles.*',
+    'customers.*', 'subscriptions.*',
+    'billing.*', 'promotions.*', 'analytics.*', 'settings.*', 'audit.*',
+    'dashboard.*'
+  ],
+
+  // Service Manager: Gestión de equipo + todos los servicios (sin billing completo)
+  'Service Manager': [
+    'users.read', 'users.update', 'users.invite',
+    'roles.read', 'roles.assign',
+    'tasks.*', 'boards.admin', 'boards.reorder', 'calendar.*',
+    'landing.read', 'landing.edit',
+    'projects.read', 'projects.update', 'projects.sections',
+    'portfolio.read', 'credentials.reveal',
+    'digital_services.tarjeta', 'digital_services.landing', 'digital_services.cv',
+    'customers.read', 'customers.analytics',
+    'analytics.read', 'audit.read',
+    'dashboard.*'
+  ],
+
+  // Member: Usuario estándar con acceso básico a servicios
+  'Member': [
+    'dashboard.*',
+    'tasks.create', 'tasks.read', 'tasks.update', 'tasks.assign',
+    'calendar.create', 'calendar.read', 'calendar.update', 'calendar.share',
+    'projects.read', 'projects.create', 'projects.update',
+    'landing.read',
+    'digital_services.tarjeta', 'digital_services.cv',
+    'analytics.read'
+  ],
+
+  // Viewer: Solo lectura
+  'Viewer': [
+    'dashboard.read',
+    'tasks.read',
+    'calendar.read',
+    'projects.read',
+    'landing.read',
+    'analytics.read'
+  ],
+
+  // === SERVICE-SPECIFIC ROLES ===
+
+  // Landing Manager: Control total de landing pages y branding
+  'Landing Manager': [
+    // Permisos específicos de landing
+    'landing.*', 'branding.*', 'forms.*',
+    'analytics.read', 'analytics.export',
+    'digital_services.landing', 'public_profiles.analytics',
+    // Permisos base de Member
+    'dashboard.*', 'tasks.read', 'calendar.read', 'projects.read'
+  ],
+
+  // Portfolio Admin: Gestión completa de proyectos y portfolios
+  'Portfolio Admin': [
+    // Permisos específicos de portfolio
+    'projects.*', 'credentials.*', 'portfolio.*',
+    'digital_services.portfolio', 'digital_services.cv',
+    'public_profiles.analytics',
+    // Permisos base de Member
+    'dashboard.*', 'tasks.create', 'tasks.read', 'tasks.update',
+    'calendar.create', 'calendar.read', 'calendar.update'
+  ],
+
+  // Task Coordinator: Gestión de tareas y calendario
+  'Task Coordinator': [
+    // Permisos específicos de tasks
+    'tasks.*', 'boards.*',
+    'calendar.*',
+    'projects.read', 'projects.update',
+    'analytics.read',
+    // Permisos base de Member
+    'dashboard.*', 'landing.read', 'digital_services.tarjeta'
+  ],
+
+  // Content Editor: Edición de contenido (sin publicar)
+  'Content Editor': [
+    // Permisos específicos de contenido
+    'landing.read', 'landing.edit',
+    'digital_services.landing', 'digital_services.cv',
+    // Permisos base de Member
+    'dashboard.*', 'tasks.read', 'calendar.read', 'projects.read'
+  ],
+
+  // === CUSTOMER/BILLING ROLES ===
+
+  // Customer Success Manager: Gestión de clientes, onboarding y retención
+  'Customer Success Manager': [
+    // Clientes (gestión completa)
+    'customers.read', 'customers.create', 'customers.update', 'customers.suspend',
+    'customers.analytics', 'customers.export',
+    // Suscripciones (read + manage, sin cancelar)
+    'subscriptions.manage',
+    // Usuarios (solo lectura)
+    'users.read',
+    // Billing (solo lectura)
+    'billing.read',
+    // Promociones (read + aplicar)
+    'promotions.manage',
+    // Analytics
+    'analytics.read',
+    // Audit (read only)
+    'audit.read',
+    // Dashboard
+    'dashboard.*'
+  ],
+
+  // Billing Manager: Gestión de facturación, planes y promociones
+  'Billing Manager': [
+    // Clientes (solo lectura)
+    'customers.read', 'customers.analytics', 'customers.export',
+    // Suscripciones (gestión completa)
+    'subscriptions.manage', 'subscriptions.cancel',
+    // Billing (gestión completa)
+    'billing.read', 'billing.manage', 'billing.upgrade',
+    // Promociones (gestión completa)
+    'promotions.manage',
+    // Analytics
+    'analytics.read', 'analytics.export',
+    // Audit
+    'audit.read',
+    // Dashboard
+    'dashboard.*'
+  ],
+
+  // === LEGACY ROLES (Compatibilidad hacia atrás) ===
   'OrgAdmin': [
-    'users.*', 'roles.*', 'permissions.*', 'billing.*',
-    'audit.*', 'settings.*', 'dashboard.read', 'content.*', 'projects.*',
-    'tasks.*', 'calendar.*', 'customers.*', 'analytics.*', 'promotions.*'
+    'users.*', 'roles.*', 'tasks.*', 'boards.*', 'calendar.*',
+    'landing.*', 'branding.*', 'forms.*', 'projects.*', 'credentials.*',
+    'portfolio.*', 'digital_services.*', 'public_profiles.*',
+    'billing.*', 'promotions.*', 'analytics.*', 'settings.*', 'audit.*',
+    'dashboard.*'
   ],
   'Manager': [
-    'users.read', 'users.update', 'roles.read', 'projects.*', 'audit.read',
-    'customers.read', 'dashboard.read', 'content.read', 'tasks.*', 'calendar.*',
-    'analytics.read', 'promotions.read', 'promotions.stats'
-  ],
-  'Member': [
-    'dashboard.read', 'projects.read', 'projects.create',
-    'content.read', 'content.create', 'content.edit_own',
-    'tasks.read', 'tasks.create', 'tasks.update', 'tasks.assign',
-    'calendar.read', 'calendar.create', 'calendar.update'
-  ],
-  'Content Editor': [
-    'dashboard.read', 'content.create', 'content.edit_own',
-    'content.read', 'content.delete',
-    'tasks.read', 'tasks.create', 'calendar.read', 'calendar.create'
+    'users.read', 'users.update', 'users.invite',
+    'roles.read', 'roles.assign',
+    'tasks.*', 'boards.admin', 'calendar.*',
+    'landing.read', 'landing.edit',
+    'projects.read', 'projects.update',
+    'analytics.read', 'audit.read',
+    'dashboard.*'
   ],
   'Guest': [
-    'dashboard.read', 'tasks.read', 'calendar.read'
-  ],
-  'HR Access': [
-    'users.read', 'hr.*', 'dashboard.read',
-    'tasks.read', 'tasks.create', 'calendar.*'
+    'dashboard.read',
+    'tasks.read',
+    'calendar.read',
+    'projects.read',
+    'landing.read',
+    'analytics.read'
   ],
   'Engineering': [
-    'projects.*', 'technical.*', 'content.read', 'dashboard.read',
-    'tasks.*', 'calendar.*'
+    'projects.*', 'credentials.*', 'portfolio.*',
+    'digital_services.portfolio', 'digital_services.cv',
+    'dashboard.*', 'tasks.create', 'tasks.read', 'tasks.update',
+    'calendar.create', 'calendar.read', 'calendar.update'
   ]
 };
 

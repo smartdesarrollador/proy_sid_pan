@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Users, Lock, ChevronRight, Shield } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Lock, ChevronRight, Shield, Info } from 'lucide-react';
 import { roles as mockRoles, permissions } from '../data/mockData';
 import { usePermissions } from '../hooks/usePermissions';
 
@@ -41,6 +41,22 @@ function RoleManagement() {
             Sin permisos para crear roles
           </div>
         )}
+      </div>
+
+      {/* Migration Banner */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-blue-900 dark:text-blue-200 text-sm">
+              Roles Actualizados a Estructura de Servicios Web
+            </h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+              Los roles ahora reflejan los servicios de la plataforma (Landing, Portfolio, Tareas, Calendario).
+              "OrgAdmin" es ahora "Owner", "Guest" es "Viewer", y "HR Access" ha sido deprecado.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Roles Grid */}

@@ -8,6 +8,27 @@ function PermissionManagement() {
 
   const categories = ['all', ...new Set(mockPermissions.map(p => p.category))];
 
+  // Helper para traducir nombres de categorías
+  const getCategoryLabel = (category) => {
+    const labels = {
+      'all': 'Todas las categorías',
+      'Users': 'Usuarios',
+      'Roles': 'Roles',
+      'Tasks': 'Tareas',
+      'Calendar': 'Calendario',
+      'Landing': 'Landing Pages',
+      'Projects': 'Proyectos',
+      'Digital Services': 'Servicios Digitales',
+      'Customers': 'Clientes',
+      'Billing': 'Facturación',
+      'Analytics': 'Analytics',
+      'Settings': 'Configuración',
+      'Audit': 'Auditoría',
+      'Dashboard': 'Dashboard'
+    };
+    return labels[category] || category;
+  };
+
   const filteredPermissions = mockPermissions.filter(perm => {
     const matchesSearch =
       perm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -103,7 +124,7 @@ function PermissionManagement() {
           >
             {categories.map(cat => (
               <option key={cat} value={cat}>
-                {cat === 'all' ? 'Todas las categorías' : cat}
+                {getCategoryLabel(cat)}
               </option>
             ))}
           </select>
@@ -116,7 +137,7 @@ function PermissionManagement() {
           <div key={category} className="card">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{category}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{getCategoryLabel(category)}</h3>
                 <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                   {perms.length} permisos
                 </span>

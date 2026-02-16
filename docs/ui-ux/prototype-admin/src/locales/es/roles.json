@@ -18,12 +18,85 @@
     "description": "Descripción",
     "selectPermissions": "Seleccionar permisos"
   },
+  "roles": {
+    "owner": "Propietario",
+    "serviceManager": "Gestor de Servicios",
+    "member": "Miembro",
+    "viewer": "Visualizador",
+    "landingManager": "Gestor de Landing",
+    "portfolioAdmin": "Admin de Portfolio",
+    "taskCoordinator": "Coordinador de Tareas",
+    "contentEditor": "Editor de Contenido",
+    "customerSuccessManager": "Gestor de Éxito del Cliente",
+    "billingManager": "Gestor de Facturación"
+  },
   "categories": {
     "users": "Usuarios",
     "roles": "Roles",
-    "clients": "Clientes",
-    "system": "Sistema",
-    "reports": "Reportes"
+    "tasks": "Tareas",
+    "calendar": "Calendario",
+    "landing": "Landing Pages",
+    "projects": "Proyectos",
+    "digitalServices": "Servicios Digitales",
+    "customers": "Clientes",
+    "billing": "Facturación",
+    "analytics": "Analytics",
+    "settings": "Configuración",
+    "audit": "Auditoría",
+    "dashboard": "Dashboard"
+  },
+  "permissions": {
+    "landing": {
+      "create": "Crear landing pages",
+      "edit": "Editar landing pages",
+      "publish": "Publicar landing pages"
+    },
+    "branding": {
+      "update": "Actualizar branding"
+    },
+    "forms": {
+      "manage": "Gestionar formularios"
+    },
+    "credentials": {
+      "manage": "Gestionar credenciales",
+      "reveal": "Revelar contraseñas"
+    },
+    "boards": {
+      "admin": "Administrar tableros",
+      "reorder": "Reordenar tableros"
+    },
+    "calendar": {
+      "sync": "Sincronizar calendario"
+    },
+    "digitalServices": {
+      "tarjeta": "Gestionar tarjeta digital",
+      "landing": "Gestionar landing pública",
+      "cv": "Gestionar CV digital",
+      "portfolio": "Gestionar portfolio público"
+    },
+    "customers": {
+      "read": "Ver clientes",
+      "create": "Crear clientes",
+      "update": "Editar clientes",
+      "delete": "Eliminar clientes",
+      "suspend": "Suspender clientes",
+      "analytics": "Ver analytics de clientes",
+      "export": "Exportar datos de clientes"
+    },
+    "subscriptions": {
+      "manage": "Gestionar suscripciones",
+      "cancel": "Cancelar suscripciones"
+    },
+    "analytics": {
+      "export": "Exportar analytics"
+    }
+  },
+  "migration": {
+    "banner": {
+      "title": "Roles Actualizados a Estructura de Servicios Web",
+      "description": "Los roles ahora reflejan los servicios de la plataforma (Landing, Portfolio, Tareas, Calendario). \"OrgAdmin\" es ahora \"Owner\", \"Guest\" es \"Viewer\", y \"HR Access\" ha sido deprecado.",
+      "learnMore": "Ver guía de migración"
+    }
   },
   "actions": {
     "create": "Crear",

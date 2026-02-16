@@ -149,6 +149,108 @@ class Permission(models.Model):
 
 ---
 
+### Catálogo de Permisos (62 permisos)
+
+El sistema implementa 62 permisos predefinidos organizados en 13 categorías. Estos permisos se crean en la migración inicial.
+
+```python
+# === CATÁLOGO DE PERMISOS (62 permisos en 13 categorías) ===
+
+# Categoría: Users & Authentication (5)
+Permission(codename='users.create', name='Crear Usuarios', resource='users', action='create', description='Permite crear nuevos usuarios en el tenant'),
+Permission(codename='users.read', name='Ver Usuarios', resource='users', action='read', description='Permite ver información de usuarios'),
+Permission(codename='users.update', name='Editar Usuarios', resource='users', action='update', description='Permite editar información de usuarios'),
+Permission(codename='users.delete', name='Eliminar Usuarios', resource='users', action='delete', description='Permite eliminar usuarios del tenant'),
+Permission(codename='users.invite', name='Invitar Usuarios', resource='users', action='invite', description='Permite enviar invitaciones a nuevos usuarios'),
+
+# Categoría: Roles & Permissions (5)
+Permission(codename='roles.create', name='Crear Roles', resource='roles', action='create', description='Permite crear roles personalizados'),
+Permission(codename='roles.read', name='Ver Roles', resource='roles', action='read', description='Permite ver roles y sus permisos'),
+Permission(codename='roles.update', name='Editar Roles', resource='roles', action='update', description='Permite editar roles personalizados'),
+Permission(codename='roles.delete', name='Eliminar Roles', resource='roles', action='delete', description='Permite eliminar roles personalizados'),
+Permission(codename='roles.assign', name='Asignar Roles', resource='roles', action='assign', description='Permite asignar roles a usuarios'),
+
+# Categoría: Tasks Service (7)
+Permission(codename='tasks.create', name='Crear Tareas', resource='tasks', action='create', description='Permite crear nuevas tareas'),
+Permission(codename='tasks.read', name='Ver Tareas', resource='tasks', action='read', description='Permite ver tareas'),
+Permission(codename='tasks.update', name='Editar Tareas', resource='tasks', action='update', description='Permite editar tareas'),
+Permission(codename='tasks.delete', name='Eliminar Tareas', resource='tasks', action='delete', description='Permite eliminar tareas'),
+Permission(codename='tasks.assign', name='Asignar Tareas', resource='tasks', action='assign', description='Permite asignar tareas a otros usuarios'),
+Permission(codename='boards.admin', name='Gestionar Tableros Kanban', resource='boards', action='admin', description='Permite administrar tableros Kanban'),
+Permission(codename='boards.reorder', name='Reordenar Tareas/Columnas', resource='boards', action='reorder', description='Permite reordenar tareas y columnas en tableros'),
+
+# Categoría: Calendar Service (6)
+Permission(codename='calendar.create', name='Crear Eventos', resource='calendar', action='create', description='Permite crear eventos de calendario'),
+Permission(codename='calendar.read', name='Ver Calendario', resource='calendar', action='read', description='Permite ver calendario y eventos'),
+Permission(codename='calendar.update', name='Editar Eventos', resource='calendar', action='update', description='Permite editar eventos de calendario'),
+Permission(codename='calendar.delete', name='Eliminar Eventos', resource='calendar', action='delete', description='Permite eliminar eventos'),
+Permission(codename='calendar.share', name='Compartir Calendario/Eventos', resource='calendar', action='share', description='Permite compartir calendario con otros usuarios'),
+Permission(codename='calendar.sync', name='Sincronizar con Google/Outlook', resource='calendar', action='sync', description='Permite sincronizar calendario con servicios externos'),
+
+# Categoría: Landing Pages (6)
+Permission(codename='landing.create', name='Crear Landing Pages', resource='landing', action='create', description='Permite crear nuevas landing pages'),
+Permission(codename='landing.read', name='Ver Landing Pages', resource='landing', action='read', description='Permite ver landing pages'),
+Permission(codename='landing.edit', name='Editar Contenido/Secciones', resource='landing', action='edit', description='Permite editar contenido de landing pages'),
+Permission(codename='landing.publish', name='Publicar Cambios en Vivo', resource='landing', action='publish', description='Permite publicar cambios de landing pages'),
+Permission(codename='branding.update', name='Modificar Branding (Colores, Logos)', resource='branding', action='update', description='Permite modificar branding del tenant'),
+Permission(codename='forms.manage', name='Configurar Formularios de Contacto', resource='forms', action='manage', description='Permite configurar formularios de captura de leads'),
+
+# Categoría: Portfolio & Projects (8)
+Permission(codename='projects.create', name='Crear Proyectos', resource='projects', action='create', description='Permite crear nuevos proyectos'),
+Permission(codename='projects.read', name='Ver Proyectos', resource='projects', action='read', description='Permite ver proyectos'),
+Permission(codename='projects.update', name='Editar Proyectos', resource='projects', action='update', description='Permite editar proyectos'),
+Permission(codename='projects.delete', name='Eliminar Proyectos', resource='projects', action='delete', description='Permite eliminar proyectos'),
+Permission(codename='projects.sections', name='Gestionar Secciones/Tags', resource='projects', action='sections', description='Permite gestionar secciones dentro de proyectos'),
+Permission(codename='credentials.manage', name='Crear/Editar Credenciales', resource='credentials', action='manage', description='Permite crear y editar credenciales encriptadas'),
+Permission(codename='credentials.reveal', name='Ver Contraseñas Encriptadas', resource='credentials', action='reveal', description='Permite revelar contraseñas encriptadas (audit logged)'),
+Permission(codename='portfolio.publish', name='Publicar Items de Portfolio', resource='portfolio', action='publish', description='Permite publicar items de portfolio públicamente'),
+
+# Categoría: Digital Services (5)
+Permission(codename='digital_services.tarjeta', name='Gestionar Tarjeta Digital', resource='digital_services', action='tarjeta', description='Permite gestionar tarjeta digital pública'),
+Permission(codename='digital_services.landing', name='Gestionar Landing Pública', resource='digital_services', action='landing', description='Permite gestionar landing pública del usuario'),
+Permission(codename='digital_services.cv', name='Gestionar CV Digital', resource='digital_services', action='cv', description='Permite gestionar CV digital público'),
+Permission(codename='digital_services.portfolio', name='Gestionar Portfolio Público', resource='digital_services', action='portfolio', description='Permite gestionar portfolio público'),
+Permission(codename='public_profiles.analytics', name='Ver Analytics de Perfil Público', resource='public_profiles', action='analytics', description='Permite ver analytics de perfiles públicos'),
+
+# Categoría: Billing & Subscriptions (4)
+Permission(codename='billing.read', name='Ver Facturación', resource='billing', action='read', description='Permite ver información de facturación'),
+Permission(codename='billing.manage', name='Actualizar Métodos de Pago', resource='billing', action='manage', description='Permite gestionar métodos de pago'),
+Permission(codename='billing.upgrade', name='Cambiar Plan de Suscripción', resource='billing', action='upgrade', description='Permite cambiar plan de suscripción'),
+Permission(codename='promotions.manage', name='Crear/Editar Códigos Promocionales', resource='promotions', action='manage', description='Permite gestionar promociones'),
+
+# Categoría: Customers (9)
+Permission(codename='customers.read', name='Ver Clientes', resource='customers', action='read', description='Permite ver información de clientes'),
+Permission(codename='customers.create', name='Crear Clientes', resource='customers', action='create', description='Permite crear nuevos clientes'),
+Permission(codename='customers.update', name='Editar Clientes', resource='customers', action='update', description='Permite editar información de clientes'),
+Permission(codename='customers.delete', name='Eliminar Clientes', resource='customers', action='delete', description='Permite eliminar clientes'),
+Permission(codename='customers.suspend', name='Suspender Clientes', resource='customers', action='suspend', description='Permite suspender cuentas de clientes'),
+Permission(codename='customers.analytics', name='Ver Analytics de Clientes', resource='customers', action='analytics', description='Permite ver analytics de clientes (MRR, health score, churn)'),
+Permission(codename='customers.export', name='Exportar Datos de Clientes', resource='customers', action='export', description='Permite exportar datos de clientes'),
+Permission(codename='subscriptions.manage', name='Gestionar Suscripciones', resource='subscriptions', action='manage', description='Permite gestionar suscripciones (upgrades/downgrades)'),
+Permission(codename='subscriptions.cancel', name='Cancelar Suscripciones', resource='subscriptions', action='cancel', description='Permite cancelar suscripciones de clientes'),
+
+# Categoría: Analytics (2)
+Permission(codename='analytics.read', name='Ver Dashboards de Analytics', resource='analytics', action='read', description='Permite ver dashboards de analytics'),
+Permission(codename='analytics.export', name='Exportar Datos de Analytics', resource='analytics', action='export', description='Permite exportar datos de analytics'),
+
+# Categoría: Settings (2)
+Permission(codename='settings.read', name='Ver Configuración', resource='settings', action='read', description='Permite ver configuración del tenant'),
+Permission(codename='settings.update', name='Modificar Configuración', resource='settings', action='update', description='Permite modificar configuración del tenant'),
+
+# Categoría: Audit (2)
+Permission(codename='audit.read', name='Ver Logs de Auditoría', resource='audit', action='read', description='Permite ver logs de auditoría'),
+Permission(codename='audit.export', name='Exportar Trails de Auditoría', resource='audit', action='export', description='Permite exportar trails de auditoría'),
+
+# Categoría: Dashboard (1)
+Permission(codename='dashboard.read', name='Ver Dashboard', resource='dashboard', action='read', description='Permite ver dashboard principal'),
+
+# TOTAL: 62 permisos
+```
+
+**Referencia completa**: Ver [RBAC Roles & Permissions - Sección 6](rbac-roles-permissions.md#6-catálogo-de-permisos)
+
+---
+
 ### RolePermission
 
 ```python

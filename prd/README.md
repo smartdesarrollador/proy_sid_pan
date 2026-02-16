@@ -27,8 +27,10 @@ Este PRD está organizado en módulos para facilitar la navegación y mantenimie
 
 ### 🔧 Technical (Documentación Técnica)
 - **[Architecture](technical/architecture.md)** - Arquitectura general del sistema, multi-tenancy, seguridad
+- **[RBAC Roles & Permissions](technical/rbac-roles-permissions.md)** - Catálogo completo de 10 roles y 62 permisos con matriz de asignación
+- **[Role Scoping](technical/role-scoping.md)** - Diferencias entre organizational, project, y share scopes
 - **[API Endpoints](technical/api-endpoints.md)** - Documentación completa de todos los endpoints REST
-- **[Data Models](technical/data-models.md)** - Modelos Django completos con relaciones
+- **[Data Models](technical/data-models.md)** - Modelos Django completos con relaciones y catálogo de permisos
 - **[Implementation Timeline](technical/implementation-timeline.md)** - Fases de desarrollo y sprints
 
 ---
@@ -96,12 +98,17 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 1. **Identity & Access Management (IAM)**: Gestión completa del ciclo de vida de usuarios, desde registro hasta offboarding, con autenticación robusta (JWT + refresh tokens + MFA opcional).
 
 2. **RBAC Avanzado**: Sistema de roles y permisos que soporta:
-   - Roles predefinidos del sistema (SuperAdmin, OrgAdmin, Manager, Member, Guest)
+   - **10 roles predefinidos** organizados en 3 categorías:
+     - System Roles (4): Owner, Service Manager, Member, Viewer
+     - Service-Specific Roles (4): Landing Manager, Portfolio Admin, Task Coordinator, Content Editor
+     - Customer/Billing Roles (2): Customer Success Manager, Billing Manager
+   - **62 permisos granulares** en 13 categorías de recursos
    - Roles personalizados por tenant con permisos granulares
-   - Jerarquía de roles con herencia de permisos
+   - Jerarquía de roles con herencia de permisos (parentRole)
    - Permisos condicionales basados en contexto (ej: "puede editar documentos que él creó")
    - Delegación temporal de permisos con fecha de expiración
    - Auditoría inmutable de todos los cambios
+   - **Referencia completa**: [RBAC Roles & Permissions](technical/rbac-roles-permissions.md)
 
 3. **Subscription Management**: Sistema completo de monetización con:
    - Múltiples planes con feature gates

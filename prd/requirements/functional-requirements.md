@@ -56,11 +56,50 @@
 
 ### 4.2 Sistema de Roles y Permisos (RBAC)
 
-**FR-006: Roles Predefinidos**
-- El sistema DEBE incluir roles: SuperAdmin (platform), OrgAdmin (tenant), Manager, Member, Guest
-- SuperAdmin DEBE tener acceso cross-tenant con audit log obligatorio
-- OrgAdmin DEBE poder gestionar usuarios/roles dentro de su tenant
-- Roles predefinidos NO DEBEN ser editables pero SÍ asignables
+**FR-006: Roles Predefinidos (10 roles en 3 categorías)**
+
+El sistema DEBE incluir 10 roles predefinidos organizados en 3 categorías funcionales:
+
+**1. System Roles (4 roles)**
+- **Propósito**: Control del tenant y acceso general a servicios
+- **Características**: `isSystemRole: true` (no editables), tenant-wide
+- Roles: Owner (~60 permisos), Service Manager (~40), Member (~20), Viewer (~8)
+
+**2. Service-Specific Roles (4 roles)**
+- **Propósito**: Especialización por área funcional (Marketing, Engineering, Operations, Content)
+- **Características**: `isSystemRole: false` (editables), heredan de Member
+- Roles: Landing Manager (~25 permisos), Portfolio Admin (~22), Task Coordinator (~18), Content Editor (~15)
+
+**3. Customer/Billing Roles (2 roles)**
+- **Propósito**: Gestión de clientes y facturación en plataforma multi-tenant
+- **Características**: `isSystemRole: false` (editables), sin parent role
+- Roles: Customer Success Manager (~18 permisos), Billing Manager (~14)
+- **Separación de responsabilidades**: CS gestiona relación (sin cancelar suscripciones), Billing gestiona finanzas (sin editar clientes)
+
+**Tabla de Roles:**
+
+| Rol | Categoría | Color | Permisos | Editable | Parent |
+|-----|-----------|-------|----------|----------|--------|
+| Owner | System | #dc2626 | ~60 | ❌ | null |
+| Service Manager | System | #ea580c | ~40 | ❌ | null |
+| Member | System | #3b82f6 | ~20 | ❌ | null |
+| Viewer | System | #6b7280 | ~8 | ❌ | null |
+| Landing Manager | Service | #8b5cf6 | ~25 | ✅ | Member |
+| Portfolio Admin | Service | #10b981 | ~22 | ✅ | Member |
+| Task Coordinator | Service | #f59e0b | ~18 | ✅ | Member |
+| Content Editor | Service | #ec4899 | ~15 | ✅ | Member |
+| Customer Success Manager | Customer | #06b6d4 | ~18 | ✅ | null |
+| Billing Manager | Customer | #0ea5e9 | ~14 | ✅ | null |
+
+**Referencias:**
+- Detalle completo: [RBAC Roles & Permissions](../technical/rbac-roles-permissions.md)
+- Scoping: [Role Scoping](../technical/role-scoping.md)
+- Catálogo de 62 permisos en 13 categorías
+- Matriz de permisos (10 × 62) con asignaciones por rol
+- Casos de uso detallados por rol
+
+**Nota de Migración:**
+Este sistema reemplaza la estructura anterior de 5 roles (SuperAdmin, OrgAdmin, Manager, Member, Guest). Para detalles de migración, ver `/prd/MIGRATION_SUMMARY.md`.
 
 **FR-007: Roles Personalizados**
 - El sistema DEBE permitir OrgAdmins crear roles personalizados por tenant
@@ -68,11 +107,42 @@
 - El sistema DEBE validar unicidad de nombre rol dentro del tenant
 - El sistema DEBE permitir usar rol existente como plantilla
 
-**FR-008: Permisos Granulares**
-- Permisos DEBEN seguir formato `resource.action` (ej: `users.create`, `documents.delete`)
-- El sistema DEBE organizar permisos por módulos: Users, Roles, Content, Projects, Billing, Settings
-- Acciones estándar: create, read, update, delete, list, export
-- El sistema DEBE validar permisos en backend (middleware/decorators) y ocultar acciones en frontend
+**FR-008: Permisos Granulares (62 permisos en 13 categorías)**
+
+El sistema DEBE implementar 62 permisos granulares organizados en 13 categorías de recursos:
+
+**Categorías de Permisos:**
+1. Users & Authentication (5)
+2. Roles & Permissions (5)
+3. Tasks Service (7)
+4. Calendar Service (6)
+5. Landing Pages (6)
+6. Portfolio & Projects (8)
+7. Digital Services (5)
+8. Billing & Subscriptions (4)
+9. Customers (9)
+10. Analytics (2)
+11. Settings (2)
+12. Audit (2)
+13. Dashboard (1)
+
+**Formato de Permisos:**
+- Permisos DEBEN seguir formato `resource.action`
+- Ejemplos: `users.create`, `customers.suspend`, `landing.publish`, `credentials.reveal`
+- Codenames únicos globalmente (no solo por tenant)
+
+**Acciones Estándar:**
+- CRUD: create, read, update, delete
+- Especializadas: invite, assign, manage, publish, reveal, suspend, cancel, export, sync
+
+**Validación:**
+- El sistema DEBE validar permisos en backend (middleware/decorators)
+- Frontend DEBE ocultar acciones no permitidas (no confiar solo en UI)
+- Audit log DEBE registrar intentos de acceso denegado
+
+**Referencias:**
+- Catálogo completo: [RBAC Roles & Permissions - Sección 6](../technical/rbac-roles-permissions.md#6-catálogo-de-permisos)
+- Matriz de asignación: [Sección 7](../technical/rbac-roles-permissions.md#7-matriz-de-permisos-por-rol)
 
 **FR-009: Jerarquía de Roles**
 - El sistema DEBE permitir definir rol padre del cual heredar permisos

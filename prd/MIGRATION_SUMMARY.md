@@ -265,6 +265,87 @@ For questions about this migration:
 
 ---
 
+## 🔄 Update: RBAC Roles Documentation (2026-02-16)
+
+### Context
+El PRD estaba desactualizado respecto a la implementación real del sistema RBAC. La documentación reflejaba una estructura antigua de 5 roles que no correspondía con los 10 roles implementados en el prototipo admin.
+
+### Changes Made
+
+**1. Documentos Técnicos Creados:**
+- ✅ `/prd/technical/rbac-roles-permissions.md` (~850 líneas)
+  - Catálogo completo de 10 roles en 3 categorías
+  - 62 permisos organizados en 13 categorías
+  - Matriz de permisos (10 × 62)
+  - 4 casos de uso detallados por rol
+
+- ✅ `/prd/technical/role-scoping.md` (~550 líneas)
+  - Diferencias entre organizational/project/share scopes
+  - Matriz de compatibilidad
+  - Casos de uso multi-scope
+  - Algoritmo de resolución de conflictos
+
+**2. Functional Requirements Actualizados:**
+- ✅ **FR-006**: Reemplazada tabla de 5 roles antiguos con tabla de 10 roles nuevos
+- ✅ **FR-008**: Agregada referencia al catálogo completo de 62 permisos
+
+**3. Data Models Actualizados:**
+- ✅ **Catálogo de Permisos**: Agregados 62 permisos con descripciones detalladas después del modelo `Permission`
+
+**4. README.md Actualizado:**
+- ✅ Agregadas referencias a nuevos documentos en sección "🔧 Technical"
+- ✅ Actualizada descripción de RBAC Avanzado con 10 roles
+
+### Roles Structure Update
+
+**Antes (Documentación Antigua):**
+- 5 roles genéricos: SuperAdmin, OrgAdmin, Manager, Member, Guest
+- Sin especialización por servicios
+- Sin roles de Customer/Billing management
+
+**Después (Documentación Actual):**
+
+| Categoría | Roles | Total Permisos |
+|-----------|-------|----------------|
+| **System Roles** | Owner, Service Manager, Member, Viewer | 8-60 permisos |
+| **Service-Specific** | Landing Manager, Portfolio Admin, Task Coordinator, Content Editor | 15-25 permisos |
+| **Customer/Billing** | Customer Success Manager, Billing Manager | 14-18 permisos |
+
+**Total: 10 roles, 62 permisos en 13 categorías**
+
+### Benefits
+
+✅ **Alineación Código-Documentación**: PRD refleja la implementación real del prototipo admin
+✅ **Onboarding Mejorado**: Nuevos devs entienden arquitectura RBAC sin leer código
+✅ **Decisiones Informadas**: Product/Business conocen capacidades exactas del sistema
+✅ **Compliance Ready**: Documentación precisa para auditorías de seguridad (SOC2, ISO 27001)
+
+### Migration Mapping
+
+Si trabajas con código antiguo, usa esta tabla de mapeo:
+
+| Rol Antiguo (PRD) | Rol Nuevo (Implementación) |
+|-------------------|----------------------------|
+| SuperAdmin | Owner |
+| OrgAdmin | Owner o Service Manager |
+| Manager | Service Manager |
+| Member | Member |
+| Guest | Viewer |
+| *(nuevo)* | Landing Manager |
+| *(nuevo)* | Portfolio Admin |
+| *(nuevo)* | Task Coordinator |
+| *(nuevo)* | Content Editor |
+| *(nuevo)* | Customer Success Manager |
+| *(nuevo)* | Billing Manager |
+
+### References
+
+- **Implementación Real**: `/docs/ui-ux/prototype-admin/src/data/mockData.js` (líneas 93-299)
+- **Documentación Completa**: `/prd/technical/rbac-roles-permissions.md`
+- **Scoping Guide**: `/prd/technical/role-scoping.md`
+
+---
+
 **Migration completed successfully** ✅
 
 All content has been preserved, organized, and documented. The PRD is now modular, navigable, and maintainable.
