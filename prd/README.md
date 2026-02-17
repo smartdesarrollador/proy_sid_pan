@@ -13,9 +13,9 @@
 Este PRD está organizado en módulos para facilitar la navegación y mantenimiento. A continuación se presenta el índice completo con enlaces a cada sección:
 
 ### 📊 Requirements (Requerimientos)
-- **[Casos de Uso](requirements/use-cases.md)** - CU-001 a CU-015: Onboarding, roles, upgrade, delegación, auditoría, compartición, analytics, promociones
-- **[User Stories](requirements/user-stories.md)** - US-001 a US-070: Historias de usuario completas organizadas por módulo
-- **[Functional Requirements](requirements/functional-requirements.md)** - FR-001 a FR-092 + NFRs: Requisitos funcionales detallados
+- **[Casos de Uso](requirements/use-cases.md)** - CU-001 a CU-025: Onboarding, roles, upgrade, delegación, auditoría, compartición, analytics, promociones, servicios complementarios
+- **[User Stories](requirements/user-stories.md)** - US-001 a US-108: Historias de usuario completas organizadas por módulo
+- **[Functional Requirements](requirements/functional-requirements.md)** - FR-001 a FR-130 + NFRs: Requisitos funcionales detallados
 
 ### 🎯 Features (Funcionalidades)
 - **[Sharing & Collaboration](features/sharing-collaboration.md)** - Sistema de compartición con permisos granulares
@@ -24,6 +24,9 @@ Este PRD está organizado en módulos para facilitar la navegación y mantenimie
 - **[Digital Services](features/digital-services.md)** - Tarjeta digital, Landing page, Portafolio, CV público con SSR
 - **[Analytics de Negocio](features/analytics.md)** - Dashboard con KPIs, métricas de clientes, MRR, ARPC, Health Score
 - **[Sistema de Promociones](features/promotions.md)** - Códigos de descuento, promociones temporales, tracking de usos
+- **[Productivity Services](features/productivity-services.md)** - Notas, Contactos, Bookmarks con feature gates por plan
+- **[DevOps Services](features/devops-services.md)** - Variables de Entorno (cifradas), Claves SSH, Certificados SSL, Snippets
+- **[Admin Services](features/admin-services.md)** - Formularios, Log de Auditoría (immutable), Reportes del Sistema
 
 ### 🔧 Technical (Documentación Técnica)
 - **[Architecture](technical/architecture.md)** - Arquitectura general del sistema, multi-tenancy, seguridad
@@ -214,6 +217,18 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - ✅ Custom domains (Enterprise)
 - ✅ SEO optimization (meta tags, sitemap, structured data)
 
+#### Fase 6 (12 semanas) - Servicios Complementarios
+- 📝 **Notas**: CRUD con categorías, pin y búsqueda (Free 10 / Starter 100 / Pro 1000 / Enterprise ∞)
+- 📝 **Contactos**: Directorio con grupos, búsqueda y exportación CSV
+- 📝 **Bookmarks**: Gestión de enlaces con colecciones, tags y búsqueda full-text
+- 📝 **Variables de Entorno**: Cifradas AES-256, separadas por ambiente, toggle de revelación (Starter+)
+- 📝 **Claves SSH**: Par de claves con fingerprint SHA-256 y alertas de vencimiento (Starter+)
+- 📝 **Certificados SSL**: Tracking con alertas automáticas a 30/7/1 días (Starter+)
+- 📝 **Snippets de Código**: 13+ lenguajes, tags, copia rápida (Free 10 / Starter 50 / Pro ∞)
+- 📝 **Formularios**: Constructor con tipos de preguntas, submissions anónimos, exportación CSV (Free 1)
+- 📝 **Log de Auditoría**: Timeline inmutable con filtros, retención 30/365 días (Professional+)
+- 📝 **Reportes del Sistema**: Dashboard de métricas, tendencias y exportación PDF (Starter+)
+
 #### Future Phases (Post-MVP)
 - Attribute-Based Access Control (ABAC)
 - Machine learning para detección de anomalías en accesos
@@ -242,6 +257,9 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
    - [Sharing & Collaboration](features/sharing-collaboration.md) - Sistema de compartición
    - [Projects](features/projects.md) - Gestión de proyectos
    - [Billing](features/billing.md) - Suscripciones y planes
+   - [Productivity Services](features/productivity-services.md) - Notas, Contactos, Bookmarks
+   - [DevOps Services](features/devops-services.md) - EnvVars, SSH Keys, SSL Certs, Snippets
+   - [Admin Services](features/admin-services.md) - Formularios, Auditoría, Reportes
 4. **Detalles Técnicos**: [API Endpoints](technical/api-endpoints.md) + [Data Models](technical/data-models.md)
 5. **Planificación**: [Implementation Timeline](technical/implementation-timeline.md)
 

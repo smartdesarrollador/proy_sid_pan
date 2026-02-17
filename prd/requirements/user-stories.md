@@ -1256,6 +1256,661 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
+## Módulo Notas
+
+**US-071: Crear Nota con Categoría y Pin**
+
+**Como** usuario,
+**Quiero** crear una nota con título, contenido, categoría y opción de fijarla,
+**Para** organizar mis apuntes e ideas dentro de mi workspace.
+
+**Criterios de Aceptación:**
+- [ ] Modal de creación con campos: título (requerido), contenido (textarea), categoría (dropdown: work/personal/ideas/archive), pin (toggle)
+- [ ] Notas fijadas aparecen al inicio de la lista con indicador visual
+- [ ] Feature gate: Free (10 max), Starter (100 max), Pro (1000 max), Enterprise (∞)
+- [ ] Muestra UpgradePrompt si se alcanza el límite del plan
+- [ ] Toast de confirmación al crear
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-072: Buscar y Filtrar Notas**
+
+**Como** usuario,
+**Quiero** buscar notas por texto y filtrar por categoría,
+**Para** encontrar rápidamente la información que necesito.
+
+**Criterios de Aceptación:**
+- [ ] Barra de búsqueda filtra por título y contenido en tiempo real (debounce 300ms)
+- [ ] Filtro por categoría: Todas, Work, Personal, Ideas, Archive
+- [ ] Contador de resultados mostrado ("X notas")
+- [ ] Estado vacío con mensaje contextual cuando no hay resultados
+- [ ] Vista lista y grid seleccionable
+
+**Prioridad:** Media | **Estimación:** 2 puntos
+
+---
+
+**US-073: Editar y Eliminar Nota**
+
+**Como** usuario,
+**Quiero** poder modificar y eliminar mis notas existentes,
+**Para** mantener mi información actualizada.
+
+**Criterios de Aceptación:**
+- [ ] Click en nota abre modal de edición con campos pre-cargados
+- [ ] Cambios se guardan con botón "Actualizar"
+- [ ] Botón eliminar muestra confirmación antes de borrar
+- [ ] Nota eliminada desaparece de la lista sin reload
+- [ ] Sólo el propietario puede editar/eliminar
+
+**Prioridad:** Alta | **Estimación:** 2 puntos
+
+---
+
+**US-074: Ver Notas por Categoría**
+
+**Como** usuario,
+**Quiero** ver mis notas agrupadas visualmente por categoría con colores,
+**Para** identificar rápidamente el tipo de cada nota.
+
+**Criterios de Aceptación:**
+- [ ] Cada categoría tiene un color distintivo (work: azul, personal: verde, ideas: amarillo, archive: gris)
+- [ ] Badge de categoría visible en la card de cada nota
+- [ ] Filtro de categoría persiste durante la sesión
+- [ ] Vista grid muestra color de fondo según categoría
+- [ ] Contador de notas por categoría en el filtro
+
+**Prioridad:** Baja | **Estimación:** 2 puntos
+
+---
+
+## Módulo Contactos
+
+**US-075: Crear Contacto con Información Completa**
+
+**Como** usuario,
+**Quiero** agregar contactos con nombre, email, teléfono, empresa y cargo,
+**Para** centralizar mi directorio de personas en mi workspace.
+
+**Criterios de Aceptación:**
+- [ ] Formulario con campos: nombre (requerido), apellido, email, teléfono, empresa, cargo, grupo
+- [ ] Avatar generado automáticamente con iniciales del nombre
+- [ ] Feature gate: Free (25 max), Starter (100 max), Professional+ (∞)
+- [ ] Validación de formato email en tiempo real
+- [ ] Toast de confirmación al guardar
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-076: Buscar y Filtrar Contactos**
+
+**Como** usuario,
+**Quiero** buscar contactos por nombre, email o empresa y filtrar por grupo,
+**Para** encontrar rápidamente el contacto que necesito.
+
+**Criterios de Aceptación:**
+- [ ] Búsqueda en tiempo real por nombre, email y empresa
+- [ ] Filtro por grupo con dropdown
+- [ ] Ordenamiento por nombre (A-Z, Z-A)
+- [ ] Estado vacío cuando no hay resultados con CTA para crear contacto
+- [ ] Contador total de contactos mostrado
+
+**Prioridad:** Media | **Estimación:** 2 puntos
+
+---
+
+**US-077: Editar y Eliminar Contacto**
+
+**Como** usuario,
+**Quiero** actualizar y eliminar contactos de mi directorio,
+**Para** mantener mi directorio limpio y actualizado.
+
+**Criterios de Aceptación:**
+- [ ] Botón editar abre modal con campos pre-cargados
+- [ ] Todos los campos editables excepto el ID
+- [ ] Confirmación antes de eliminar con nombre del contacto
+- [ ] Contacto eliminado desaparece inmediatamente de la lista
+- [ ] Sólo el propietario puede modificar sus contactos
+
+**Prioridad:** Alta | **Estimación:** 2 puntos
+
+---
+
+**US-078: Organizar Contactos en Grupos**
+
+**Como** usuario con plan Starter+,
+**Quiero** crear grupos de contactos personalizados,
+**Para** organizar mi directorio por proyectos, equipos o categorías.
+
+**Criterios de Aceptación:**
+- [ ] Crear/editar/eliminar grupos con nombre y color
+- [ ] Asignar contacto a grupo desde el formulario de contacto
+- [ ] Filtrar directorio por grupo seleccionado
+- [ ] Feature gate: grupos sólo en Starter+ (Free ve un grupo genérico)
+- [ ] UpgradePrompt si intenta crear grupo en Free
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+## Módulo Bookmarks
+
+**US-079: Guardar Bookmark con URL y Metadatos**
+
+**Como** usuario,
+**Quiero** guardar una URL con título, descripción y tags,
+**Para** organizar mis enlaces importantes y recuperarlos fácilmente.
+
+**Criterios de Aceptación:**
+- [ ] Formulario con campos: URL (requerido, validación de formato), título, descripción, colección, tags
+- [ ] Feature gate: Free (20 max), Starter (100 max), Professional+ (∞)
+- [ ] Validación de URL en tiempo real
+- [ ] Tags ingresados con Enter o coma, removibles con X
+- [ ] Card muestra favicon placeholder, título y URL truncada
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-080: Organizar Bookmarks en Colecciones**
+
+**Como** usuario con plan Starter+,
+**Quiero** crear colecciones para agrupar bookmarks relacionados,
+**Para** estructurar mis enlaces por proyecto o temática.
+
+**Criterios de Aceptación:**
+- [ ] Crear/editar/eliminar colecciones con nombre y color
+- [ ] Asignar bookmark a colección al crear o editar
+- [ ] Filtrar bookmarks por colección en la lista
+- [ ] Feature gate: colecciones en Starter+ (Free: sin colecciones)
+- [ ] UpgradePrompt si intenta crear colección en Free
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+**US-081: Buscar y Filtrar Bookmarks**
+
+**Como** usuario,
+**Quiero** buscar bookmarks por texto y filtrar por colección o tag,
+**Para** recuperar rápidamente el enlace que necesito.
+
+**Criterios de Aceptación:**
+- [ ] Búsqueda por título, URL y descripción (debounce 300ms)
+- [ ] Filtro por colección con dropdown
+- [ ] Filtro por tag con chips seleccionables
+- [ ] Contador de resultados visible
+- [ ] Vista lista y grid disponibles
+
+**Prioridad:** Media | **Estimación:** 2 puntos
+
+---
+
+**US-082: Gestionar Tags de Bookmarks**
+
+**Como** usuario,
+**Quiero** agregar y quitar tags de mis bookmarks,
+**Para** clasificarlos de forma transversal independiente de las colecciones.
+
+**Criterios de Aceptación:**
+- [ ] Tags editables desde el modal de edición
+- [ ] Autocompletado de tags existentes al escribir
+- [ ] Tags mostrados como chips en la card del bookmark
+- [ ] Click en tag de card aplica filtro automáticamente
+- [ ] Feature gate: tags en Starter+ (Free: sin tags)
+
+**Prioridad:** Baja | **Estimación:** 2 puntos
+
+---
+
+## Módulo Variables de Entorno
+
+**US-083: Crear y Organizar Variables por Ambiente**
+
+**Como** usuario con plan Starter+,
+**Quiero** agregar variables de entorno clasificadas por ambiente (dev/staging/prod),
+**Para** gestionar la configuración de mis proyectos de forma segura.
+
+**Criterios de Aceptación:**
+- [ ] Formulario: key (requerido, UPPER_CASE recomendado), value, ambiente (dropdown), descripción, toggle "es secreto"
+- [ ] Feature gate: sólo Starter+ (UpgradePrompt en Free)
+- [ ] Límite Starter: 25 variables, Professional+: ∞
+- [ ] Variables agrupadas por ambiente en la lista principal
+- [ ] Toast de confirmación al guardar
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-084: Revelar y Copiar Valor de Variable**
+
+**Como** usuario con plan Starter+,
+**Quiero** poder revelar temporalmente el valor de una variable secreta y copiarlo,
+**Para** usarlo en mi configuración sin que quede expuesto permanentemente.
+
+**Criterios de Aceptación:**
+- [ ] Valores secretos mostrados como `••••••••` por defecto
+- [ ] Ícono de ojo revela el valor por 30 segundos, luego se enmascara automáticamente
+- [ ] Botón copiar al portapapeles con feedback "¡Copiado!" por 2s
+- [ ] Acción de revelación registrada en el audit log
+- [ ] Solo el propietario puede revelar valores de sus variables
+
+**Prioridad:** Alta | **Estimación:** 2 puntos
+
+---
+
+**US-085: Editar y Eliminar Variable de Entorno**
+
+**Como** usuario con plan Starter+,
+**Quiero** actualizar el valor o descripción de una variable existente y eliminarla si ya no la necesito,
+**Para** mantener mi configuración actualizada.
+
+**Criterios de Aceptación:**
+- [ ] Modal de edición con campos pre-cargados (value enmascarado, requiere re-ingresar para cambiar)
+- [ ] Confirmación de eliminación con nombre de la variable
+- [ ] Eliminación registrada en audit log
+- [ ] Solo propietario puede editar/eliminar
+
+**Prioridad:** Alta | **Estimación:** 2 puntos
+
+---
+
+**US-086: Exportar Variables por Ambiente**
+
+**Como** usuario con plan Professional+,
+**Quiero** exportar las variables de un ambiente como archivo `.env`,
+**Para** usarlas directamente en mis proyectos.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Exportar .env" disponible por ambiente
+- [ ] Archivo descargado como `{ambiente}.env` con formato `KEY=VALUE`
+- [ ] Valores secretos incluidos en texto plano en el archivo exportado
+- [ ] Feature gate: Professional+ (UpgradePrompt en Starter/Free)
+- [ ] Exportación registrada en audit log
+
+**Prioridad:** Media | **Estimación:** 2 puntos
+
+---
+
+## Módulo Claves SSH
+
+**US-087: Agregar Clave SSH con Nombre y Descripción**
+
+**Como** usuario con plan Starter+,
+**Quiero** registrar mis claves SSH con nombre, algoritmo y descripción,
+**Para** tener un inventario centralizado de mis claves de acceso.
+
+**Criterios de Aceptación:**
+- [ ] Formulario: nombre (requerido), algoritmo (RSA/ED25519/ECDSA), clave pública (requerida), clave privada (opcional, cifrada), descripción, fecha de expiración
+- [ ] Feature gate: Starter (5 max), Professional+ (∞), Free (❌)
+- [ ] Fingerprint SHA-256 calculado automáticamente al ingresar clave pública
+- [ ] Toast de confirmación al guardar
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-088: Ver Fingerprint y Copiar Clave Pública**
+
+**Como** usuario con plan Starter+,
+**Quiero** ver el fingerprint de cada clave y copiar la clave pública con un click,
+**Para** identificar y usar mis claves sin exponerlas innecesariamente.
+
+**Criterios de Aceptación:**
+- [ ] Fingerprint SHA-256 mostrado en la card de cada clave
+- [ ] Botón copiar al portapapeles para la clave pública
+- [ ] Feedback "¡Copiado!" por 2s al copiar
+- [ ] Badge de algoritmo (RSA/ED25519/ECDSA) con color distintivo
+- [ ] Clave privada NO accesible desde la UI (solo almacenada cifrada)
+
+**Prioridad:** Alta | **Estimación:** 2 puntos
+
+---
+
+**US-089: Gestionar Expiración de Claves SSH**
+
+**Como** usuario con plan Professional+,
+**Quiero** recibir alertas cuando mis claves SSH estén próximas a vencer,
+**Para** renovarlas antes de que interrumpan el acceso a mis servidores.
+
+**Criterios de Aceptación:**
+- [ ] Indicador visual de expiración: verde (válida), amarillo (<30 días), rojo (vencida)
+- [ ] Alertas automáticas por email a 30, 7 y 1 día antes del vencimiento
+- [ ] Feature gate: alertas en Professional+ (Starter ve indicadores pero sin email)
+- [ ] Columna "Expira" en la lista con fecha y color de estado
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+**US-090: Eliminar Clave SSH de Forma Segura**
+
+**Como** usuario con plan Starter+,
+**Quiero** eliminar una clave SSH que ya no necesito,
+**Para** reducir la superficie de ataque de mis accesos.
+
+**Criterios de Aceptación:**
+- [ ] Confirmación de eliminación con nombre de la clave
+- [ ] Eliminación registrada en audit log con timestamp
+- [ ] Solo el propietario puede eliminar sus claves
+- [ ] Clave eliminada desaparece inmediatamente de la lista
+
+**Prioridad:** Media | **Estimación:** 1 punto
+
+---
+
+## Módulo Certificados SSL
+
+**US-091: Agregar Certificado SSL con Información del Emisor**
+
+**Como** usuario con plan Starter+,
+**Quiero** registrar un certificado SSL con dominio, emisor y fechas de validez,
+**Para** hacer seguimiento de mis certificados en un lugar centralizado.
+
+**Criterios de Aceptación:**
+- [ ] Formulario: dominio (requerido), emisor, fecha desde (requerida), fecha hasta (requerida), notas
+- [ ] Feature gate: Starter (10 max), Professional+ (∞), Free (❌)
+- [ ] Validación: fecha hasta > fecha desde
+- [ ] Estado calculado automáticamente al crear
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-092: Ver Estado Visual del Certificado**
+
+**Como** usuario con plan Starter+,
+**Quiero** ver el estado de cada certificado con código de color,
+**Para** identificar de un vistazo cuáles requieren atención inmediata.
+
+**Criterios de Aceptación:**
+- [ ] Badge verde: válido (>30 días restantes)
+- [ ] Badge amarillo: por vencer (8-30 días restantes)
+- [ ] Badge rojo: vencido o ≤7 días restantes
+- [ ] Días restantes mostrados en cada card ("23 días restantes")
+- [ ] Certificados vencidos/críticos listados primero (ordenados por urgencia)
+
+**Prioridad:** Alta | **Estimación:** 2 puntos
+
+---
+
+**US-093: Recibir Alertas de Vencimiento de Certificados**
+
+**Como** usuario con plan Professional+,
+**Quiero** recibir emails automáticos cuando un certificado esté próximo a vencer,
+**Para** renovarlo a tiempo y evitar interrupciones de servicio.
+
+**Criterios de Aceptación:**
+- [ ] Alerta enviada a 30 días del vencimiento
+- [ ] Alerta enviada a 7 días del vencimiento
+- [ ] Alerta enviada a 1 día del vencimiento
+- [ ] Feature gate: alertas solo en Professional+ (Starter ve colores pero sin emails)
+- [ ] Alertas no se reenvían (flag `alert_30_sent`, `alert_7_sent`, `alert_1_sent`)
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-094: Renovar o Eliminar Certificado Vencido**
+
+**Como** usuario con plan Starter+,
+**Quiero** actualizar las fechas de un certificado renovado o eliminar uno que ya no uso,
+**Para** mantener mi inventario de certificados limpio y actualizado.
+
+**Criterios de Aceptación:**
+- [ ] Botón editar abre modal con campos pre-cargados para actualizar fechas
+- [ ] Estado se recalcula automáticamente al actualizar fechas
+- [ ] Confirmación de eliminación con nombre del dominio
+- [ ] Acción registrada en audit log
+
+**Prioridad:** Media | **Estimación:** 2 puntos
+
+---
+
+## Módulo Snippets
+
+**US-095: Crear Snippet con Lenguaje y Código**
+
+**Como** usuario,
+**Quiero** guardar un fragmento de código con su lenguaje y descripción,
+**Para** reutilizarlo en el futuro sin tener que buscarlo o reescribirlo.
+
+**Criterios de Aceptación:**
+- [ ] Formulario: título (requerido), lenguaje (dropdown con 13+ opciones), código (textarea monospace), descripción, tags
+- [ ] Feature gate: Free (10 max), Starter (50 max), Professional+ (∞)
+- [ ] Badge de lenguaje con color identificativo en la card
+- [ ] Preview del código (primeras 3 líneas) en la card
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-096: Buscar Snippets por Lenguaje o Tags**
+
+**Como** usuario,
+**Quiero** filtrar mis snippets por lenguaje de programación o tags,
+**Para** encontrar rápidamente el fragmento que necesito.
+
+**Criterios de Aceptación:**
+- [ ] Dropdown de filtro por lenguaje con iconos/badges
+- [ ] Filtro por tags con chips seleccionables (multi-selección)
+- [ ] Búsqueda por título y descripción en tiempo real
+- [ ] Combinación de filtros (lenguaje + tag + búsqueda simultáneos)
+- [ ] Contador de resultados visible
+
+**Prioridad:** Media | **Estimación:** 2 puntos
+
+---
+
+**US-097: Copiar Snippet al Portapapeles**
+
+**Como** usuario,
+**Quiero** copiar el código de un snippet con un solo click,
+**Para** pegarlo inmediatamente en mi editor sin seleccionar el texto manualmente.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Copiar" visible en la card de cada snippet
+- [ ] `navigator.clipboard.writeText(code)` copia el código completo
+- [ ] Feedback visual "¡Copiado!" por 2s con cambio de ícono
+- [ ] Funciona desde vista lista y vista grid
+
+**Prioridad:** Alta | **Estimación:** 1 punto
+
+---
+
+**US-098: Organizar Snippets con Tags Personalizados**
+
+**Como** usuario,
+**Quiero** agregar tags personalizados a mis snippets,
+**Para** clasificarlos de forma transversal más allá del lenguaje.
+
+**Criterios de Aceptación:**
+- [ ] Tags ingresados con Enter o coma en el formulario
+- [ ] Tags removibles con X en el modal de edición
+- [ ] Tags mostrados como chips en la card
+- [ ] Autocompletado de tags existentes del usuario
+- [ ] Máximo 10 tags por snippet
+
+**Prioridad:** Baja | **Estimación:** 2 puntos
+
+---
+
+## Módulo Formularios
+
+**US-099: Crear Formulario con Preguntas Configurables**
+
+**Como** usuario,
+**Quiero** crear un formulario con diferentes tipos de preguntas,
+**Para** recopilar información estructurada de otras personas.
+
+**Criterios de Aceptación:**
+- [ ] Formulario: título (requerido), descripción, lista de preguntas
+- [ ] Tipos de pregunta: Texto corto, Texto largo, Opción múltiple, Casillas, Número, Fecha
+- [ ] Orden de preguntas reordenable con drag o botones up/down
+- [ ] Toggle "Requerido" por pregunta
+- [ ] Feature gate: Free (1 form, 5 preguntas), Starter (5 forms, 20 preguntas), Pro+ (∞)
+
+**Prioridad:** Alta | **Estimación:** 5 puntos
+
+---
+
+**US-100: Activar y Compartir Formulario con URL Pública**
+
+**Como** usuario con plan Starter+,
+**Quiero** activar mi formulario y compartir la URL pública,
+**Para** que cualquier persona pueda responderlo sin necesidad de cuenta.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Activar" cambia estado de Draft a Activo y genera slug único
+- [ ] URL pública mostrada con botón de copia: `{base_url}/forms/{slug}`
+- [ ] Formulario inactivo muestra mensaje "Este formulario no está disponible"
+- [ ] Feature gate: URL pública en Starter+ (Free: sin URL pública)
+- [ ] Botón "Cerrar formulario" para dejar de recibir respuestas
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-101: Ver Respuestas Recibidas con Conteo**
+
+**Como** usuario,
+**Quiero** ver el conteo de respuestas y el detalle de cada una,
+**Para** analizar los datos recopilados por mis formularios.
+
+**Criterios de Aceptación:**
+- [ ] Tabla de formularios muestra columna "Respuestas" con conteo actualizado en tiempo real
+- [ ] Click en "Ver respuestas" muestra lista de submissions con fecha/hora
+- [ ] Click en respuesta individual muestra las respuestas a cada pregunta
+- [ ] Paginación en lista de respuestas (20 por página)
+- [ ] Feature gate almacenamiento: Free (50 respuestas), Starter+ (∞)
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-102: Exportar Respuestas a CSV**
+
+**Como** usuario con plan Professional+,
+**Quiero** exportar todas las respuestas de un formulario a CSV,
+**Para** analizarlas en Excel u otra herramienta de datos.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Exportar CSV" disponible en la vista de respuestas
+- [ ] CSV con columnas: fecha_envio, ip_respondente, y una columna por pregunta
+- [ ] Descarga inmediata del archivo `{form_title}_respuestas.csv`
+- [ ] Feature gate: Professional+ (UpgradePrompt en Starter/Free)
+- [ ] Exportación registrada en audit log
+
+**Prioridad:** Media | **Estimación:** 2 puntos
+
+---
+
+## Módulo Auditoría
+
+**US-103: Ver Timeline de Acciones del Sistema**
+
+**Como** Owner o Service Manager con plan Professional+,
+**Quiero** ver un timeline cronológico de todas las acciones del sistema,
+**Para** tener visibilidad completa de lo que ocurrió en mi workspace.
+
+**Criterios de Aceptación:**
+- [ ] Timeline paginado (50 eventos por página) ordenado por fecha DESC
+- [ ] Cada evento muestra: ícono de acción, usuario, descripción, recurso y timestamp
+- [ ] Feature gate: Professional+ (UpgradePrompt en Starter/Free)
+- [ ] Vista de solo lectura (sin opciones de edición/eliminación)
+- [ ] Retención: 30 días en Professional, 365 días en Enterprise
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-104: Filtrar Eventos por Usuario, Acción y Fecha**
+
+**Como** Owner con plan Professional+,
+**Quiero** filtrar el log de auditoría por usuario, tipo de acción y rango de fechas,
+**Para** encontrar eventos específicos de forma eficiente.
+
+**Criterios de Aceptación:**
+- [ ] Filtro por usuario (dropdown con todos los miembros del tenant)
+- [ ] Filtro por tipo de acción (create/update/delete/login/share/reveal)
+- [ ] Filtro por rango de fechas (fecha desde - fecha hasta)
+- [ ] Filtros combinables y aplicados simultáneamente
+- [ ] Botón "Limpiar filtros" cuando hay filtros activos
+
+**Prioridad:** Alta | **Estimación:** 3 puntos
+
+---
+
+**US-105: Exportar Log de Auditoría para Compliance**
+
+**Como** Owner con plan Enterprise,
+**Quiero** exportar el log de auditoría filtrado a CSV o PDF,
+**Para** presentarlo en auditorías de compliance.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Exportar" disponible con opciones CSV y PDF
+- [ ] Exportación incluye los filtros activos en el momento de exportar
+- [ ] PDF incluye header con nombre del tenant, período y fecha de generación
+- [ ] Feature gate: Enterprise únicamente
+- [ ] Exportación misma registrada en el audit log (meta-auditoría)
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+## Módulo Reportes
+
+**US-106: Ver Métricas de Uso del Workspace**
+
+**Como** Owner con plan Starter+,
+**Quiero** ver un dashboard con las métricas de uso de mi workspace,
+**Para** entender cómo se utiliza la plataforma y planificar recursos.
+
+**Criterios de Aceptación:**
+- [ ] Cards de métricas: Usuarios activos, Total proyectos, Storage usado, API calls del período
+- [ ] Período seleccionable: Última semana, último mes, último trimestre
+- [ ] Métricas básicas en Starter, métricas avanzadas en Professional+
+- [ ] Feature gate: Free (❌), Starter+ (✅)
+- [ ] Datos calculados bajo demanda (no cacheados >5min)
+
+**Prioridad:** Alta | **Estimación:** 4 puntos
+
+---
+
+**US-107: Comparar Métricas Entre Períodos**
+
+**Como** Owner con plan Professional+,
+**Quiero** ver tendencias comparando el período actual con el anterior,
+**Para** identificar crecimiento o declive en el uso.
+
+**Criterios de Aceptación:**
+- [ ] Indicador de cambio por métrica: porcentaje de variación con flecha (↑↓) y color (verde/rojo)
+- [ ] Gráfico de barras CSS (sin librería externa) para tendencia semanal
+- [ ] Comparativa: período actual vs mismo período anterior
+- [ ] Feature gate: Professional+ (Starter ve métricas simples sin comparativa)
+- [ ] Datos de tendencia disponibles para período histórico máximo del plan
+
+**Prioridad:** Media | **Estimación:** 4 puntos
+
+---
+
+**US-108: Exportar Reporte Ejecutivo**
+
+**Como** Owner con plan Enterprise,
+**Quiero** exportar un reporte ejecutivo en PDF con todas las métricas del período,
+**Para** compartirlo con stakeholders o inversores.
+
+**Criterios de Aceptación:**
+- [ ] Botón "Exportar PDF" en el dashboard de reportes
+- [ ] PDF incluye: nombre del tenant, período, todas las métricas con variaciones, gráficos
+- [ ] Generación del PDF en el servidor (background task)
+- [ ] Email con link de descarga cuando esté listo
+- [ ] Feature gate: Enterprise únicamente (UpgradePrompt en Professional/Starter)
+
+**Prioridad:** Media | **Estimación:** 5 puntos
 
 ---
 
@@ -1267,4 +1922,4 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
-**Última actualización**: 2026-02-15
+**Última actualización**: 2026-02-17

@@ -311,6 +311,19 @@
 | Push Notifications | ❌ | ❌ | ✅ | ✅ |
 | Public Links | ❌ | ✅ | ✅ | ✅ |
 | File Versioning | ❌ | ❌ | ✅ | ✅ |
+| **Productivity Services** |
+| Notas | 10 | 100 | 1.000 | ∞ |
+| Contactos | 25 | 100 | ∞ | ∞ |
+| Bookmarks | 20 | 100 | ∞ | ∞ |
+| **DevOps Services** |
+| Variables de Entorno | ❌ | 25 | ∞ | ∞ |
+| Claves SSH | ❌ | 5 | ∞ | ∞ |
+| Certificados SSL | ❌ | 10 | ∞ | ∞ |
+| Snippets de Código | 10 | 50 | ∞ | ∞ |
+| **Admin Services** |
+| Formularios | 1 | 5 | 25 | ∞ |
+| Log de Auditoría | ❌ | ❌ | 30 días retención | 365 días retención |
+| Reportes del Sistema | ❌ | Básico | Avanzado | Personalizado |
 | **Projects** |
 | Batch Operations | ❌ | Basic | ✅ | ✅ |
 | Project Templates | ❌ | ❌ | ✅ | ✅ |

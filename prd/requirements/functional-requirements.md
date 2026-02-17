@@ -1176,6 +1176,394 @@ Proveer métricas de efectividad de promociones para decisiones de marketing.
 
 ---
 
+### 4.9 Servicios de Productividad
+
+#### FR-093: CRUD de Notas con Categorías y Pin
+- **Descripción:** El sistema debe permitir crear, leer, actualizar y eliminar notas con título, contenido, categoría y estado de pin
+- **Plan:** Free (10 max), Starter (100 max), Professional (1.000 max), Enterprise (∞)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Notas fijadas (is_pinned=true) aparecen al inicio de la lista ordenadas por fecha
+  2. Categorías disponibles: work, personal, ideas, archive — con color distintivo por categoría
+  3. Sistema bloquea creación cuando se alcanza el límite del plan con mensaje de upgrade
+
+#### FR-094: Búsqueda y Filtrado de Notas
+- **Descripción:** El sistema debe permitir buscar notas por texto y filtrar por categoría en tiempo real
+- **Plan:** Todos los planes
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Búsqueda filtra por título y contenido con debounce de 300ms
+  2. Filtro por categoría actualiza lista sin reload de página
+  3. Estado vacío muestra mensaje contextual cuando no hay resultados
+
+#### FR-095: Feature Gates de Notas por Plan
+- **Descripción:** El sistema debe aplicar límites de notas según el plan activo del usuario
+- **Plan:** Todos los planes (límites diferentes)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. API rechaza creación con 402 cuando se supera el límite del plan
+  2. Frontend muestra UpgradePrompt antes de abrir el modal de creación si el límite está alcanzado
+  3. Dashboard del usuario muestra progreso de uso (X/Y notas) para Free y Starter
+
+#### FR-096: Vista Lista/Grid Configurable para Notas
+- **Descripción:** El sistema debe ofrecer dos modos de visualización (lista y grid) para las notas
+- **Plan:** Todos los planes
+- **Prioridad:** Baja
+- **Criterios de aceptación:**
+  1. Toggle de vista persiste en localStorage durante la sesión
+  2. Vista grid muestra cards con color de categoría como fondo tenue
+  3. Vista lista muestra título, preview de contenido y categoría en línea
+
+---
+
+#### FR-097: CRUD de Contactos con Campos Completos
+- **Descripción:** El sistema debe gestionar un directorio de contactos con nombre, email, teléfono, empresa, cargo y grupo
+- **Plan:** Free (25 max), Starter (100 max), Professional+ (∞)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Avatar generado automáticamente con iniciales del contacto (primer y segundo nombre)
+  2. Validación de formato email en tiempo real con feedback visual
+  3. Sistema bloquea creación al alcanzar límite del plan
+
+#### FR-098: Búsqueda y Filtrado de Contactos por Múltiples Campos
+- **Descripción:** El sistema debe permitir buscar contactos por nombre, email o empresa y filtrar por grupo
+- **Plan:** Todos los planes
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Búsqueda actúa sobre nombre, apellido, email y empresa simultáneamente
+  2. Filtro por grupo actualiza el listado sin recarga
+  3. Ordenamiento disponible: nombre A-Z, nombre Z-A, fecha de creación
+
+#### FR-099: Gestión de Grupos de Contactos
+- **Descripción:** El sistema debe permitir crear grupos personalizados para organizar contactos (Starter+)
+- **Plan:** Starter+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Grupos tienen nombre y color personalizable
+  2. Contacto puede pertenecer a máximo un grupo
+  3. Eliminar grupo no elimina los contactos (pasan a sin grupo)
+  4. Feature gate: Free ve solo una categoría genérica sin personalización
+
+#### FR-100: Exportación de Contactos a CSV
+- **Descripción:** El sistema debe permitir exportar el directorio de contactos a formato CSV (Starter+)
+- **Plan:** Starter+
+- **Prioridad:** Baja
+- **Criterios de aceptación:**
+  1. CSV incluye columnas: nombre, apellido, email, teléfono, empresa, cargo, grupo, fecha_creación
+  2. Exportación opcional por grupo o todos los contactos
+  3. Nombre del archivo: `contactos_{fecha}.csv`
+
+---
+
+#### FR-101: CRUD de Bookmarks con URL, Título y Descripción
+- **Descripción:** El sistema debe permitir guardar y gestionar enlaces web con metadatos completos
+- **Plan:** Free (20 max), Starter (100 max), Professional+ (∞)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Validación de formato URL al crear o editar
+  2. Título auto-generado si no se proporciona (se toma de la URL)
+  3. Sistema bloquea creación al alcanzar límite del plan
+
+#### FR-102: Organización de Bookmarks en Colecciones
+- **Descripción:** El sistema debe permitir crear colecciones para agrupar bookmarks (Starter+)
+- **Plan:** Starter+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Colecciones tienen nombre y color personalizable
+  2. Bookmark puede pertenecer a máximo una colección
+  3. Eliminar colección no elimina los bookmarks (pasan a sin colección)
+
+#### FR-103: Sistema de Tags para Bookmarks
+- **Descripción:** El sistema debe permitir etiquetar bookmarks con tags personalizados para clasificación transversal (Starter+)
+- **Plan:** Starter+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Tags almacenados como ArrayField en PostgreSQL
+  2. Autocompletado de tags existentes del usuario al escribir
+  3. Click en tag de una card aplica filtro automáticamente
+  4. Máximo 10 tags por bookmark
+
+#### FR-104: Búsqueda Full-Text en Bookmarks
+- **Descripción:** El sistema debe permitir buscar bookmarks por título, URL y descripción simultáneamente
+- **Plan:** Todos los planes
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Búsqueda actúa en título, URL y descripción con debounce 300ms
+  2. Filtros de colección y tags combinables con la búsqueda
+  3. Contador de resultados actualizado en tiempo real
+
+---
+
+### 4.10 Servicios DevOps
+
+#### FR-105: CRUD de Variables de Entorno con Cifrado AES-256
+- **Descripción:** El sistema debe almacenar variables de entorno con los valores secretos cifrados con AES-256 en reposo
+- **Plan:** Starter (25 max), Professional+ (∞), Free (❌)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Valores marcados como "secreto" se cifran con AES-256 antes de persistir
+  2. Valores en tránsito siempre bajo TLS 1.3
+  3. API devuelve valores mascarados por defecto (`••••••••` en el campo value)
+  4. Endpoint específico `/reveal/` devuelve valor descifrado y registra en audit log
+
+#### FR-106: Separación de Variables por Ambiente
+- **Descripción:** El sistema debe permitir clasificar variables por ambiente (dev/staging/prod) y mostrarlas agrupadas
+- **Plan:** Starter+
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Tres ambientes predefinidos: development, staging, production
+  2. UI agrupa variables por ambiente con acordeón expandible/colapsable
+  3. Filtro rápido por ambiente en la barra de herramientas
+  4. Unique constraint: key + environment por usuario (no duplicados en el mismo ambiente)
+
+#### FR-107: Enmascarado de Valores con Toggle de Revelación Temporal
+- **Descripción:** El sistema debe enmascarar los valores secretos por defecto y permitir revelarlos temporalmente por 30 segundos
+- **Plan:** Starter+
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Valores mostrados como `••••••••` hasta acción explícita del usuario
+  2. Ícono de ojo activa revelación por 30 segundos con cuenta regresiva visible
+  3. Después de 30 segundos el valor se enmascara automáticamente sin interacción
+  4. Botón copiar al portapapeles disponible para el valor revelado con feedback 2s
+
+#### FR-108: Exportación de Variables como Archivo .env
+- **Descripción:** El sistema debe permitir exportar variables de un ambiente como archivo `.env` (Professional+)
+- **Plan:** Professional+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Exportación descifra valores y los escribe en formato `KEY=VALUE` en el archivo
+  2. Archivo nombrado como `{ambiente}.env`
+  3. Exportación registrada en audit log con timestamp e IP
+  4. Feature gate aplicado: UpgradePrompt en Free/Starter
+
+---
+
+#### FR-109: Almacenamiento de Claves SSH con Clave Privada Cifrada
+- **Descripción:** El sistema debe almacenar pares de claves SSH con la clave privada cifrada si se proporciona
+- **Plan:** Starter (5 max), Professional+ (∞), Free (❌)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Clave pública almacenada en texto plano (es pública por definición)
+  2. Clave privada (opcional) cifrada con AES-256 antes de persistir
+  3. Fingerprint SHA-256 calculado automáticamente de la clave pública al crear
+  4. API nunca devuelve la clave privada descifrada en respuestas
+
+#### FR-110: Visualización de Fingerprint SHA-256
+- **Descripción:** El sistema debe mostrar el fingerprint SHA-256 de cada clave SSH sin exponer la clave privada
+- **Plan:** Starter+
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Fingerprint mostrado en formato estándar: `SHA256:XXXXXXXXXX`
+  2. Botón copiar clave pública al portapapeles con feedback visual
+  3. Badge de algoritmo (RSA/ED25519/ECDSA) con color diferenciado
+  4. Clave privada no accesible desde ningún endpoint de listado
+
+#### FR-111: Alertas de Vencimiento de Claves SSH
+- **Descripción:** El sistema debe enviar alertas automáticas por email cuando una clave SSH esté próxima a vencer (Professional+)
+- **Plan:** Professional+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Cron job diario evalúa claves con fecha de expiración
+  2. Emails enviados a 30, 7 y 1 día antes del vencimiento (flags de control)
+  3. Indicadores visuales de estado en UI: verde (válida), amarillo (<30d), rojo (vencida/≤7d)
+  4. Feature gate: Starter ve indicadores pero sin emails automáticos
+
+#### FR-112: Eliminación Segura de Claves SSH
+- **Descripción:** El sistema debe requerir confirmación explícita para eliminar claves SSH y registrar la acción en audit log
+- **Plan:** Starter+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Modal de confirmación muestra nombre de la clave antes de eliminar
+  2. Eliminación en cascade de clave privada cifrada de la base de datos
+  3. Acción registrada en audit log con usuario, clave eliminada y timestamp
+  4. Solo el propietario puede eliminar sus propias claves
+
+---
+
+#### FR-113: CRUD de Certificados SSL con Seguimiento de Estado
+- **Descripción:** El sistema debe gestionar certificados SSL con cálculo automático de estado según días restantes hasta vencimiento
+- **Plan:** Starter (10 max), Professional+ (∞), Free (❌)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Estado calculado en tiempo real: valid (>30d), expiring (8-30d), expired/critical (≤7d o pasado)
+  2. Certificados ordenados por urgencia (vencidos/críticos primero)
+  3. Días restantes mostrados en cada card
+
+#### FR-114: Cálculo Automático de Estado de Certificados
+- **Descripción:** El sistema debe calcular el estado del certificado basado en los días hasta su vencimiento
+- **Plan:** Todos los planes con acceso
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Property `status` en el modelo calcula estado sin persistir (calculado en cada request)
+  2. Property `days_until_expiry` disponible en el serializer
+  3. Endpoint de listado ordena por `valid_until` ASC (más urgentes primero)
+
+#### FR-115: Alertas de Vencimiento de Certificados SSL por Email
+- **Descripción:** El sistema debe enviar emails automáticos cuando un certificado SSL esté próximo a vencer (Professional+)
+- **Plan:** Professional+
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Cron job diario evalúa todos los certificados activos del tenant
+  2. Emails enviados a 30, 7 y 1 día antes del vencimiento
+  3. Flags en DB (`alert_30_sent`, `alert_7_sent`, `alert_1_sent`) previenen envíos duplicados
+  4. Email incluye dominio, emisor, fecha de vencimiento y link al dashboard
+
+#### FR-116: Importación de Certificados desde Archivo PEM/CRT
+- **Descripción:** El sistema debe permitir importar certificados SSL desde archivos .pem o .crt con extracción automática de metadatos (Professional+)
+- **Plan:** Professional+
+- **Prioridad:** Baja
+- **Criterios de aceptación:**
+  1. Endpoint POST acepta archivo .pem/.crt y extrae: dominio, emisor, valid_from, valid_until, serial_number
+  2. Extracción usa la librería `cryptography` de Python
+  3. Vista previa de datos extraídos antes de confirmar la importación
+  4. Error descriptivo si el archivo no es un certificado válido
+
+---
+
+#### FR-117: CRUD de Snippets con Múltiples Lenguajes
+- **Descripción:** El sistema debe gestionar fragmentos de código con soporte de 13+ lenguajes de programación
+- **Plan:** Free (10 max), Starter (50 max), Professional+ (∞)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Lenguajes soportados: JS, TS, Python, Bash, SQL, CSS, Go, Rust, Java, PHP, Ruby, YAML, JSON, Otro
+  2. Badge de lenguaje con color identificativo para cada lenguaje
+  3. Preview del código (primeras 3 líneas) visible en la card sin abrir el snippet
+  4. Sistema bloquea creación al alcanzar límite del plan
+
+#### FR-118: Identificación Visual por Badge de Lenguaje
+- **Descripción:** El sistema debe mostrar un badge colorido con el nombre del lenguaje en cada snippet
+- **Plan:** Todos los planes
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Colores de badges: JS (amarillo), Python (azul), SQL (naranja), Bash (verde), CSS (azul claro), etc.
+  2. Filtro de lenguaje en la lista actualiza resultados instantáneamente
+  3. Dropdown de lenguaje en formulario incluye todos los lenguajes soportados
+
+#### FR-119: Sistema de Tags para Snippets
+- **Descripción:** El sistema debe permitir clasificar snippets con tags personalizados para búsqueda transversal
+- **Plan:** Todos los planes
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Tags almacenados como ArrayField en PostgreSQL
+  2. Máximo 10 tags por snippet, máximo 50 caracteres por tag
+  3. Autocompletado de tags existentes del usuario al tipear
+  4. Filtro por tag combinable con filtro de lenguaje y búsqueda
+
+#### FR-120: Búsqueda Full-Text en Snippets
+- **Descripción:** El sistema debe permitir buscar snippets por título, descripción y código simultáneamente
+- **Plan:** Todos los planes
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Búsqueda actúa en título y descripción con índice full-text PostgreSQL
+  2. Debounce de 300ms antes de ejecutar la búsqueda
+  3. Botón copiar código visible en cada resultado con feedback de confirmación
+
+---
+
+### 4.11 Servicios de Administración
+
+#### FR-121: CRUD de Formularios con Constructor de Preguntas
+- **Descripción:** El sistema debe permitir crear formularios con múltiples tipos de preguntas configurables
+- **Plan:** Free (1 form, 5 preguntas), Starter (5 forms, 20 preguntas), Professional (25 forms, ∞), Enterprise (∞)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Preguntas pueden reordenarse (orden guardado como campo `order`)
+  2. Cada pregunta tiene: label, tipo, opciones (para multiple_choice/checkbox), flag requerido
+  3. Validación de límites por plan al crear formulario y al agregar preguntas
+
+#### FR-122: Tipos de Preguntas en Formularios
+- **Descripción:** El sistema debe soportar múltiples tipos de preguntas: texto corto, texto largo, opción múltiple, casillas, número y fecha
+- **Plan:** Todos los planes con acceso
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Opción múltiple y casillas validan que haya al menos 2 opciones definidas
+  2. Número valida que el valor sea numérico y dentro de rangos opcionales (min/max)
+  3. Fecha valida formato ISO 8601
+  4. Texto largo (textarea) sin límite de caracteres por defecto
+
+#### FR-123: Gestión de Respuestas de Formularios
+- **Descripción:** El sistema debe registrar y mostrar las respuestas enviadas a cada formulario activo
+- **Plan:** Free (50 respuestas), Starter+ (∞)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Endpoint público `/forms/public/{slug}/submit/` acepta submissions sin autenticación
+  2. Respuestas almacenadas en JSON con estructura {question_id: value}
+  3. Contador `response_count` en el modelo se incrementa con cada submission válido
+  4. Paginación de 20 respuestas por página en la vista de detalle
+
+#### FR-124: Exportación de Respuestas a CSV
+- **Descripción:** El sistema debe permitir exportar todas las respuestas de un formulario a CSV (Professional+)
+- **Plan:** Professional+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. CSV tiene una columna por pregunta con el label de la pregunta como header
+  2. Columnas adicionales: fecha_envio, ip_respondente
+  3. Nombre del archivo: `{form_title}_respuestas_{fecha}.csv`
+  4. Exportación registrada en audit log
+
+---
+
+#### FR-125: Timeline de Eventos Inmutable con Filtros
+- **Descripción:** El sistema debe mostrar un timeline de lectura de todos los eventos del audit log con filtros múltiples (Professional+)
+- **Plan:** Professional+, Enterprise
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Vista de solo lectura: sin botones de edición, eliminación o modificación
+  2. Filtros: usuario (dropdown), tipo de acción (dropdown), rango de fechas (date range picker)
+  3. Paginación de 50 eventos por página ordenados por fecha DESC
+  4. Retención: Professional (30 días), Enterprise (365 días)
+
+#### FR-126: Retención Configurable del Log de Auditoría por Plan
+- **Descripción:** El sistema debe aplicar retención automática de logs según el plan del tenant
+- **Plan:** Professional (30 días), Enterprise (365 días)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Cron job diario elimina registros más antiguos que la retención del plan
+  2. Registros de Enterprise nunca eliminados antes de 365 días
+  3. Dashboard muestra: "Reteniendo logs de los últimos X días"
+  4. API rechaza requests con filtros de fecha fuera del rango de retención del plan
+
+#### FR-127: Exportación de Logs a CSV/PDF para Compliance
+- **Descripción:** El sistema debe permitir exportar el log de auditoría filtrado a CSV o PDF (Enterprise)
+- **Plan:** Enterprise
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Exportación incluye los filtros activos en el momento de exportar
+  2. PDF generado con header: nombre del tenant, período, fecha de generación, número de registros
+  3. La exportación misma se registra en el audit log (meta-auditoría)
+  4. Archivos de exportación eliminados del servidor después de 24h
+
+---
+
+#### FR-128: Dashboard de Métricas de Uso del Workspace
+- **Descripción:** El sistema debe calcular y mostrar métricas de uso del tenant en tiempo real (Starter+)
+- **Plan:** Starter+, Professional+, Enterprise
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. Métricas básicas (Starter): usuarios activos, total proyectos, storage usado, tareas completadas
+  2. Métricas avanzadas (Professional+): API calls, tendencias, desglose por servicio
+  3. Datos calculados bajo demanda con caché máximo de 5 minutos en Redis
+  4. Período seleccionable: última semana (7d), mes (30d), trimestre (90d)
+
+#### FR-129: Comparativas de Tendencia Entre Períodos
+- **Descripción:** El sistema debe mostrar variaciones porcentuales de cada métrica comparando el período actual con el mismo período anterior (Professional+)
+- **Plan:** Professional+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. Indicador de cambio: porcentaje de variación con flecha ↑ (verde) o ↓ (rojo)
+  2. Comparativa: período actual vs mismo período anterior (ej: últimos 30d vs 30d anteriores)
+  3. Gráfico de barras en CSS (sin librería externa) para tendencia semanal
+  4. Datos históricos disponibles hasta el máximo de retención del plan
+
+#### FR-130: Exportación de Reporte Ejecutivo en PDF
+- **Descripción:** El sistema debe generar un reporte ejecutivo en PDF con todas las métricas del período seleccionado (Enterprise)
+- **Plan:** Enterprise
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. PDF generado en background task (Celery) para no bloquear el request
+  2. Email enviado al usuario con link de descarga cuando el PDF esté listo
+  3. PDF incluye: nombre del tenant, período, todas las métricas con variaciones y gráficos
+  4. Link de descarga válido por 48 horas, luego el archivo se elimina del storage
 
 ---
 
@@ -1187,4 +1575,4 @@ Proveer métricas de efectividad de promociones para decisiones de marketing.
 
 ---
 
-**Última actualización**: 2026-02-15
+**Última actualización**: 2026-02-17

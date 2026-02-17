@@ -404,6 +404,122 @@ Total: ~74 weeks (~17 months)
 
 ---
 
+## Fase 6: Servicios Complementarios (Weeks 51-62, Sprints 41-46)
+
+**Objetivo**: Implementar los 10 servicios de productividad, DevOps y administración documentados en las features de Productivity Services, DevOps Services y Admin Services.
+
+**Duración**: 12 semanas
+**Sprints**: 41-46 (2 semanas cada uno)
+
+### Sprint 41-42: Servicios de Productividad (Weeks 51-54)
+
+**Notas** (Week 51):
+- [ ] Modelo `Note` con categorías, pin y timestamps
+- [ ] CRUD endpoints `/api/v1/notes/`
+- [ ] Endpoint PATCH `/api/v1/notes/{id}/pin/` para toggle pin
+- [ ] Feature gate: validación de límites por plan (10/100/1000/∞)
+- [ ] Filtros: por categoría, búsqueda full-text (título + contenido)
+- [ ] Tests unitarios y de integración (coverage >85%)
+
+**Contactos** (Week 52):
+- [ ] Modelos `Contact` y `ContactGroup` con relaciones
+- [ ] CRUD endpoints `/api/v1/contacts/` y `/api/v1/contacts/groups/`
+- [ ] Endpoint GET `/api/v1/contacts/export/` (CSV, Starter+)
+- [ ] Feature gate: límites Free/Starter/Pro, grupos solo Starter+
+- [ ] Búsqueda por nombre, email, empresa
+- [ ] Tests unitarios y de integración
+
+**Bookmarks** (Week 53-54):
+- [ ] Modelos `Bookmark` y `BookmarkCollection`
+- [ ] CRUD endpoints `/api/v1/bookmarks/` y `/api/v1/bookmarks/collections/`
+- [ ] ArrayField para tags (PostgreSQL)
+- [ ] Feature gate: límites y colecciones según plan
+- [ ] Búsqueda full-text en URL, título y descripción
+- [ ] Tests unitarios y de integración
+
+**Feature Gates Semana 51-54**:
+- [ ] UpgradePrompt en frontend para todos los límites de plan
+- [ ] Validaciones en serializers con error 402 al superar límites
+
+**Milestones Sprint 41-42**:
+- Week 52: Notas y Contactos en producción con tests verdes
+- Week 54: Bookmarks completo con colecciones y tags
+
+---
+
+### Sprint 43-44: Servicios DevOps (Weeks 55-58)
+
+**Variables de Entorno** (Week 55):
+- [ ] Modelo `EnvVariable` con cifrado AES-256 (campo `value_encrypted`)
+- [ ] CRUD endpoints `/api/v1/env-vars/`
+- [ ] Endpoint POST `/api/v1/env-vars/{id}/reveal/` con audit log
+- [ ] Endpoint GET `/api/v1/env-vars/export/` (archivo .env, Professional+)
+- [ ] Feature gate: solo Starter+ (25 vars Starter, ∞ Pro/Enterprise)
+- [ ] Unique constraint: key + environment por usuario
+- [ ] Tests de seguridad: verificar que valores no se exponen en listados
+
+**Claves SSH** (Week 56):
+- [ ] Modelo `SSHKey` con clave privada cifrada AES-256
+- [ ] CRUD endpoints `/api/v1/ssh-keys/`
+- [ ] Cálculo automático de fingerprint SHA-256 al crear
+- [ ] Feature gate: Starter (5 max), Professional+ (∞), Free (❌)
+- [ ] Tests: verificar que clave privada nunca aparece en respuestas
+
+**Certificados SSL** (Week 57):
+- [ ] Modelo `SSLCertificate` con properties `status` y `days_until_expiry`
+- [ ] CRUD endpoints `/api/v1/ssl-certs/`
+- [ ] Endpoint POST `/api/v1/ssl-certs/import/` con librería `cryptography`
+- [ ] Feature gate: Starter (10 max), Professional+ (∞), Free (❌)
+- [ ] Cron job: evaluación diaria de vencimientos y envío de alertas email
+
+**Snippets** (Week 58):
+- [ ] Modelo `CodeSnippet` con ArrayField para tags
+- [ ] CRUD endpoints `/api/v1/snippets/`
+- [ ] Filtros por lenguaje y tags
+- [ ] Feature gate: Free (10 max), Starter (50 max), Pro+ (∞)
+- [ ] Búsqueda full-text con PostgreSQL FTS en título y descripción
+
+**Milestones Sprint 43-44**:
+- Week 56: EnvVars y SSH Keys en producción con cifrado verificado
+- Week 58: SSL Certs con alertas automáticas y Snippets completos
+
+---
+
+### Sprint 45-46: Servicios de Administración (Weeks 59-62)
+
+**Formularios** (Week 59-60):
+- [ ] Modelos `Form`, `FormQuestion`, `FormResponse`
+- [ ] CRUD endpoints `/api/v1/forms/`
+- [ ] Endpoint POST `/api/v1/forms/{id}/activate/` (genera slug único)
+- [ ] Endpoint público POST `/api/v1/forms/public/{slug}/submit/` (sin auth)
+- [ ] Endpoint GET `/api/v1/forms/{id}/responses/` (paginado, 20/page)
+- [ ] Endpoint GET `/api/v1/forms/{id}/export/` (CSV, Professional+)
+- [ ] Feature gate: límites por plan en forms y preguntas
+- [ ] Tests: submission anónimo, validaciones de tipos de pregunta
+
+**Log de Auditoría** (Week 61):
+- [ ] Vista de lectura del AuditLog existente con filtros adicionales
+- [ ] Endpoint GET `/api/v1/audit-log/` con filtros: usuario, acción, fecha rango
+- [ ] Endpoint GET `/api/v1/audit-log/export/` (CSV/PDF, Enterprise)
+- [ ] Feature gate: Professional+ (con 30d retención), Enterprise (365d retención)
+- [ ] Cron job: purga automática de logs según retención del plan
+- [ ] Generación de PDF con ReportLab o WeasyPrint
+
+**Reportes** (Week 62):
+- [ ] Clase `TenantReport` con cálculo de métricas bajo demanda
+- [ ] Endpoint GET `/api/v1/reports/summary/` (Starter+)
+- [ ] Endpoint GET `/api/v1/reports/usage/` (desglose por recurso, Starter+)
+- [ ] Endpoint GET `/api/v1/reports/trends/` (comparativas, Professional+)
+- [ ] Endpoint GET `/api/v1/reports/export/` (PDF ejecutivo, Enterprise)
+- [ ] Cache Redis con TTL 5 minutos para evitar recálculo innecesario
+- [ ] Task Celery para generación de PDF en background con email de notificación
+
+**Milestones Sprint 45-46**:
+- Week 60: Formularios con submissions anónimos y exportación CSV
+- Week 62: Auditoría y Reportes completos con exportación Enterprise
+
+---
+
 ## Milestones
 
 | Milestone | Week | Deliverable |
@@ -413,6 +529,7 @@ Total: ~74 weeks (~17 months)
 | **Public Launch** | Week 28 | Enterprise features, public availability |
 | **v2.0** | Week 40 | Sharing & Projects completo |
 | **v2.5** | Week 50 | Digital Services (SSR + Public Profiles) |
+| **v3.0** | Week 62 | Servicios Complementarios (Productividad + DevOps + Admin) |
 
 ---
 

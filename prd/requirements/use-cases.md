@@ -489,6 +489,225 @@
 
 ---
 
+## CU-016: Gestionar Notas
+
+**Actor**: Usuario autenticado (Member+)
+
+**Precondiciones**:
+- Usuario autenticado con plan Free o superior
+- No ha alcanzado el límite de notas de su plan
+
+**Flujo principal**:
+1. Usuario accede a "Notas" desde el sidebar del sistema
+2. Sistema muestra lista/grid de notas con filtro por categoría y búsqueda
+3. Usuario crea nueva nota con título, contenido, categoría (work/personal/ideas/archive) y opción de pin
+4. Sistema valida límite por plan (Free: 10, Starter: 100, Professional: 1000, Enterprise: ∞)
+5. Nota se guarda y aparece en la lista, con las notas fijadas al inicio
+
+**Postcondiciones**:
+- Nota creada y visible en la lista del usuario
+
+---
+
+## CU-017: Gestionar Contactos
+
+**Actor**: Usuario autenticado (Member+)
+
+**Precondiciones**:
+- Usuario autenticado
+- No ha alcanzado el límite de contactos de su plan
+
+**Flujo principal**:
+1. Usuario accede a "Contactos" desde el sidebar
+2. Sistema muestra directorio con búsqueda y filtros por grupo
+3. Usuario crea contacto con nombre, email, teléfono, empresa, cargo y grupo
+4. Sistema valida límite por plan (Free: 25, Starter: 100, Professional+: ∞)
+5. Contacto aparece en el directorio con avatar de iniciales
+
+**Postcondiciones**:
+- Contacto creado y visible en el directorio
+
+---
+
+## CU-018: Gestionar Bookmarks
+
+**Actor**: Usuario autenticado (Member+)
+
+**Precondiciones**:
+- Usuario autenticado
+- No ha alcanzado el límite de bookmarks de su plan
+
+**Flujo principal**:
+1. Usuario accede a "Bookmarks" desde el sidebar
+2. Sistema muestra lista de enlaces con filtros por colección y búsqueda
+3. Usuario guarda URL con título, descripción, colección y tags
+4. Sistema valida límite por plan (Free: 20, Starter: 100, Professional+: ∞)
+5. Bookmark aparece en la lista con favicon placeholder
+
+**Postcondiciones**:
+- Bookmark guardado y accesible desde la colección correspondiente
+
+---
+
+## CU-019: Gestionar Variables de Entorno
+
+**Actor**: Usuario autenticado (Member+ con plan Starter+)
+
+**Precondiciones**:
+- Usuario con plan Starter o superior (feature gate)
+- No ha alcanzado el límite de variables del plan
+
+**Flujo principal**:
+1. Usuario accede a "Variables de Entorno" desde el sidebar
+2. Sistema muestra variables agrupadas por ambiente (dev/staging/prod) con valores enmascarados
+3. Usuario crea variable con key, value (marcado como secreto), ambiente y descripción
+4. Sistema cifra el valor con AES-256 antes de almacenar
+5. Variable aparece en la lista con valor enmascarado (`••••••••`)
+6. Usuario puede revelar el valor temporalmente (30s) haciendo click en el ícono de ojo
+
+**Flujos alternativos**:
+- **2a. Plan Free**: Sistema muestra UpgradePrompt indicando que requiere Starter+
+
+**Postcondiciones**:
+- Variable cifrada y disponible en el ambiente correspondiente
+
+---
+
+## CU-020: Gestionar Claves SSH
+
+**Actor**: Usuario autenticado (Member+ con plan Starter+)
+
+**Precondiciones**:
+- Usuario con plan Starter o superior
+- No ha superado el límite de claves del plan
+
+**Flujo principal**:
+1. Usuario accede a "Claves SSH" desde el sidebar
+2. Sistema muestra lista de claves con fingerprint, algoritmo y fecha de creación/expiración
+3. Usuario agrega nueva clave con nombre, clave pública, algoritmo y descripción
+4. Sistema calcula fingerprint SHA-256 automáticamente
+5. Usuario puede copiar la clave pública con un click
+
+**Flujos alternativos**:
+- **2a. Plan Free**: Muestra UpgradePrompt para Starter+
+
+**Postcondiciones**:
+- Clave SSH almacenada con clave privada cifrada (si se provee)
+
+---
+
+## CU-021: Gestionar Certificados SSL
+
+**Actor**: Usuario autenticado (Member+ con plan Starter+)
+
+**Precondiciones**:
+- Usuario con plan Starter o superior
+
+**Flujo principal**:
+1. Usuario accede a "Certificados SSL" desde el sidebar
+2. Sistema muestra lista de certificados con indicador de estado visual:
+   - Verde: válido (>30 días restantes)
+   - Amarillo: por vencer (≤30 días restantes)
+   - Rojo: vencido o ≤7 días
+3. Usuario agrega certificado con dominio, emisor, fecha desde/hasta
+4. Sistema calcula días hasta vencimiento y asigna estado automáticamente
+5. En Professional+: sistema programa alertas automáticas a 30, 7 y 1 día
+
+**Postcondiciones**:
+- Certificado registrado y monitoreado con alertas configuradas
+
+---
+
+## CU-022: Gestionar Snippets de Código
+
+**Actor**: Usuario autenticado (Member+)
+
+**Precondiciones**:
+- Usuario autenticado (disponible desde Free con límite 10)
+
+**Flujo principal**:
+1. Usuario accede a "Snippets" desde el sidebar
+2. Sistema muestra lista/grid de snippets con filtros por lenguaje y tags
+3. Usuario crea snippet con título, lenguaje, código y descripción opcional
+4. Snippet aparece en lista con badge de lenguaje y preview del código
+5. Usuario puede copiar el código al portapapeles con un click
+
+**Postcondiciones**:
+- Snippet guardado y accesible por lenguaje y tags
+
+---
+
+## CU-023: Gestionar Formularios y Respuestas
+
+**Actor**: Usuario autenticado (Member+ con plan Free+)
+
+**Precondiciones**:
+- Usuario autenticado
+- No ha alcanzado el límite de formularios del plan
+
+**Flujo principal**:
+1. Usuario accede a "Formularios" desde el sidebar
+2. Sistema muestra lista de formularios con estado (Draft/Activo/Cerrado) y conteo de respuestas
+3. Usuario crea formulario con título, descripción y preguntas (tipo: texto, opción múltiple, número, fecha)
+4. Usuario activa el formulario para generar URL pública de respuesta (Starter+)
+5. Respondentes envían respuestas via URL pública sin autenticación
+6. Usuario ve conteo de respuestas actualizado y puede ver detalle de cada respuesta
+7. En Professional+: usuario exporta respuestas a CSV
+
+**Postcondiciones**:
+- Formulario activo con URL pública y recibiendo respuestas
+
+---
+
+## CU-024: Consultar Log de Auditoría
+
+**Actor**: Usuario autenticado (Owner/Service Manager con plan Professional+)
+
+**Precondiciones**:
+- Usuario con rol Owner o Service Manager
+- Plan Professional o Enterprise (feature gate)
+
+**Flujo principal**:
+1. Usuario accede a "Auditoría" desde el sidebar
+2. Sistema muestra timeline cronológico de eventos con usuario, acción, recurso y fecha/hora
+3. Usuario aplica filtros: por usuario, tipo de acción, recurso específico, rango de fechas
+4. Sistema filtra y muestra resultados paginados
+5. En Enterprise: usuario exporta log filtrado a CSV/PDF
+
+**Flujos alternativos**:
+- **1a. Plan Starter o Free**: Muestra UpgradePrompt para Professional+
+
+**Postcondiciones**:
+- Usuario tiene visibilidad completa de acciones del sistema para compliance
+
+---
+
+## CU-025: Consultar Reportes del Sistema
+
+**Actor**: Usuario autenticado con plan Starter+
+
+**Precondiciones**:
+- Usuario autenticado con plan Starter o superior
+
+**Flujo principal**:
+1. Usuario accede a "Reportes" desde el sidebar
+2. Sistema muestra dashboard con métricas del workspace:
+   - Usuarios activos en el período
+   - Total de proyectos, tareas completadas
+   - Storage consumido vs límite del plan
+   - API calls en el período
+3. Usuario selecciona período (última semana, mes, trimestre)
+4. Sistema recalcula métricas para el período seleccionado
+5. En Enterprise: usuario exporta reporte ejecutivo a PDF
+
+**Flujos alternativos**:
+- **1a. Plan Free**: Muestra UpgradePrompt para Starter+
+
+**Postcondiciones**:
+- Usuario tiene visibilidad de métricas de uso de su workspace
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -497,4 +716,4 @@
 
 ---
 
-**Última actualización**: 2026-02-15
+**Última actualización**: 2026-02-17
