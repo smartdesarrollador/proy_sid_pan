@@ -1,0 +1,16 @@
+{
+  "title": "Audit Log",
+  "eventsCount": "events",
+  "readOnly": "Read only",
+  "searchPlaceholder": "Search events...",
+  "emptyTitle": "No audit events",
+  "upgradeTitle": "Audit Log requires Professional Plan",
+  "upgradeDescription": "Access the complete action history with Professional or Enterprise plan.",
+  "upgradeRequired": "Requires Professional plan or higher",
+  "filters": {
+    "allActors": "All actors",
+    "allStatuses": "All statuses",
+    "success": "Success",
+    "failed": "Failed"
+  }
+}

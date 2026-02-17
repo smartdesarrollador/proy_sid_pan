@@ -1,0 +1,32 @@
+{
+  "title": "Formularios",
+  "formsCount": "formularios",
+  "createButton": "Nuevo Formulario",
+  "emptyTitle": "No hay formularios",
+  "emptyDescription": "Crea tu primer formulario para recopilar datos",
+  "confirmDelete": "¿Eliminar este formulario?",
+  "responses": "respuestas",
+  "questions": "preguntas",
+  "addQuestion": "Agregar pregunta",
+  "noQuestions": "Sin preguntas aún",
+  "questionPlaceholder": "Texto de la pregunta",
+  "status": {
+    "all": "Todos",
+    "active": "Activo",
+    "draft": "Borrador",
+    "closed": "Cerrado"
+  },
+  "fields": {
+    "title": "Título",
+    "description": "Descripción",
+    "status": "Estado",
+    "closesAt": "Cierra el",
+    "questions": "Preguntas"
+  },
+  "modal": {
+    "create": "Nuevo Formulario",
+    "edit": "Editar Formulario",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}

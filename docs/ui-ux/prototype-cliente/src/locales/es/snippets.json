@@ -1,0 +1,24 @@
+{
+  "title": "Snippets de Código",
+  "snippetsCount": "snippets",
+  "createButton": "Nuevo Snippet",
+  "searchPlaceholder": "Buscar snippets...",
+  "emptyTitle": "No hay snippets",
+  "emptyDescription": "Guarda fragmentos de código reutilizable",
+  "languages": {
+    "all": "Todos los lenguajes"
+  },
+  "fields": {
+    "title": "Título",
+    "language": "Lenguaje",
+    "description": "Descripción",
+    "code": "Código",
+    "tags": "Etiquetas"
+  },
+  "modal": {
+    "create": "Nuevo Snippet",
+    "edit": "Editar Snippet",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}

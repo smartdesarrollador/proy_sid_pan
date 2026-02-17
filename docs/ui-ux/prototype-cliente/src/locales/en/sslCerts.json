@@ -1,0 +1,32 @@
+{
+  "title": "SSL Certificates",
+  "certsCount": "certificates",
+  "createButton": "New Certificate",
+  "emptyTitle": "No SSL certificates yet",
+  "confirmDelete": "Delete this certificate?",
+  "autoRenew": "Auto-renew",
+  "alerts": {
+    "expired": "expired certificate(s)",
+    "expiring": "certificate(s) expiring soon"
+  },
+  "status": {
+    "all": "All",
+    "valid": "Valid",
+    "expiring": "Expiring",
+    "expired": "Expired"
+  },
+  "fields": {
+    "domain": "Domain",
+    "issuer": "Issuer",
+    "validFrom": "Valid from",
+    "validUntil": "Valid until",
+    "autoRenew": "Auto-renewal",
+    "notes": "Notes"
+  },
+  "modal": {
+    "create": "New SSL Certificate",
+    "edit": "Edit SSL Certificate",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

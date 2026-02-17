@@ -1,7 +1,12 @@
 {
-  "title": "Eventos de Hoy",
+  "title": "Notificaciones",
   "empty": "No tienes eventos programados para hoy",
   "viewCalendar": "Ver calendario completo",
+  "eventsTitle": "Eventos de Hoy",
+  "alerts": {
+    "title": "Alertas",
+    "markAllRead": "Marcar todas como leídas"
+  },
   "sections": {
     "now": "Ahora",
     "upcoming": "Próximos",

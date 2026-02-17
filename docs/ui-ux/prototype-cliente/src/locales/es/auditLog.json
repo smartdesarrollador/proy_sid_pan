@@ -1,0 +1,16 @@
+{
+  "title": "Registro de Auditoría",
+  "eventsCount": "eventos",
+  "readOnly": "Solo lectura",
+  "searchPlaceholder": "Buscar eventos...",
+  "emptyTitle": "No hay eventos de auditoría",
+  "upgradeTitle": "Auditoría requiere Plan Professional",
+  "upgradeDescription": "Accede al historial completo de acciones con el Plan Professional o Enterprise.",
+  "upgradeRequired": "Requiere Plan Professional o superior",
+  "filters": {
+    "allActors": "Todos los actores",
+    "allStatuses": "Todos los estados",
+    "success": "Éxito",
+    "failed": "Fallido"
+  }
+}

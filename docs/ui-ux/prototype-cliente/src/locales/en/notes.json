@@ -1,0 +1,33 @@
+{
+  "title": "Notes",
+  "notesCount": "notes",
+  "createButton": "New Note",
+  "searchPlaceholder": "Search notes...",
+  "pinnedSection": "Pinned",
+  "otherNotes": "Other notes",
+  "confirmDelete": "Delete this note?",
+  "emptyTitle": "No notes yet",
+  "emptyDescription": "Create your first note to get started",
+  "categories": {
+    "all": "All",
+    "work": "Work",
+    "personal": "Personal",
+    "ideas": "Ideas",
+    "archive": "Archive"
+  },
+  "fields": {
+    "title": "Title",
+    "titlePlaceholder": "Note title",
+    "content": "Content",
+    "contentPlaceholder": "Write your note here...",
+    "category": "Category",
+    "tags": "Tags",
+    "pin": "Pin note"
+  },
+  "modal": {
+    "create": "New Note",
+    "edit": "Edit Note",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

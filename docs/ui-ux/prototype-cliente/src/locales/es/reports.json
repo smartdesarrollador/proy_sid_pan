@@ -1,0 +1,22 @@
+{
+  "title": "Reportes",
+  "subtitle": "Estadísticas del sistema en tiempo real",
+  "liveData": "Datos en vivo",
+  "upgradeTitle": "Reportes requieren Plan Starter",
+  "upgradeDescription": "Actualiza a Plan Starter para acceder a los reportes del sistema.",
+  "stats": {
+    "activeTasks": "Tareas activas",
+    "completedTasks": "Tareas completadas",
+    "upcomingEvents": "Próximos eventos",
+    "activeProjects": "Proyectos activos",
+    "teamMembers": "Miembros del equipo",
+    "notes": "Notas",
+    "auditEvents": "Eventos de auditoría",
+    "storageUsed": "Almacenamiento usado"
+  },
+  "charts": {
+    "tasksByStatus": "Tareas por estado",
+    "tasksByPriority": "Tareas por prioridad",
+    "auditActions": "Acciones de auditoría"
+  }
+}

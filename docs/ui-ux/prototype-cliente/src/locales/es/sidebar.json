@@ -4,10 +4,24 @@
     "tasks": "Tareas",
     "calendar": "Calendario",
     "projects": "Proyectos",
-    "files": "Archivos",
     "shared": "Compartidos conmigo",
     "profile": "Mi Perfil",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "notes": "Notas",
+    "contacts": "Contactos",
+    "bookmarks": "Bookmarks",
+    "envVars": "Variables de Entorno",
+    "sshKeys": "Claves SSH",
+    "sslCerts": "Certificados SSL",
+    "snippets": "Snippets",
+    "forms": "Formularios",
+    "auditLog": "Auditoría",
+    "reports": "Reportes"
+  },
+  "groups": {
+    "productivity": "Productividad",
+    "devops": "Infraestructura",
+    "admin": "Administración"
   },
   "help": {
     "title": "¿Necesitas ayuda?",

@@ -1,0 +1,25 @@
+{
+  "title": "Bookmarks",
+  "bookmarksCount": "bookmarks",
+  "createButton": "Nuevo Bookmark",
+  "searchPlaceholder": "Buscar bookmarks...",
+  "emptyTitle": "No hay bookmarks",
+  "emptyDescription": "Guarda tus enlaces favoritos",
+  "collections": {
+    "all": "Todas las colecciones"
+  },
+  "fields": {
+    "url": "URL",
+    "title": "Título",
+    "titlePlaceholder": "Título del enlace",
+    "description": "Descripción",
+    "collection": "Colección",
+    "tags": "Etiquetas"
+  },
+  "modal": {
+    "create": "Nuevo Bookmark",
+    "edit": "Editar Bookmark",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}

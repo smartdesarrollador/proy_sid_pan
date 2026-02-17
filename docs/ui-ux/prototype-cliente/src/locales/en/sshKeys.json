@@ -1,0 +1,28 @@
+{
+  "title": "SSH Keys",
+  "keysCount": "keys",
+  "createButton": "New Key",
+  "searchPlaceholder": "Search SSH keys...",
+  "emptyTitle": "No SSH keys yet",
+  "confirmDelete": "Delete this SSH key?",
+  "autoRenew": "Auto-renew",
+  "fields": {
+    "name": "Name",
+    "algorithm": "Algorithm",
+    "publicKey": "Public Key",
+    "description": "Description",
+    "expiresAt": "Expires at",
+    "created": "Created",
+    "expires": "Expires",
+    "lastUsed": "Last used"
+  },
+  "actions": {
+    "copy": "Copy public key"
+  },
+  "modal": {
+    "create": "New SSH Key",
+    "edit": "Edit SSH Key",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

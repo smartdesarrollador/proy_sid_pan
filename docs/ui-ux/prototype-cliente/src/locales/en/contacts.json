@@ -1,0 +1,31 @@
+{
+  "title": "Contacts",
+  "contactsCount": "contacts",
+  "createButton": "New Contact",
+  "searchPlaceholder": "Search contacts...",
+  "emptyTitle": "No contacts yet",
+  "emptyDescription": "Add your first contact",
+  "groups": {
+    "all": "All",
+    "clients": "Clients",
+    "partners": "Partners",
+    "vendors": "Vendors",
+    "personal": "Personal"
+  },
+  "fields": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "company": "Company",
+    "position": "Position",
+    "group": "Group",
+    "notes": "Notes"
+  },
+  "modal": {
+    "create": "New Contact",
+    "edit": "Edit Contact",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

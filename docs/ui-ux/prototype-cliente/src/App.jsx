@@ -12,6 +12,16 @@ import { ProjectsView } from './components/projects/ProjectsView';
 import { ProjectDetail } from './components/projects/ProjectDetail';
 import SharedWithMeView from './components/sharing/SharedWithMeView';
 import { SettingsView } from './components/SettingsView';
+import { NotesView } from './components/notes/NotesView';
+import { ContactsView } from './components/contacts/ContactsView';
+import { BookmarksView } from './components/bookmarks/BookmarksView';
+import { EnvVarsView } from './components/env-vars/EnvVarsView';
+import { SSHKeysView } from './components/ssh-keys/SSHKeysView';
+import { SSLCertsView } from './components/ssl-certs/SSLCertsView';
+import { SnippetsView } from './components/snippets/SnippetsView';
+import { FormsView } from './components/forms/FormsView';
+import { AuditLogView } from './components/audit-log/AuditLogView';
+import { ReportsView } from './components/reports/ReportsView';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -47,12 +57,31 @@ function AppContent() {
             onBack={handleBackToProjects}
           />
         );
+      case 'notes':
+        return <NotesView />;
+      case 'contacts':
+        return <ContactsView />;
+      case 'bookmarks':
+        return <BookmarksView />;
+      case 'env-vars':
+        return <EnvVarsView />;
+      case 'ssh-keys':
+        return <SSHKeysView />;
+      case 'ssl-certs':
+        return <SSLCertsView />;
+      case 'snippets':
+        return <SnippetsView />;
+      case 'forms':
+        return <FormsView />;
+      case 'audit-log':
+        return <AuditLogView />;
+      case 'reports':
+        return <ReportsView />;
       case 'shared-with-me':
         return (
           <SharedWithMeView
             currentPlan="professional"
             onNavigateToResource={(item) => {
-              // Navigate to the resource
               if (item.resourceType === 'project') {
                 handleSelectProject(item.resourceId);
               } else if (item.resourceType === 'task') {
@@ -60,7 +89,6 @@ function AppContent() {
               } else if (item.resourceType === 'event') {
                 setActiveView('calendar');
               }
-              // Add more navigation logic as needed
             }}
           />
         );

@@ -1,7 +1,12 @@
 {
-  "title": "Today's Events",
+  "title": "Notifications",
   "empty": "You have no events scheduled for today",
   "viewCalendar": "View full calendar",
+  "eventsTitle": "Today's Events",
+  "alerts": {
+    "title": "Alerts",
+    "markAllRead": "Mark all as read"
+  },
   "sections": {
     "now": "Now",
     "upcoming": "Upcoming",

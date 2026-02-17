@@ -45,6 +45,42 @@ export const featuresByPlan = {
     customWidgets: false,
     exportReports: false,
     apiAccess: false,
+
+    // Notas
+    maxNotes: 10,
+    notesSharing: false,
+
+    // Contactos
+    maxContacts: 25,
+    contactsImport: false,
+
+    // Bookmarks
+    maxBookmarks: 20,
+    bookmarksSharing: false,
+
+    // DevOps - no disponible en free
+    envVarsEnabled: false,
+    maxEnvVars: 0,
+    sshKeysEnabled: false,
+    maxSshKeys: 0,
+    sslCertsEnabled: false,
+    maxSslCerts: 0,
+
+    // Snippets - disponible en free con límite
+    snippetsEnabled: true,
+    maxSnippets: 10,
+
+    // Formularios
+    maxForms: 1,
+    maxQuestionsPerForm: 5,
+    maxFormResponses: 10,
+
+    // Auditoría
+    auditLogEnabled: false,
+    auditLogRetentionDays: 0,
+
+    // Reportes
+    reportsEnabled: false,
   },
 
   starter: {
@@ -87,6 +123,42 @@ export const featuresByPlan = {
     customWidgets: false,
     exportReports: false,
     apiAccess: false,
+
+    // Notas
+    maxNotes: 100,
+    notesSharing: false,
+
+    // Contactos
+    maxContacts: 100,
+    contactsImport: false,
+
+    // Bookmarks
+    maxBookmarks: 100,
+    bookmarksSharing: false,
+
+    // DevOps - disponible en starter
+    envVarsEnabled: true,
+    maxEnvVars: 25,
+    sshKeysEnabled: true,
+    maxSshKeys: 10,
+    sslCertsEnabled: true,
+    maxSslCerts: 10,
+
+    // Snippets
+    snippetsEnabled: true,
+    maxSnippets: 100,
+
+    // Formularios
+    maxForms: 5,
+    maxQuestionsPerForm: 15,
+    maxFormResponses: 100,
+
+    // Auditoría
+    auditLogEnabled: false,
+    auditLogRetentionDays: 0,
+
+    // Reportes
+    reportsEnabled: true,
   },
 
   professional: {
@@ -129,6 +201,42 @@ export const featuresByPlan = {
     customWidgets: true,
     exportReports: true,
     apiAccess: true,
+
+    // Notas
+    maxNotes: 1000,
+    notesSharing: true,
+
+    // Contactos
+    maxContacts: 1000,
+    contactsImport: true,
+
+    // Bookmarks
+    maxBookmarks: 1000,
+    bookmarksSharing: true,
+
+    // DevOps
+    envVarsEnabled: true,
+    maxEnvVars: Infinity,
+    sshKeysEnabled: true,
+    maxSshKeys: Infinity,
+    sslCertsEnabled: true,
+    maxSslCerts: Infinity,
+
+    // Snippets
+    snippetsEnabled: true,
+    maxSnippets: Infinity,
+
+    // Formularios
+    maxForms: 25,
+    maxQuestionsPerForm: 50,
+    maxFormResponses: Infinity,
+
+    // Auditoría
+    auditLogEnabled: true,
+    auditLogRetentionDays: 30,
+
+    // Reportes
+    reportsEnabled: true,
   },
 
   enterprise: {
@@ -173,6 +281,42 @@ export const featuresByPlan = {
     customWidgets: true,
     exportReports: true,
     apiAccess: true,
+
+    // Notas
+    maxNotes: Infinity,
+    notesSharing: true,
+
+    // Contactos
+    maxContacts: Infinity,
+    contactsImport: true,
+
+    // Bookmarks
+    maxBookmarks: Infinity,
+    bookmarksSharing: true,
+
+    // DevOps
+    envVarsEnabled: true,
+    maxEnvVars: Infinity,
+    sshKeysEnabled: true,
+    maxSshKeys: Infinity,
+    sslCertsEnabled: true,
+    maxSslCerts: Infinity,
+
+    // Snippets
+    snippetsEnabled: true,
+    maxSnippets: Infinity,
+
+    // Formularios
+    maxForms: Infinity,
+    maxQuestionsPerForm: Infinity,
+    maxFormResponses: Infinity,
+
+    // Auditoría
+    auditLogEnabled: true,
+    auditLogRetentionDays: 365,
+
+    // Reportes
+    reportsEnabled: true,
   }
 };
 

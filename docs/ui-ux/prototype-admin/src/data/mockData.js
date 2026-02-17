@@ -1501,3 +1501,46 @@ export const notificationSettings = {
   },
   frequency: 'instant'
 };
+
+export const notifications = [
+  {
+    id: 'notif-001',
+    type: 'security',
+    title: 'Nuevo inicio de sesión detectado',
+    message: 'Inicio de sesión desde IP 192.168.1.45 (Buenos Aires, AR)',
+    time: '2026-02-16T10:30:00',
+    read: false,
+  },
+  {
+    id: 'notif-002',
+    type: 'role',
+    title: 'Rol actualizado',
+    message: 'Sarah Johnson fue promovida a Service Manager',
+    time: '2026-02-16T09:15:00',
+    read: false,
+  },
+  {
+    id: 'notif-003',
+    type: 'billing',
+    title: 'Pago procesado',
+    message: 'Se procesó correctamente el pago del plan Professional por $49.00',
+    time: '2026-02-15T18:00:00',
+    read: false,
+  },
+  {
+    id: 'notif-004',
+    type: 'system',
+    title: 'Rol "HR Access" deprecado',
+    message: '2 usuarios aún tienen asignado el rol "HR Access". Migrar antes del 01/03/2026.',
+    time: '2026-02-14T12:00:00',
+    read: true,
+  },
+  {
+    id: 'notif-005',
+    type: 'security',
+    title: 'MFA deshabilitado',
+    message: 'Mike Chen deshabilitó la autenticación de dos factores',
+    time: '2026-02-13T16:45:00',
+    read: true,
+  },
+];

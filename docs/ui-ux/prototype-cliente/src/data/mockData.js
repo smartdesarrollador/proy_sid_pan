@@ -1887,3 +1887,703 @@ export const getUserSettings = (userId) => {
   // En producción, esto haría fetch a /api/users/{userId}/settings
   return userSettings;
 };
+
+export const alerts = [
+  {
+    id: 'alert-001',
+    type: 'task',
+    icon: 'AlertCircle',
+    title: 'Tarea vence hoy',
+    message: '"Preparar informe mensual" vence hoy a las 18:00 hs',
+    time: '2026-02-16T08:00:00',
+    read: false,
+  },
+  {
+    id: 'alert-002',
+    type: 'shared',
+    icon: 'Share2',
+    title: 'Proyecto compartido contigo',
+    message: 'Ana López te compartió el proyecto "Configuración Servidores" con acceso de edición',
+    time: '2026-02-16T09:30:00',
+    read: false,
+  },
+  {
+    id: 'alert-003',
+    type: 'comment',
+    icon: 'MessageSquare',
+    title: 'Nuevo comentario en tu tarea',
+    message: 'Carlos Rodríguez comentó en "Revisar documentación API": "¿Podemos agendar una reunión?"',
+    time: '2026-02-16T10:00:00',
+    read: false,
+  },
+  {
+    id: 'alert-004',
+    type: 'task',
+    icon: 'Clock',
+    title: 'Tarea vence mañana',
+    message: '"Actualizar credenciales de producción" vence el 17/02/2026',
+    time: '2026-02-15T17:00:00',
+    read: true,
+  },
+];
+
+// ==================== NOTES DATA ====================
+export const notes = [
+  {
+    id: 'note-001',
+    title: 'Ideas para refactoring del auth module',
+    content: 'Considerar separar la lógica de tokens JWT en un servicio independiente. Implementar refresh token rotation y agregar blacklist de tokens revocados.',
+    category: 'work',
+    color: '#3b82f6',
+    isPinned: true,
+    tags: ['backend', 'security', 'jwt'],
+    createdBy: 'user-001',
+    createdAt: '2026-02-10',
+    updatedAt: '2026-02-14'
+  },
+  {
+    id: 'note-002',
+    title: 'Lista de compras semanal',
+    content: 'Leche, pan integral, frutas (manzanas, plátanos), verduras para la semana, café, yogur griego.',
+    category: 'personal',
+    color: '#10b981',
+    isPinned: false,
+    tags: ['personal', 'shopping'],
+    createdBy: 'user-001',
+    createdAt: '2026-02-15',
+    updatedAt: '2026-02-15'
+  },
+  {
+    id: 'note-003',
+    title: 'Idea: App de gestión de tiempo con IA',
+    content: 'Crear una app que analice patrones de trabajo y sugiera bloques de tiempo óptimos. Integrar con calendario y tareas. Usar ML para predecir duración de tareas.',
+    category: 'ideas',
+    color: '#f59e0b',
+    isPinned: true,
+    tags: ['idea', 'ai', 'productivity'],
+    createdBy: 'user-001',
+    createdAt: '2026-02-08',
+    updatedAt: '2026-02-12'
+  },
+  {
+    id: 'note-004',
+    title: 'Notas reunión Q1 Planning',
+    content: 'Objetivos Q1:\n- Lanzar v2.0 del producto\n- Crecer 30% en usuarios activos\n- Implementar feature de compartición\n- Migrar a nueva infraestructura\n\nPróxima reunión: 22 Feb',
+    category: 'work',
+    color: '#8b5cf6',
+    isPinned: false,
+    tags: ['meeting', 'planning', 'q1'],
+    createdBy: 'user-001',
+    createdAt: '2026-02-12',
+    updatedAt: '2026-02-12'
+  },
+  {
+    id: 'note-005',
+    title: 'Recursos de aprendizaje - TypeScript avanzado',
+    content: 'Libros: "Programming TypeScript" por Boris Cherny. Cursos: Matt Pocock en Total TypeScript. Videos: Fireship TypeScript playlist.',
+    category: 'archive',
+    color: '#6b7280',
+    isPinned: false,
+    tags: ['learning', 'typescript', 'resources'],
+    createdBy: 'user-001',
+    createdAt: '2026-01-20',
+    updatedAt: '2026-01-20'
+  }
+];
+
+// ==================== CONTACTS DATA ====================
+export const contacts = [
+  {
+    id: 'contact-001',
+    firstName: 'Ana',
+    lastName: 'López',
+    email: 'ana.lopez@techcorp.com',
+    phone: '+34 612 345 678',
+    company: 'TechCorp Solutions',
+    position: 'CTO',
+    group: 'clients',
+    notes: 'Contacto principal para el proyecto de integración API',
+    avatar: null,
+    isFavorite: true,
+    createdAt: '2026-01-10',
+    updatedAt: '2026-02-05'
+  },
+  {
+    id: 'contact-002',
+    firstName: 'Carlos',
+    lastName: 'Rodríguez',
+    email: 'carlos@startup.io',
+    phone: '+1 555 987 6543',
+    company: 'Startup IO',
+    position: 'CEO',
+    group: 'partners',
+    notes: 'Potencial socio para el programa de partners',
+    avatar: null,
+    isFavorite: false,
+    createdAt: '2026-01-15',
+    updatedAt: '2026-01-28'
+  },
+  {
+    id: 'contact-003',
+    firstName: 'María',
+    lastName: 'García',
+    email: 'mgarcia@consultora.es',
+    phone: '+34 699 111 222',
+    company: 'Consultora Digital',
+    position: 'Consultora Senior',
+    group: 'vendors',
+    notes: 'Consultora de UX para el rediseño del dashboard',
+    avatar: null,
+    isFavorite: true,
+    createdAt: '2026-02-01',
+    updatedAt: '2026-02-10'
+  },
+  {
+    id: 'contact-004',
+    firstName: 'James',
+    lastName: 'Williams',
+    email: 'j.williams@aws.amazon.com',
+    phone: '+1 206 555 0100',
+    company: 'Amazon Web Services',
+    position: 'Solutions Architect',
+    group: 'vendors',
+    notes: 'TAM asignado para nuestra cuenta Enterprise',
+    avatar: null,
+    isFavorite: false,
+    createdAt: '2025-12-15',
+    updatedAt: '2026-01-20'
+  },
+  {
+    id: 'contact-005',
+    firstName: 'Lucía',
+    lastName: 'Martínez',
+    email: 'lucia.martinez@personal.com',
+    phone: '+34 666 444 333',
+    company: null,
+    position: null,
+    group: 'personal',
+    notes: 'Contacto personal',
+    avatar: null,
+    isFavorite: false,
+    createdAt: '2026-02-14',
+    updatedAt: '2026-02-14'
+  }
+];
+
+// ==================== BOOKMARKS DATA ====================
+export const bookmarks = [
+  {
+    id: 'bookmark-001',
+    title: 'React Documentation',
+    url: 'https://react.dev',
+    description: 'Documentación oficial de React 18+',
+    collection: 'dev-resources',
+    tags: ['react', 'frontend', 'docs'],
+    favicon: null,
+    isFavorite: true,
+    createdAt: '2026-01-10',
+    updatedAt: '2026-01-10'
+  },
+  {
+    id: 'bookmark-002',
+    title: 'Tailwind CSS Docs',
+    url: 'https://tailwindcss.com/docs',
+    description: 'Referencia completa de utilidades de Tailwind CSS',
+    collection: 'dev-resources',
+    tags: ['css', 'tailwind', 'frontend', 'docs'],
+    favicon: null,
+    isFavorite: true,
+    createdAt: '2026-01-12',
+    updatedAt: '2026-01-12'
+  },
+  {
+    id: 'bookmark-003',
+    title: 'Linear - Product Roadmap',
+    url: 'https://linear.app',
+    description: 'Herramienta de gestión de proyectos e issues',
+    collection: 'tools',
+    tags: ['productivity', 'project-management', 'tool'],
+    favicon: null,
+    isFavorite: false,
+    createdAt: '2026-02-01',
+    updatedAt: '2026-02-01'
+  },
+  {
+    id: 'bookmark-004',
+    title: 'PostgreSQL Performance Tips',
+    url: 'https://wiki.postgresql.org/wiki/Performance_Optimization',
+    description: 'Guía de optimización de rendimiento en PostgreSQL',
+    collection: 'databases',
+    tags: ['postgresql', 'performance', 'database', 'backend'],
+    favicon: null,
+    isFavorite: false,
+    createdAt: '2026-02-05',
+    updatedAt: '2026-02-05'
+  },
+  {
+    id: 'bookmark-005',
+    title: 'Figma Design System',
+    url: 'https://figma.com',
+    description: 'Archivo de design system del proyecto en Figma',
+    collection: 'design',
+    tags: ['design', 'ui', 'figma'],
+    favicon: null,
+    isFavorite: false,
+    createdAt: '2026-02-08',
+    updatedAt: '2026-02-08'
+  }
+];
+
+// ==================== ENV VARS DATA ====================
+export const envVars = [
+  {
+    id: 'env-001',
+    key: 'DATABASE_URL',
+    value: 'postgresql://dev_user:••••••@localhost:5432/acme_dev',
+    maskedValue: 'postgresql://dev_user:••••••@localhost:5432/acme_dev',
+    environment: 'development',
+    description: 'URL de conexión a PostgreSQL desarrollo',
+    isSecret: true,
+    createdBy: 'user-001',
+    updatedAt: '2026-02-01'
+  },
+  {
+    id: 'env-002',
+    key: 'REDIS_URL',
+    value: 'redis://localhost:6379',
+    maskedValue: 'redis://localhost:6379',
+    environment: 'development',
+    description: 'URL de Redis para cache y sesiones',
+    isSecret: false,
+    createdBy: 'user-003',
+    updatedAt: '2026-01-20'
+  },
+  {
+    id: 'env-003',
+    key: 'JWT_SECRET',
+    value: 'dev_secret_key_not_for_production_use',
+    maskedValue: '••••••••••••••••••••••••••••••••',
+    environment: 'development',
+    description: 'Secret para firma de tokens JWT en desarrollo',
+    isSecret: true,
+    createdBy: 'user-001',
+    updatedAt: '2026-01-15'
+  },
+  {
+    id: 'env-004',
+    key: 'DATABASE_URL',
+    value: 'postgresql://staging_user:••••••@staging.acme.com:5432/acme_staging',
+    maskedValue: 'postgresql://staging_user:••••••@staging.acme.com:5432/acme_staging',
+    environment: 'staging',
+    description: 'URL de conexión a PostgreSQL staging',
+    isSecret: true,
+    createdBy: 'user-001',
+    updatedAt: '2026-02-05'
+  },
+  {
+    id: 'env-005',
+    key: 'STRIPE_SECRET_KEY',
+    value: 'sk_test_••••••••••••••••••••••••••••••',
+    maskedValue: 'sk_test_••••••••••••••••••••••••••••••',
+    environment: 'staging',
+    description: 'API key de Stripe para pagos en staging',
+    isSecret: true,
+    createdBy: 'user-001',
+    updatedAt: '2026-02-10'
+  },
+  {
+    id: 'env-006',
+    key: 'SMTP_HOST',
+    value: 'smtp.mailgun.org',
+    maskedValue: 'smtp.mailgun.org',
+    environment: 'staging',
+    description: 'Host SMTP para envío de emails en staging',
+    isSecret: false,
+    createdBy: 'user-002',
+    updatedAt: '2026-01-28'
+  },
+  {
+    id: 'env-007',
+    key: 'DATABASE_URL',
+    value: 'postgresql://prod_user:••••••@prod.acme.com:5432/acme_prod',
+    maskedValue: 'postgresql://prod_user:••••••@prod.acme.com:5432/acme_prod',
+    environment: 'production',
+    description: 'URL de conexión a PostgreSQL producción',
+    isSecret: true,
+    createdBy: 'user-001',
+    updatedAt: '2026-02-01'
+  },
+  {
+    id: 'env-008',
+    key: 'STRIPE_SECRET_KEY',
+    value: 'sk_live_••••••••••••••••••••••••••••••',
+    maskedValue: 'sk_live_••••••••••••••••••••••••••••••',
+    environment: 'production',
+    description: 'API key de Stripe producción - CUIDADO',
+    isSecret: true,
+    createdBy: 'user-001',
+    updatedAt: '2026-01-30'
+  }
+];
+
+// ==================== SSH KEYS DATA ====================
+export const sshKeys = [
+  {
+    id: 'ssh-001',
+    name: 'Laptop Personal - Deploy Key',
+    algorithm: 'ED25519',
+    fingerprint: 'SHA256:abc123def456ghi789jkl012mno345pqr678stu901vwx',
+    publicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBcDej7K... john@laptop',
+    description: 'Clave para deploy desde laptop personal',
+    createdAt: '2026-01-10',
+    expiresAt: null,
+    lastUsed: '2026-02-15',
+    createdBy: 'user-001'
+  },
+  {
+    id: 'ssh-002',
+    name: 'CI/CD Pipeline - GitHub Actions',
+    algorithm: 'RSA-4096',
+    fingerprint: 'SHA256:xyz789abc123def456ghi789jkl012mno345pqr678stu',
+    publicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDpT... ci@github-actions',
+    description: 'Clave usada por GitHub Actions para deployments automáticos',
+    createdAt: '2026-01-15',
+    expiresAt: '2026-12-31',
+    lastUsed: '2026-02-14',
+    createdBy: 'user-003'
+  },
+  {
+    id: 'ssh-003',
+    name: 'Servidor de Staging',
+    algorithm: 'ED25519',
+    fingerprint: 'SHA256:mno345pqr678stu901vwx234yza567bcd890efg123hij',
+    publicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHvKw... deploy@staging',
+    description: 'Acceso SSH al servidor de staging',
+    createdAt: '2025-12-20',
+    expiresAt: '2026-06-30',
+    lastUsed: '2026-02-10',
+    createdBy: 'user-001'
+  },
+  {
+    id: 'ssh-004',
+    name: 'Backup - Clave GPG de Firma',
+    algorithm: 'RSA-2048',
+    fingerprint: 'SHA256:efg123hij456klm789nop012qrs345tuv678wxy901zab',
+    publicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDk... backup@acme',
+    description: 'Clave GPG para firma de commits y releases',
+    createdAt: '2025-11-01',
+    expiresAt: '2027-11-01',
+    lastUsed: '2026-02-01',
+    createdBy: 'user-001'
+  }
+];
+
+// ==================== SSL CERTIFICATES DATA ====================
+export const sslCerts = [
+  {
+    id: 'ssl-001',
+    domain: 'acme.com',
+    issuer: "Let's Encrypt",
+    validFrom: '2025-12-01',
+    validUntil: '2026-12-01',
+    status: 'valid',
+    autoRenew: true,
+    san: ['www.acme.com', 'api.acme.com'],
+    notes: 'Certificado principal del dominio',
+    createdBy: 'user-001',
+    updatedAt: '2025-12-01'
+  },
+  {
+    id: 'ssl-002',
+    domain: 'staging.acme.com',
+    issuer: "Let's Encrypt",
+    validFrom: '2026-02-01',
+    validUntil: '2026-03-01',
+    status: 'expiring',
+    autoRenew: false,
+    san: ['staging.acme.com'],
+    notes: '⚠️ Expira en menos de 15 días - renovar urgente',
+    createdBy: 'user-001',
+    updatedAt: '2026-02-01'
+  },
+  {
+    id: 'ssl-003',
+    domain: 'old.acme.com',
+    issuer: 'DigiCert',
+    validFrom: '2025-09-01',
+    validUntil: '2026-01-15',
+    status: 'expired',
+    autoRenew: false,
+    san: ['old.acme.com'],
+    notes: 'Dominio antiguo - ya no está en uso',
+    createdBy: 'user-002',
+    updatedAt: '2025-09-01'
+  },
+  {
+    id: 'ssl-004',
+    domain: 'app.acme.com',
+    issuer: 'ZeroSSL',
+    validFrom: '2026-01-15',
+    validUntil: '2026-07-15',
+    status: 'valid',
+    autoRenew: true,
+    san: ['app.acme.com', 'mobile.acme.com'],
+    notes: 'Certificado para la app móvil y web',
+    createdBy: 'user-003',
+    updatedAt: '2026-01-15'
+  }
+];
+
+// ==================== SNIPPETS DATA ====================
+export const snippets = [
+  {
+    id: 'snippet-001',
+    title: 'JWT Token Verification Middleware',
+    language: 'javascript',
+    languageColor: '#f7df1e',
+    description: 'Middleware de Express para verificar tokens JWT en headers Authorization',
+    code: `const jwt = require('jsonwebtoken');
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Token requerido' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Token inválido' });
+  }
+};
+
+module.exports = verifyToken;`,
+    tags: ['jwt', 'auth', 'middleware', 'express'],
+    isFavorite: true,
+    createdBy: 'user-001',
+    createdAt: '2026-01-20',
+    updatedAt: '2026-02-05'
+  },
+  {
+    id: 'snippet-002',
+    title: 'Async PostgreSQL Query Helper',
+    language: 'python',
+    languageColor: '#3572A5',
+    description: 'Helper asíncrono para ejecutar queries en PostgreSQL con asyncpg',
+    code: `import asyncpg
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def get_db_connection(dsn: str):
+    conn = await asyncpg.connect(dsn)
+    try:
+        yield conn
+    finally:
+        await conn.close()
+
+async def execute_query(dsn: str, query: str, *args):
+    async with get_db_connection(dsn) as conn:
+        return await conn.fetch(query, *args)`,
+    tags: ['python', 'postgresql', 'async', 'asyncpg'],
+    isFavorite: false,
+    createdBy: 'user-003',
+    createdAt: '2026-01-25',
+    updatedAt: '2026-01-25'
+  },
+  {
+    id: 'snippet-003',
+    title: 'Deploy to Production Script',
+    language: 'bash',
+    languageColor: '#89e051',
+    description: 'Script de bash para deploy a producción con verificaciones y rollback',
+    code: `#!/bin/bash
+set -euo pipefail
+
+APP_NAME="acme-api"
+DEPLOY_DIR="/var/www/$APP_NAME"
+
+echo "🚀 Iniciando deploy de $APP_NAME..."
+
+# Pull latest code
+git pull origin main
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate --noinput
+
+# Collect static files
+python manage.py collectstatic --noinput
+
+# Restart services
+sudo systemctl restart $APP_NAME gunicorn nginx
+
+echo "✅ Deploy completado exitosamente"`,
+    tags: ['bash', 'deploy', 'devops', 'script'],
+    isFavorite: true,
+    createdBy: 'user-001',
+    createdAt: '2026-02-01',
+    updatedAt: '2026-02-01'
+  },
+  {
+    id: 'snippet-004',
+    title: 'Find Slow Queries - PostgreSQL',
+    language: 'sql',
+    languageColor: '#e38c00',
+    description: 'Query para encontrar las consultas más lentas en PostgreSQL usando pg_stat_statements',
+    code: `SELECT
+  query,
+  calls,
+  total_exec_time / calls AS avg_exec_time_ms,
+  rows / calls AS avg_rows,
+  shared_blks_hit / calls AS avg_cache_hits
+FROM pg_stat_statements
+WHERE calls > 100
+  AND query NOT LIKE '%pg_%'
+ORDER BY avg_exec_time_ms DESC
+LIMIT 20;`,
+    tags: ['sql', 'postgresql', 'performance', 'monitoring'],
+    isFavorite: false,
+    createdBy: 'user-003',
+    createdAt: '2026-02-08',
+    updatedAt: '2026-02-08'
+  },
+  {
+    id: 'snippet-005',
+    title: 'CSS Skeleton Loading Animation',
+    language: 'css',
+    languageColor: '#563d7c',
+    description: 'Animación de skeleton loader reutilizable para estados de carga',
+    code: `.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    #374151 25%,
+    #4b5563 50%,
+    #374151 75%
+  );
+  background-size: 200% 100%;
+}`,
+    tags: ['css', 'animation', 'loading', 'skeleton', 'ux'],
+    isFavorite: false,
+    createdBy: 'user-004',
+    createdAt: '2026-02-10',
+    updatedAt: '2026-02-10'
+  }
+];
+
+// ==================== FORMS DATA ====================
+export const forms = [
+  {
+    id: 'form-001',
+    title: 'Feedback del Producto Q1 2026',
+    description: 'Encuesta para recopilar feedback de usuarios sobre las nuevas features del Q1',
+    status: 'active',
+    responsesCount: 12,
+    maxResponses: null,
+    questions: [
+      { id: 'q-001', type: 'rating', text: '¿Qué tan satisfecho estás con el producto?', required: true },
+      { id: 'q-002', type: 'multiple_choice', text: '¿Qué feature usas más?', options: ['Dashboard', 'Tareas', 'Calendario', 'Proyectos'], required: true },
+      { id: 'q-003', type: 'text', text: '¿Qué mejorarías del producto?', required: false },
+      { id: 'q-004', type: 'boolean', text: '¿Recomendarías el producto a un colega?', required: true }
+    ],
+    createdBy: 'user-002',
+    createdAt: '2026-02-01',
+    updatedAt: '2026-02-10',
+    closesAt: '2026-02-28'
+  },
+  {
+    id: 'form-002',
+    title: 'Solicitud de Acceso - Nuevo Usuario',
+    description: 'Formulario interno para solicitar acceso al sistema para nuevos empleados',
+    status: 'draft',
+    responsesCount: 0,
+    maxResponses: null,
+    questions: [
+      { id: 'q-005', type: 'text', text: 'Nombre completo del empleado', required: true },
+      { id: 'q-006', type: 'text', text: 'Email corporativo', required: true },
+      { id: 'q-007', type: 'multiple_choice', text: 'Departamento', options: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance'], required: true },
+      { id: 'q-008', type: 'multiple_choice', text: 'Nivel de acceso requerido', options: ['Viewer', 'Editor', 'Manager', 'Admin'], required: true },
+      { id: 'q-009', type: 'text', text: 'Justificación del acceso', required: true }
+    ],
+    createdBy: 'user-001',
+    createdAt: '2026-02-12',
+    updatedAt: '2026-02-12',
+    closesAt: null
+  },
+  {
+    id: 'form-003',
+    title: 'Encuesta de Satisfacción - Diciembre 2025',
+    description: 'Encuesta mensual de satisfacción del equipo',
+    status: 'closed',
+    responsesCount: 8,
+    maxResponses: null,
+    questions: [
+      { id: 'q-010', type: 'rating', text: 'Satisfacción general con el equipo', required: true },
+      { id: 'q-011', type: 'rating', text: 'Satisfacción con las herramientas', required: true },
+      { id: 'q-012', type: 'text', text: 'Comentarios adicionales', required: false }
+    ],
+    createdBy: 'user-002',
+    createdAt: '2025-12-01',
+    updatedAt: '2025-12-31',
+    closesAt: '2025-12-31'
+  }
+];
+
+// Helper: Get notes by category
+export const getNotesByCategory = (category) => {
+  if (!category || category === 'all') return notes;
+  return notes.filter(note => note.category === category);
+};
+
+// Helper: Get contacts by group
+export const getContactsByGroup = (group) => {
+  if (!group || group === 'all') return contacts;
+  return contacts.filter(contact => contact.group === group);
+};
+
+// Helper: Get bookmarks by collection
+export const getBookmarksByCollection = (collection) => {
+  if (!collection || collection === 'all') return bookmarks;
+  return bookmarks.filter(bookmark => bookmark.collection === collection);
+};
+
+// Helper: Get env vars by environment
+export const getEnvVarsByEnvironment = (environment) => {
+  if (!environment || environment === 'all') return envVars;
+  return envVars.filter(v => v.environment === environment);
+};
+
+// Helper: Get SSL cert status color
+export const getSSLCertStatusColor = (cert) => {
+  const today = new Date();
+  const validUntil = new Date(cert.validUntil);
+  const daysUntilExpiry = Math.floor((validUntil - today) / (1000 * 60 * 60 * 24));
+
+  if (daysUntilExpiry < 0) return { status: 'expired', color: '#ef4444', bg: 'bg-red-100 dark:bg-red-900/20', text: 'text-red-700 dark:text-red-400', label: 'Vencido' };
+  if (daysUntilExpiry <= 30) return { status: 'expiring', color: '#f59e0b', bg: 'bg-yellow-100 dark:bg-yellow-900/20', text: 'text-yellow-700 dark:text-yellow-400', label: `Vence en ${daysUntilExpiry}d` };
+  return { status: 'valid', color: '#10b981', bg: 'bg-green-100 dark:bg-green-900/20', text: 'text-green-700 dark:text-green-400', label: 'Válido' };
+};
+
+// Helper: Get snippets by language
+export const getSnippetsByLanguage = (language) => {
+  if (!language || language === 'all') return snippets;
+  return snippets.filter(snippet => snippet.language === language);
+};

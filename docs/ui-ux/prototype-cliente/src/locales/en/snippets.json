@@ -1,0 +1,24 @@
+{
+  "title": "Code Snippets",
+  "snippetsCount": "snippets",
+  "createButton": "New Snippet",
+  "searchPlaceholder": "Search snippets...",
+  "emptyTitle": "No snippets yet",
+  "emptyDescription": "Save reusable code fragments",
+  "languages": {
+    "all": "All languages"
+  },
+  "fields": {
+    "title": "Title",
+    "language": "Language",
+    "description": "Description",
+    "code": "Code",
+    "tags": "Tags"
+  },
+  "modal": {
+    "create": "New Snippet",
+    "edit": "Edit Snippet",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

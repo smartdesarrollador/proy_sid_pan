@@ -1,7 +1,7 @@
 import { Menu, Bell, Settings, User, LogOut, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { currentTenant, events } from '../data/mockData';
+import { currentTenant, events, alerts as initialAlerts } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
 import ThemeToggle from './shared/ThemeToggle';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -13,10 +13,14 @@ function Navbar({ onMenuClick }) {
   const { currentUser, logout } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [alertsList, setAlertsList] = useState(initialAlerts);
 
   // Calculate today's events and notification count
   const todayEvents = getTodayEvents(events);
-  const notificationCount = todayEvents.length;
+  const unreadAlerts = alertsList.filter(a => !a.read).length;
+  const notificationCount = todayEvents.length + unreadAlerts;
+
+  const handleMarkAlertsRead = () => setAlertsList(alertsList.map(a => ({ ...a, read: true })));
 
   const handleLogout = () => {
     logout();
@@ -75,7 +79,9 @@ function Navbar({ onMenuClick }) {
             {notificationsOpen && (
               <NotificationDropdown
                 events={todayEvents}
+                alerts={alertsList}
                 onClose={() => setNotificationsOpen(false)}
+                onMarkAlertsRead={handleMarkAlertsRead}
                 onEventClick={(eventId) => {
                   setNotificationsOpen(false);
                   // TODO Future: Navigate to calendar and highlight event

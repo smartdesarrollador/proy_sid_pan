@@ -1,0 +1,22 @@
+{
+  "title": "Reports",
+  "subtitle": "Real-time system statistics",
+  "liveData": "Live data",
+  "upgradeTitle": "Reports require Starter Plan",
+  "upgradeDescription": "Upgrade to Starter Plan to access system reports.",
+  "stats": {
+    "activeTasks": "Active tasks",
+    "completedTasks": "Completed tasks",
+    "upcomingEvents": "Upcoming events",
+    "activeProjects": "Active projects",
+    "teamMembers": "Team members",
+    "notes": "Notes",
+    "auditEvents": "Audit events",
+    "storageUsed": "Storage used"
+  },
+  "charts": {
+    "tasksByStatus": "Tasks by status",
+    "tasksByPriority": "Tasks by priority",
+    "auditActions": "Audit actions"
+  }
+}

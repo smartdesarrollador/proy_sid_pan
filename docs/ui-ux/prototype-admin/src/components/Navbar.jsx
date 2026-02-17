@@ -1,7 +1,7 @@
 import { Menu, Bell, Settings, User, LogOut, ChevronDown, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { currentTenant } from '../data/mockData';
+import { currentTenant, notifications as initialNotifications } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import ThemeToggle from './shared/ThemeToggle';
@@ -12,11 +12,16 @@ function Navbar({ onMenuClick, onNavigate }) {
   const { currentUser, logout } = useAuth();
   const { getPrimaryRole, getRoleColor } = usePermissions();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState(initialNotifications);
 
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
   };
+
+  const unreadCount = notifs.filter(n => !n.read).length;
+  const markAllRead = () => setNotifs(notifs.map(n => ({ ...n, read: true })));
 
   const primaryRole = getPrimaryRole();
   const roleColor = getRoleColor();
@@ -75,15 +80,89 @@ function Navbar({ onMenuClick, onNavigate }) {
           <ThemeToggle />
 
           {/* Notifications */}
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-            <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => { setNotifOpen(!notifOpen); setUserMenuOpen(false); }}
+              className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold px-0.5">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {t('notifications.title')}
+                  </h3>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllRead}
+                      className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                      {t('notifications.markAllRead')}
+                    </button>
+                  )}
+                </div>
+
+                {/* Lista */}
+                <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                  {notifs.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+                      {t('notifications.empty')}
+                    </p>
+                  ) : (
+                    notifs.map(n => (
+                      <div
+                        key={n.id}
+                        className={`px-4 py-3 flex gap-3 ${!n.read ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
+                      >
+                        <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
+                          n.type === 'security' ? 'bg-red-500' :
+                          n.type === 'role'     ? 'bg-blue-500' :
+                          n.type === 'billing'  ? 'bg-green-500' : 'bg-gray-400'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {n.title}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                            {n.message}
+                          </p>
+                          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                            {new Date(n.time).toLocaleString()}
+                          </p>
+                        </div>
+                        {!n.read && (
+                          <span className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0 mt-1" />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-2 text-center">
+                  <button
+                    onClick={() => setNotifOpen(false)}
+                    className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                  >
+                    {t('notifications.close')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* User menu */}
           <div className="relative">
             <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
+              onClick={() => { setUserMenuOpen(!userMenuOpen); setNotifOpen(false); }}
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">

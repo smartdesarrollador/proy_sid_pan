@@ -1,0 +1,31 @@
+{
+  "title": "Contactos",
+  "contactsCount": "contactos",
+  "createButton": "Nuevo Contacto",
+  "searchPlaceholder": "Buscar contactos...",
+  "emptyTitle": "No hay contactos",
+  "emptyDescription": "Agrega tu primer contacto",
+  "groups": {
+    "all": "Todos",
+    "clients": "Clientes",
+    "partners": "Socios",
+    "vendors": "Proveedores",
+    "personal": "Personal"
+  },
+  "fields": {
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Email",
+    "phone": "Teléfono",
+    "company": "Empresa",
+    "position": "Cargo",
+    "group": "Grupo",
+    "notes": "Notas"
+  },
+  "modal": {
+    "create": "Nuevo Contacto",
+    "edit": "Editar Contacto",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, ChevronDown, Search, Users } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Search, Users, X } from 'lucide-react';
 import { ProjectTree } from './ProjectTree';
 import { FieldCardsGrid } from './FieldCardsGrid';
 import { SectionModal } from './SectionModal';
+import { ItemModal } from './ItemModal';
+import { FieldEditModal } from './FieldEditModal';
 import { EmptyState } from '../shared/EmptyState';
 import ShareButton from '../sharing/ShareButton';
 import {
@@ -22,7 +24,12 @@ export const ProjectDetail = ({ projectId, onBack }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedItemFields, setSelectedItemFields] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
+  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const [itemModalSectionId, setItemModalSectionId] = useState(null);
+  const [isFieldEditModalOpen, setIsFieldEditModalOpen] = useState(false);
+  const [editingField, setEditingField] = useState(null);
 
   // Cargar proyecto y secciones al montar
   useEffect(() => {
@@ -93,14 +100,39 @@ export const ProjectDetail = ({ projectId, onBack }) => {
     setIsSectionModalOpen(false);
   };
 
-  // Handler para agregar item (placeholder para Sprint 3)
-  const handleAddItem = () => {
-    alert('Agregar item - Implementado en Sprint 3');
+  // Handler para agregar item
+  const handleAddItem = (sectionId) => {
+    setItemModalSectionId(sectionId);
+    setIsItemModalOpen(true);
+  };
+
+  // Handler para guardar nuevo item
+  const handleSaveItem = (itemData) => {
+    const newItem = {
+      id: `item-${Date.now()}`,
+      ...itemData
+    };
+    allItems.push(newItem);
+    // Si el item es de la sección actualmente seleccionada, actualizar la vista
+    if (selectedItem && selectedItem.sectionId === itemData.sectionId) {
+      // Refresh items for the current view
+    }
+    setIsItemModalOpen(false);
   };
 
   // Handler para editar campo
   const handleEditField = (field) => {
-    alert(`Editar campo: ${field.fieldName} - Implementado en Sprint 3`);
+    setEditingField(field);
+    setIsFieldEditModalOpen(true);
+  };
+
+  // Handler para guardar campo editado
+  const handleSaveField = (updatedField) => {
+    setSelectedItemFields(prev =>
+      prev.map(f => f.id === updatedField.id ? updatedField : f)
+    );
+    setIsFieldEditModalOpen(false);
+    setEditingField(null);
   };
 
   // Handler para eliminar campo
@@ -198,6 +230,29 @@ export const ProjectDetail = ({ projectId, onBack }) => {
         </div>
       </div>
 
+      {/* Search bar */}
+      {isSearchOpen && (
+        <div className="px-6 py-3 border-b dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Buscar items..."
+              className="input w-full pl-9 pr-9"
+              autoFocus
+            />
+            <button
+              onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Layout 2 columnas */}
       <div className="flex gap-6 p-6">
         {/* Sidebar */}
@@ -207,9 +262,11 @@ export const ProjectDetail = ({ projectId, onBack }) => {
             sections={sections}
             expandedSections={expandedSections}
             selectedItem={selectedItem}
+            searchQuery={searchQuery}
             onToggleSection={handleToggleSection}
             onSelectItem={handleSelectItem}
             onAddSection={handleAddSection}
+            onAddItem={handleAddItem}
           />
         </aside>
 
@@ -235,6 +292,22 @@ export const ProjectDetail = ({ projectId, onBack }) => {
           onClose={() => setIsSectionModalOpen(false)}
         />
       )}
+
+      {/* Item Modal */}
+      <ItemModal
+        isOpen={isItemModalOpen}
+        sectionId={itemModalSectionId}
+        onSave={handleSaveItem}
+        onClose={() => setIsItemModalOpen(false)}
+      />
+
+      {/* Field Edit Modal */}
+      <FieldEditModal
+        isOpen={isFieldEditModalOpen}
+        field={editingField}
+        onSave={handleSaveField}
+        onClose={() => { setIsFieldEditModalOpen(false); setEditingField(null); }}
+      />
     </div>
   );
 };

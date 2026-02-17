@@ -6,9 +6,11 @@ export const ProjectTree = ({
   sections,
   expandedSections,
   selectedItem,
+  searchQuery = '',
   onToggleSection,
   onSelectItem,
-  onAddSection
+  onAddSection,
+  onAddItem
 }) => {
   return (
     <div className="card p-4 sticky top-24">
@@ -22,7 +24,12 @@ export const ProjectTree = ({
       <nav className="space-y-1">
         {sections.map(section => {
           const isExpanded = expandedSections.has(section.id);
-          const items = getItemsBySection(section.id);
+          const allSectionItems = getItemsBySection(section.id);
+          const items = searchQuery
+            ? allSectionItems.filter(item =>
+                item.title.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+            : allSectionItems;
 
           return (
             <div key={section.id}>
@@ -55,7 +62,7 @@ export const ProjectTree = ({
                 <div className="ml-6 mt-1 space-y-1">
                   {items.length === 0 ? (
                     <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 italic">
-                      Sin items
+                      {searchQuery ? 'Sin resultados' : 'Sin items'}
                     </div>
                   ) : (
                     items.map(item => (
@@ -77,6 +84,17 @@ export const ProjectTree = ({
                         )}
                       </button>
                     ))
+                  )}
+
+                  {/* Add item button */}
+                  {onAddItem && (
+                    <button
+                      onClick={() => onAddItem(section.id)}
+                      className="section-item w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-gray-500 dark:text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Agregar item</span>
+                    </button>
                   )}
                 </div>
               )}

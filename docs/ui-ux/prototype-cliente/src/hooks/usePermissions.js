@@ -68,6 +68,47 @@ export const usePermissions = () => {
     return role && ['owner', 'admin', 'editor'].includes(role);
   };
 
+  // Notes permissions
+  const canCreateNotes = () => hasPermission('notes.create');
+  const canEditNotes = () => hasPermission('notes.update');
+  const canDeleteNotes = () => hasPermission('notes.delete');
+
+  // Contacts permissions
+  const canCreateContacts = () => hasPermission('contacts.create');
+  const canEditContacts = () => hasPermission('contacts.update');
+  const canDeleteContacts = () => hasPermission('contacts.delete');
+
+  // Bookmarks permissions
+  const canCreateBookmarks = () => hasPermission('bookmarks.create');
+  const canEditBookmarks = () => hasPermission('bookmarks.update');
+  const canDeleteBookmarks = () => hasPermission('bookmarks.delete');
+
+  // Env Vars permissions
+  const canCreateEnvVars = () => hasPermission('envvars.create');
+  const canEditEnvVars = () => hasPermission('envvars.update');
+  const canDeleteEnvVars = () => hasPermission('envvars.delete');
+  const canRevealEnvVars = () => hasPermission('envvars.reveal') || hasPermission('projects.*') || isOrgAdmin();
+
+  // SSH Keys permissions
+  const canCreateSSHKeys = () => hasPermission('sshkeys.create');
+  const canEditSSHKeys = () => hasPermission('sshkeys.update');
+  const canDeleteSSHKeys = () => hasPermission('sshkeys.delete');
+
+  // SSL Certs permissions
+  const canCreateSSLCerts = () => hasPermission('sslcerts.create');
+  const canEditSSLCerts = () => hasPermission('sslcerts.update');
+  const canDeleteSSLCerts = () => hasPermission('sslcerts.delete');
+
+  // Snippets permissions
+  const canCreateSnippets = () => hasPermission('snippets.create');
+  const canEditSnippets = () => hasPermission('snippets.update');
+  const canDeleteSnippets = () => hasPermission('snippets.delete');
+
+  // Forms permissions
+  const canCreateForms = () => hasPermission('forms.create');
+  const canEditForms = () => hasPermission('forms.update');
+  const canDeleteForms = () => hasPermission('forms.delete');
+
   // Helper para verificar si es admin completo
   const isOrgAdmin = () => {
     return currentUser?.roles?.includes('OrgAdmin') || false;
@@ -95,6 +136,31 @@ export const usePermissions = () => {
   return {
     hasPermission,
     canAccess,
+    canCreateNotes,
+    canEditNotes,
+    canDeleteNotes,
+    canCreateContacts,
+    canEditContacts,
+    canDeleteContacts,
+    canCreateBookmarks,
+    canEditBookmarks,
+    canDeleteBookmarks,
+    canCreateEnvVars,
+    canEditEnvVars,
+    canDeleteEnvVars,
+    canRevealEnvVars,
+    canCreateSSHKeys,
+    canEditSSHKeys,
+    canDeleteSSHKeys,
+    canCreateSSLCerts,
+    canEditSSLCerts,
+    canDeleteSSLCerts,
+    canCreateSnippets,
+    canEditSnippets,
+    canDeleteSnippets,
+    canCreateForms,
+    canEditForms,
+    canDeleteForms,
     canCreateUsers,
     canEditUsers,
     canDeleteUsers,

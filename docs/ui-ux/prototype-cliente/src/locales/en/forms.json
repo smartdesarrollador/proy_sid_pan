@@ -1,0 +1,32 @@
+{
+  "title": "Forms",
+  "formsCount": "forms",
+  "createButton": "New Form",
+  "emptyTitle": "No forms yet",
+  "emptyDescription": "Create your first form to collect data",
+  "confirmDelete": "Delete this form?",
+  "responses": "responses",
+  "questions": "questions",
+  "addQuestion": "Add question",
+  "noQuestions": "No questions yet",
+  "questionPlaceholder": "Question text",
+  "status": {
+    "all": "All",
+    "active": "Active",
+    "draft": "Draft",
+    "closed": "Closed"
+  },
+  "fields": {
+    "title": "Title",
+    "description": "Description",
+    "status": "Status",
+    "closesAt": "Closes at",
+    "questions": "Questions"
+  },
+  "modal": {
+    "create": "New Form",
+    "edit": "Edit Form",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

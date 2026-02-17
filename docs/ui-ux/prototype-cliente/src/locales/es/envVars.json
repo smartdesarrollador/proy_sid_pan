@@ -1,0 +1,29 @@
+{
+  "title": "Variables de Entorno",
+  "varsCount": "variables",
+  "createButton": "Nueva Variable",
+  "searchPlaceholder": "Buscar variables...",
+  "emptyTitle": "No hay variables de entorno",
+  "upgradeTitle": "Variables de Entorno requieren Plan Starter",
+  "upgradeDescription": "Actualiza tu plan para gestionar variables de entorno por ambiente",
+  "environments": {
+    "all": "Todos",
+    "development": "Desarrollo",
+    "staging": "Staging",
+    "production": "Produccion"
+  },
+  "fields": {
+    "key": "Clave",
+    "value": "Valor",
+    "valuePlaceholder": "Valor de la variable",
+    "environment": "Ambiente",
+    "description": "Descripcion",
+    "isSecret": "Es secreto (ocultar valor)"
+  },
+  "modal": {
+    "create": "Nueva Variable",
+    "edit": "Editar Variable",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}

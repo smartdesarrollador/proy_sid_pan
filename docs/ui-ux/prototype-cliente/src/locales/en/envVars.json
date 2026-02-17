@@ -1,0 +1,29 @@
+{
+  "title": "Environment Variables",
+  "varsCount": "variables",
+  "createButton": "New Variable",
+  "searchPlaceholder": "Search variables...",
+  "emptyTitle": "No environment variables",
+  "upgradeTitle": "Environment Variables require Starter Plan",
+  "upgradeDescription": "Upgrade your plan to manage environment variables by environment",
+  "environments": {
+    "all": "All",
+    "development": "Development",
+    "staging": "Staging",
+    "production": "Production"
+  },
+  "fields": {
+    "key": "Key",
+    "value": "Value",
+    "valuePlaceholder": "Variable value",
+    "environment": "Environment",
+    "description": "Description",
+    "isSecret": "Is secret (hide value)"
+  },
+  "modal": {
+    "create": "New Variable",
+    "edit": "Edit Variable",
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

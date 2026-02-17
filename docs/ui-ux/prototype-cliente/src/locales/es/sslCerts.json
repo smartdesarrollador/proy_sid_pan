@@ -1,0 +1,32 @@
+{
+  "title": "Certificados SSL",
+  "certsCount": "certificados",
+  "createButton": "Nuevo Certificado",
+  "emptyTitle": "No hay certificados SSL",
+  "confirmDelete": "Eliminar este certificado?",
+  "autoRenew": "Auto-renovar",
+  "alerts": {
+    "expired": "certificado(s) vencido(s)",
+    "expiring": "certificado(s) por vencer pronto"
+  },
+  "status": {
+    "all": "Todos",
+    "valid": "Valido",
+    "expiring": "Por vencer",
+    "expired": "Vencido"
+  },
+  "fields": {
+    "domain": "Dominio",
+    "issuer": "Emisor",
+    "validFrom": "Valido desde",
+    "validUntil": "Valido hasta",
+    "autoRenew": "Renovacion automatica",
+    "notes": "Notas"
+  },
+  "modal": {
+    "create": "Nuevo Certificado SSL",
+    "edit": "Editar Certificado SSL",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}

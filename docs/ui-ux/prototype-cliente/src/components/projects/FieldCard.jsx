@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, Tag, Edit2, Copy, Info, Trash2, Lock, Eye, EyeOff } from 'lucide-react';
+import { Star, Tag, Edit2, Copy, Info, Trash2, Lock, Eye, EyeOff, Check } from 'lucide-react';
 import { usePermissions } from '../../hooks/usePermissions';
 
 export const FieldCard = ({
@@ -8,15 +8,13 @@ export const FieldCard = ({
   onEdit,
   onDelete,
   onToggleFavorite,
-  onCopy,
   onShowInfo,
   onTags
 }) => {
   const [isPasswordRevealed, setIsPasswordRevealed] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const { canEditProjectItems, canDeleteProjectItems, canRevealPasswords } = usePermissions();
-
-  // Mock: determinar si es favorito (en producción vendría del item)
-  const isFavorite = false;
 
   const handleRevealPassword = () => {
     if (!canRevealPasswords()) {
@@ -24,10 +22,36 @@ export const FieldCard = ({
       return;
     }
     setIsPasswordRevealed(true);
-    // Auto-hide después de 30 segundos
+    // Auto-hide after 30 seconds
     setTimeout(() => {
       setIsPasswordRevealed(false);
     }, 30000);
+  };
+
+  const handleCopy = () => {
+    const valueToCopy = field.fieldType === 'password' && !isPasswordRevealed
+      ? 'P@ssw0rd123!' // Mock password real value
+      : field.fieldValue;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(valueToCopy).then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      }).catch(() => {
+        // Fallback for older browsers
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      });
+    } else {
+      // Fallback
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
+  };
+
+  const handleToggleFavorite = () => {
+    setIsFavorited(!isFavorited);
+    if (onToggleFavorite) onToggleFavorite(field.id);
   };
 
   const renderFieldValue = () => {
@@ -131,13 +155,13 @@ export const FieldCard = ({
       <div className="flex items-center justify-end gap-1 pt-3 border-t dark:border-gray-700">
         {/* Favorito */}
         <button
-          onClick={() => onToggleFavorite(field.id)}
+          onClick={handleToggleFavorite}
           className="p-1.5 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors"
-          title="Favorito"
+          title={isFavorited ? 'Quitar de favoritos' : 'Agregar a favoritos'}
         >
           <Star
-            className={`w-4 h-4 ${
-              isFavorite
+            className={`w-4 h-4 transition-colors ${
+              isFavorited
                 ? 'fill-yellow-500 text-yellow-500'
                 : 'text-gray-400 dark:text-gray-500'
             }`}
@@ -146,7 +170,7 @@ export const FieldCard = ({
 
         {/* Tags */}
         <button
-          onClick={() => onTags(field.id)}
+          onClick={() => onTags && onTags(field.id)}
           className="p-1.5 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
           title="Tags"
         >
@@ -156,7 +180,7 @@ export const FieldCard = ({
         {/* Editar */}
         {canEditProjectItems() && (
           <button
-            onClick={() => onEdit(field)}
+            onClick={() => onEdit && onEdit(field)}
             className="p-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
             title="Editar"
           >
@@ -166,21 +190,20 @@ export const FieldCard = ({
 
         {/* Copiar */}
         <button
-          onClick={() => {
-            const valueToCopy = field.fieldType === 'password' && !isPasswordRevealed
-              ? 'P@ssw0rd123!' // Mock password real
-              : field.fieldValue;
-            onCopy(valueToCopy);
-          }}
+          onClick={handleCopy}
           className="p-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          title="Copiar"
+          title={isCopied ? '¡Copiado!' : 'Copiar al portapapeles'}
         >
-          <Copy className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          {isCopied ? (
+            <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+          ) : (
+            <Copy className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          )}
         </button>
 
         {/* Info */}
         <button
-          onClick={() => onShowInfo(field)}
+          onClick={() => onShowInfo && onShowInfo(field)}
           className="p-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
           title="Información"
         >
@@ -190,7 +213,7 @@ export const FieldCard = ({
         {/* Eliminar */}
         {canDeleteProjectItems() && (
           <button
-            onClick={() => onDelete(field.id)}
+            onClick={() => onDelete && onDelete(field.id)}
             className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             title="Eliminar"
           >

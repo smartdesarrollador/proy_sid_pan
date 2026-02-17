@@ -1,0 +1,28 @@
+{
+  "title": "Claves SSH",
+  "keysCount": "claves",
+  "createButton": "Nueva Clave",
+  "searchPlaceholder": "Buscar claves SSH...",
+  "emptyTitle": "No hay claves SSH",
+  "confirmDelete": "Eliminar esta clave SSH?",
+  "autoRenew": "Auto-renovar",
+  "fields": {
+    "name": "Nombre",
+    "algorithm": "Algoritmo",
+    "publicKey": "Clave Publica",
+    "description": "Descripcion",
+    "expiresAt": "Expira el",
+    "created": "Creada",
+    "expires": "Expira",
+    "lastUsed": "Ultimo uso"
+  },
+  "actions": {
+    "copy": "Copiar clave publica"
+  },
+  "modal": {
+    "create": "Nueva Clave SSH",
+    "edit": "Editar Clave SSH",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  }
+}
