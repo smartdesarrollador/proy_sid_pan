@@ -562,6 +562,7 @@ export const userCVs = {
   'user-001': {
     id: 'cv-001',
     userId: 'user-001',
+    isPublished: true,
     template: 'modern',
     versions: [
       {
@@ -646,6 +647,7 @@ export const userCVs = {
   'user-002': {
     id: 'cv-002',
     userId: 'user-002',
+    isPublished: true,
     template: 'minimal',
     versions: [
       {
@@ -707,6 +709,7 @@ export const userCVs = {
   'user-003': {
     id: 'cv-003',
     userId: 'user-003',
+    isPublished: true,
     template: 'modern',
     versions: [
       {
@@ -767,6 +770,7 @@ export const userCVs = {
   'user-004': {
     id: 'cv-004',
     userId: 'user-004',
+    isPublished: true,
     template: 'classic', // Free plan limited to classic template
     versions: [
       {
@@ -824,6 +828,7 @@ export const userCVs = {
   'user-005': {
     id: 'cv-005',
     userId: 'user-005',
+    isPublished: false,
     template: 'classic',
     versions: [
       {
@@ -1157,4 +1162,10 @@ export const getPortfolioByUsername = (username) => {
   const user = getUserByUsername(username);
   if (!user) return null;
   return userPortfolios[user.id] || null;
+};
+
+export const getCVByUsername = (username) => {
+  const user = getUserByUsername(username);
+  if (!user) return null;
+  return userCVs[user.id] || null;
 };

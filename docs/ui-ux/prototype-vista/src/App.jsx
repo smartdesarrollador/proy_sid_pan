@@ -13,6 +13,7 @@ import { Login } from './components/auth/Login';
 import { PublicCardViewer } from './components/public/PublicCardViewer';
 import { PublicLandingViewer } from './components/public/PublicLandingViewer';
 import { PublicPortfolioViewer } from './components/public/PublicPortfolioViewer';
+import { PublicCVViewer } from './components/public/PublicCVViewer';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -200,6 +201,36 @@ function App() {
       <AuthProvider>
         <ThemeProvider>
           <PublicPortfolioViewer username={portfolioUsername} />
+        </ThemeProvider>
+      </AuthProvider>
+    );
+  }
+
+  // Public CV route - no login required
+  const isPublicCVRoute = pathname.startsWith('/cv/');
+  if (isPublicCVRoute) {
+    const cvUsername = pathname.split('/')[2];
+    if (!cvUsername) {
+      return (
+        <AuthProvider>
+          <ThemeProvider>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+              <div className="text-center">
+                <h1 className="text-6xl font-bold text-gray-900 dark:text-white mb-4">404</h1>
+                <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">URL inválida</p>
+                <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Volver al inicio
+                </a>
+              </div>
+            </div>
+          </ThemeProvider>
+        </AuthProvider>
+      );
+    }
+    return (
+      <AuthProvider>
+        <ThemeProvider>
+          <PublicCVViewer username={cvUsername} />
         </ThemeProvider>
       </AuthProvider>
     );
