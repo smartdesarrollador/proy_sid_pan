@@ -24,7 +24,7 @@ function Sidebar({ isOpen, activeView, onNavigate }) {
     { id: 'clients', label: t('menu.clients'), icon: Building2, permission: 'customers.read' },
     { id: 'analytics', label: t('menu.analytics'), icon: BarChart3, permission: 'analytics.read' },
     { id: 'roles', label: t('menu.roles'), icon: Shield, permission: 'roles.read' },
-    { id: 'permissions', label: t('menu.permissions'), icon: Key, permission: 'permissions.read' },
+    { id: 'permissions', label: t('menu.permissions'), icon: Key, permission: 'roles.read' },
     { id: 'subscription', label: t('menu.subscription'), icon: CreditCard, permission: 'billing.read' },
     { id: 'promotions', label: t('menu.promotions'), icon: Tag, permission: 'promotions.read' },
     { id: 'audit', label: t('menu.audit'), icon: FileText, permission: 'audit.read' },
