@@ -978,7 +978,7 @@ export const rolePermissions = {
     'portfolio.*', 'digital_services.*', 'public_profiles.*',
     'customers.*', 'subscriptions.*',
     'billing.*', 'promotions.*', 'analytics.*', 'settings.*', 'audit.*',
-    'dashboard.*'
+    'dashboard.*', 'support.*'
   ],
 
   // Service Manager: Gestión de equipo + todos los servicios (sin billing completo)
@@ -1735,3 +1735,120 @@ export const reportStats = {
     { month: 'Feb 2026', users: 23, revenue: 99 },
   ],
 };
+
+export const supportTickets = [
+  // Bandeja (open / in_progress / waiting_client) — 6 tickets
+  {
+    id: 'TKT-001', subject: 'No puedo acceder al dashboard desde móvil',
+    description: 'Desde ayer no puedo ingresar al panel desde mi celular. Error: "Session expired" aunque acabo de iniciar sesión.',
+    category: 'technical', priority: 'alta', status: 'open',
+    clientId: 'client-001', clientName: 'Tech Solutions S.A.', clientEmail: 'admin@techsolutions.com',
+    assignedTo: null, createdAt: '2026-02-22T09:15:00Z', updatedAt: '2026-02-22T09:15:00Z', resolvedAt: null,
+    comments: [
+      { id: 'c1', author: 'admin@techsolutions.com', role: 'client',
+        message: 'El problema empezó después de la actualización del sistema.', createdAt: '2026-02-22T09:20:00Z' }
+    ]
+  },
+  {
+    id: 'TKT-002', subject: 'Error al exportar reporte de facturación en PDF',
+    description: 'El botón "Exportar PDF" no genera el archivo. El spinner gira indefinidamente.',
+    category: 'billing', priority: 'urgente', status: 'in_progress',
+    clientId: 'client-002', clientName: 'Innovatech SRL', clientEmail: 'soporte@innovatech.com',
+    assignedTo: 'John Admin', createdAt: '2026-02-21T14:00:00Z', updatedAt: '2026-02-22T08:30:00Z', resolvedAt: null,
+    comments: [
+      { id: 'c2', author: 'soporte@innovatech.com', role: 'client',
+        message: 'Necesitamos el reporte para una auditoría que es el viernes.', createdAt: '2026-02-21T14:05:00Z' },
+      { id: 'c3', author: 'John Admin', role: 'agent',
+        message: 'Estamos investigando el problema. Identificamos un timeout en la generación del PDF para reportes con más de 500 transacciones.', createdAt: '2026-02-22T08:30:00Z' }
+    ]
+  },
+  {
+    id: 'TKT-003', subject: 'Solicitud: agregar campo personalizado en perfil de cliente',
+    description: 'Necesitamos un campo "Número de contrato interno" en el perfil de cada cliente para vincular con nuestro ERP.',
+    category: 'feature_request', priority: 'baja', status: 'open',
+    clientId: 'client-003', clientName: 'Global Logistics Corp', clientEmail: 'it@globallogistics.com',
+    assignedTo: null, createdAt: '2026-02-20T11:30:00Z', updatedAt: '2026-02-20T11:30:00Z', resolvedAt: null,
+    comments: []
+  },
+  {
+    id: 'TKT-004', subject: 'Usuario no puede resetear su contraseña',
+    description: 'Mi colega María García no recibe el email de reset de contraseña. Revisamos spam y nada.',
+    category: 'access', priority: 'alta', status: 'waiting_client',
+    clientId: 'client-004', clientName: 'MedCare Solutions', clientEmail: 'admin@medcare.com',
+    assignedTo: 'John Admin', createdAt: '2026-02-19T16:00:00Z', updatedAt: '2026-02-21T10:00:00Z', resolvedAt: null,
+    comments: [
+      { id: 'c4', author: 'John Admin', role: 'agent',
+        message: 'Verificamos el servidor de email. Por favor confirmá que el email registrado para María es maria@medcare.com.', createdAt: '2026-02-21T10:00:00Z' }
+    ]
+  },
+  {
+    id: 'TKT-005', subject: 'Plan no actualizó permisos después de upgrade',
+    description: 'Hicimos upgrade a Professional ayer pero los nuevos módulos siguen bloqueados.',
+    category: 'billing', priority: 'alta', status: 'in_progress',
+    clientId: 'client-005', clientName: 'StartupHub Inc', clientEmail: 'ceo@startuphub.com',
+    assignedTo: 'John Admin', createdAt: '2026-02-22T07:00:00Z', updatedAt: '2026-02-22T09:45:00Z', resolvedAt: null,
+    comments: [
+      { id: 'c5', author: 'ceo@startuphub.com', role: 'client',
+        message: 'El cobro ya se procesó según nuestro banco.', createdAt: '2026-02-22T07:10:00Z' },
+      { id: 'c6', author: 'John Admin', role: 'agent',
+        message: 'Confirmado, vemos el pago en el sistema. Hay un delay en la propagación de permisos. Activando manualmente.', createdAt: '2026-02-22T09:45:00Z' }
+    ]
+  },
+  {
+    id: 'TKT-006', subject: 'Integración API devuelve 401 desde ayer',
+    description: 'Nuestra integración con la API empezó a fallar con error 401 Unauthorized. El token API no cambió.',
+    category: 'technical', priority: 'urgente', status: 'open',
+    clientId: 'client-001', clientName: 'Tech Solutions S.A.', clientEmail: 'dev@techsolutions.com',
+    assignedTo: null, createdAt: '2026-02-22T11:00:00Z', updatedAt: '2026-02-22T11:00:00Z', resolvedAt: null,
+    comments: []
+  },
+  // Historial (resolved / closed) — 4 tickets
+  {
+    id: 'TKT-007', subject: 'Error al cargar imagen de perfil mayor a 5MB',
+    description: 'No puedo subir fotos de perfil mayores a 5MB. Solo aparece un error genérico.',
+    category: 'technical', priority: 'media', status: 'resolved',
+    clientId: 'client-002', clientName: 'Innovatech SRL', clientEmail: 'design@innovatech.com',
+    assignedTo: 'John Admin', createdAt: '2026-02-15T10:00:00Z', updatedAt: '2026-02-16T14:00:00Z',
+    resolvedAt: '2026-02-16T14:00:00Z',
+    comments: [
+      { id: 'c7', author: 'John Admin', role: 'agent',
+        message: 'Corregido. El límite era de 5MB para el plan Starter. Con el upgrade a Professional ahora acepta hasta 500MB.', createdAt: '2026-02-16T14:00:00Z' }
+    ]
+  },
+  {
+    id: 'TKT-008', subject: 'Facturas no muestran el número de IVA de la empresa',
+    description: 'Necesitamos que nuestro CUIT/NIF aparezca en las facturas para poder deducirlas.',
+    category: 'billing', priority: 'media', status: 'resolved',
+    clientId: 'client-003', clientName: 'Global Logistics Corp', clientEmail: 'contabilidad@globallogistics.com',
+    assignedTo: 'John Admin', createdAt: '2026-02-10T09:00:00Z', updatedAt: '2026-02-11T12:00:00Z',
+    resolvedAt: '2026-02-11T12:00:00Z',
+    comments: [
+      { id: 'c8', author: 'John Admin', role: 'agent',
+        message: 'Agregado CUIT en la sección Organización > Configuración Fiscal. Las próximas facturas lo incluirán.', createdAt: '2026-02-11T12:00:00Z' }
+    ]
+  },
+  {
+    id: 'TKT-009', subject: 'Solicitud de datos para exportación GDPR',
+    description: 'Como parte de nuestro compliance GDPR necesitamos exportar todos los datos del workspace.',
+    category: 'other', priority: 'baja', status: 'closed',
+    clientId: 'client-004', clientName: 'MedCare Solutions', clientEmail: 'legal@medcare.com',
+    assignedTo: 'John Admin', createdAt: '2026-02-05T15:00:00Z', updatedAt: '2026-02-07T10:00:00Z',
+    resolvedAt: '2026-02-07T10:00:00Z',
+    comments: [
+      { id: 'c9', author: 'John Admin', role: 'agent',
+        message: 'Exportación GDPR completada y enviada al email registrado. Archivo disponible por 48h.', createdAt: '2026-02-07T10:00:00Z' }
+    ]
+  },
+  {
+    id: 'TKT-010', subject: 'Notificaciones duplicadas en el dashboard',
+    description: 'Cada notificación aparece dos veces en el panel. Ocurre con Chrome y Firefox.',
+    category: 'technical', priority: 'media', status: 'resolved',
+    clientId: 'client-005', clientName: 'StartupHub Inc', clientEmail: 'admin@startuphub.com',
+    assignedTo: 'John Admin', createdAt: '2026-02-01T13:00:00Z', updatedAt: '2026-02-03T09:00:00Z',
+    resolvedAt: '2026-02-03T09:00:00Z',
+    comments: [
+      { id: 'c10', author: 'John Admin', role: 'agent',
+        message: 'Bug corregido en la versión 1.3.2. Por favor refresca la página y confirma.', createdAt: '2026-02-03T09:00:00Z' }
+    ]
+  },
+];

@@ -17,6 +17,7 @@ import Settings from './components/Settings';
 import Reports from './components/Reports';
 import Notifications from './components/Notifications';
 import Billing from './components/Billing';
+import Support from './components/Support';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -51,6 +52,8 @@ function AppContent() {
         return <Notifications />;
       case 'billing':
         return <Billing />;
+      case 'support':
+        return <Support />;
       default:
         return <Dashboard />;
     }

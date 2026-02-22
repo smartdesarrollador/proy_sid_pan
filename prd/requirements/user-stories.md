@@ -1914,6 +1914,85 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
+**US-109: Panel de Reportes Admin con KPIs de Actividad**
+
+**Como** admin o service manager,
+**Quiero** ver un panel de reportes con KPIs de actividad (usuarios activos, nuevos este mes, churn rate, MRR) y una tabla de actividad de usuarios con badges de estado,
+**Para** monitorear la salud operacional del workspace de un vistazo.
+
+**Criterios de Aceptación:**
+- [ ] 4 KPI cards visibles: Usuarios Activos, Nuevos Este Mes, Churn Rate, MRR
+- [ ] Tabla de actividad de usuarios con columnas: nombre, email, rol, último acceso, badge de estado
+- [ ] Badge dinámico: "Muy activo" (≤1 día), "Activo" (≤7 días), "Inactivo" (>7 días)
+- [ ] Botón "Exportar" visible para roles con permiso `analytics.read`
+- [ ] Accesible desde el menú de navegación admin
+
+**Permiso requerido:** `analytics.read`
+
+**Prioridad:** Alta | **Estimación:** 5 puntos
+
+---
+
+**US-110: Distribución de Roles y Permisos Más Usados en Reportes**
+
+**Como** admin,
+**Quiero** ver la distribución de roles del equipo con barras de progreso y el ranking de permisos más utilizados,
+**Para** entender el uso real del sistema RBAC y detectar roles sobredimensionados o permisos subutilizados.
+
+**Criterios de Aceptación:**
+- [ ] Sección "Distribución de Roles" con barra de progreso, porcentaje y conteo por rol
+- [ ] Sección "Permisos Más Usados" con ranking ordenado descendentemente
+- [ ] Barras de permisos proporcionales al uso máximo del permiso más utilizado
+- [ ] Datos actualizados al cargar la página (sin intervalo automático)
+- [ ] Sección visible solo para usuarios con `analytics.read`
+
+**Permiso requerido:** `analytics.read`
+
+**Prioridad:** Media | **Estimación:** 3 puntos
+
+---
+
+**US-111: Centro de Notificaciones Administrativo**
+
+**Como** usuario del panel admin (cualquier rol),
+**Quiero** un centro de notificaciones con filtros por categoría, poder marcar como leída y descartar notificaciones individualmente o todas a la vez,
+**Para** mantenerme informado sobre eventos relevantes del sistema sin perder contexto de trabajo.
+
+**Criterios de Aceptación:**
+- [ ] Notificaciones categorizadas: seguridad, usuarios, facturación, sistema, roles
+- [ ] Filtros funcionales por categoría y por estado (sin leer / todas)
+- [ ] Badge con conteo de notificaciones sin leer en el icono del menú
+- [ ] Acción "Marcar todas como leídas" disponible cuando hay sin leer
+- [ ] Descartar notificación individual con botón "×"
+- [ ] Timestamp relativo visible: "Hace X min/h/días"
+- [ ] Empty state descriptivo cuando no hay notificaciones en el filtro activo
+
+**Permiso requerido:** `dashboard.read` (todos los roles con acceso al panel admin)
+
+**Prioridad:** Alta | **Estimación:** 5 puntos
+
+---
+
+**US-112: Panel de Historial Financiero Admin**
+
+**Como** admin o billing manager,
+**Quiero** ver un panel dedicado de facturación con resumen de totales, métodos de pago registrados, historial de facturas descargables y timeline de transacciones,
+**Para** tener visibilidad completa del estado financiero del workspace sin necesidad de contactar soporte.
+
+**Criterios de Aceptación:**
+- [ ] Fila de 3 stats cards: total facturado (pagado), pendiente de cobro, próxima factura (fecha + monto)
+- [ ] Cards de métodos de pago con brand, últimos 4 dígitos, vencimiento y badge "Principal"
+- [ ] Botón "Agregar método de pago" visible solo para `billing.manage`
+- [ ] Tabla de facturas con: # factura, período, monto, badge de estado (Pagada / Pendiente / Fallida), botón descarga PDF
+- [ ] Timeline vertical de transacciones con dot de color según estado (verde/amarillo/rojo)
+- [ ] Historial ordenado cronológicamente descendente (más reciente primero)
+
+**Permiso requerido:** `billing.read` (lectura); `billing.manage` (agregar métodos)
+
+**Prioridad:** Alta | **Estimación:** 8 puntos
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -1922,4 +2001,4 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
-**Última actualización**: 2026-02-17
+**Última actualización**: 2026-02-22

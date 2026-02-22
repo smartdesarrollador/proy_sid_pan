@@ -1567,6 +1567,66 @@ Proveer métricas de efectividad de promociones para decisiones de marketing.
 
 ---
 
+#### FR-131: Panel de Reportes Admin con KPIs de Actividad
+- **Descripción:** El sistema debe mostrar un panel de reportes con KPIs de actividad del workspace y tabla de actividad de usuarios
+- **Plan:** Starter+
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. El sistema DEBE mostrar 4 KPI cards: Usuarios Activos, Nuevos Este Mes, Churn Rate, MRR
+  2. El sistema DEBE incluir tabla de actividad de usuarios con columnas: nombre, email, rol, último acceso y badge de estado
+  3. Badge dinámico calculado a partir de `last_login`: "Muy activo" si ≤1 día, "Activo" si ≤7 días, "Inactivo" si >7 días
+  4. El sistema DEBE mostrar botón "Exportar" accesible solo a roles con permiso `analytics.read`
+  5. Acceso restringido: usuarios sin `analytics.read` reciben HTTP 403
+
+#### FR-132: Visualizaciones de Distribución de Roles y Permisos Más Usados
+- **Descripción:** El sistema debe mostrar visualizaciones de distribución de roles y ranking de permisos más utilizados
+- **Plan:** Starter+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. El sistema DEBE mostrar distribución de roles con barra de progreso, porcentaje y conteo de usuarios por rol
+  2. El sistema DEBE rankear los permisos más usados con barras proporcionales al uso máximo (permiso líder = 100%)
+  3. Datos calculados bajo demanda; no se almacenan como serie temporal
+  4. Las visualizaciones se renderizan con CSS puro (sin librerías de charts externas)
+
+#### FR-133: Resumen Financiero en Reportes (Condicional a billing.read)
+- **Descripción:** El sistema debe mostrar métricas financieras en el panel de reportes solo cuando el usuario tiene permiso `billing.read`
+- **Plan:** Professional+
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. La sección de métricas financieras DEBE ocultarse completamente si el usuario carece de `billing.read` (no solo visualmente deshabilitada)
+  2. La sección DEBE incluir: MRR, ARR, ARPU, conversiones de trial a pago
+  3. El sistema DEBE mostrar tabla de crecimiento mensual con los últimos 6 meses: mes, nuevos clientes, cancelaciones, MRR neto
+  4. Los datos financieros se obtienen del mismo endpoint `/api/v1/reports/summary/` con campos adicionales cuando el permiso está presente
+
+#### FR-134: Centro de Notificaciones Administrativo
+- **Descripción:** El sistema debe proveer un centro de notificaciones administrativo con filtrado, marcado como leída y descarte
+- **Plan:** Todos los planes (funcionalidad base del panel admin)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. El sistema DEBE mostrar notificaciones categorizadas en: `security`, `users`, `billing`, `system`, `roles`
+  2. El sistema DEBE permitir filtrar por categoría y por estado (`unread` / `all`) de forma independiente
+  3. El sistema DEBE permitir marcar una notificación individual como leída (toggle)
+  4. El sistema DEBE proveer acción "Marcar todas como leídas" que actualiza el estado en batch
+  5. El sistema DEBE permitir descartar (eliminar) una notificación individual con confirmación implícita
+  6. El sistema DEBE mostrar timestamp relativo: "Hace X min", "Hace X h", "Hace X días"
+  7. El sistema DEBE mostrar un empty state descriptivo cuando el filtro activo no retorna notificaciones
+  8. El badge de notificaciones sin leer en el menú se actualiza en tiempo real o mediante polling cada 60 s
+
+#### FR-135: Panel de Historial Financiero Administrativo
+- **Descripción:** El sistema debe proveer un panel dedicado de facturación con resumen financiero, métodos de pago, historial de facturas y timeline de transacciones
+- **Plan:** Starter+ (lectura); Professional+ (gestión de métodos de pago)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. El sistema DEBE mostrar 3 stats cards: total facturado en el período (facturas `paid`), pendiente de cobro (facturas `pending`), próxima factura (fecha estimada + monto)
+  2. El sistema DEBE listar los métodos de pago con: brand (Visa/Mastercard/etc.), últimos 4 dígitos, mes/año de vencimiento y badge "Principal" para el método predeterminado
+  3. El botón "Agregar método de pago" DEBE mostrarse solo a usuarios con permiso `billing.manage`; oculto (no deshabilitado) para usuarios con solo `billing.read`
+  4. El sistema DEBE mostrar tabla de facturas con: número de factura, período de cobertura, monto, badge de estado (`Pagada` / `Pendiente` / `Fallida`) y botón de descarga PDF por fila
+  5. El sistema DEBE mostrar timeline vertical de transacciones con dot de color según estado: verde (exitosa), amarillo (pendiente), rojo (fallida)
+  6. El historial de facturas y transacciones se ordena cronológicamente descendente (más reciente primero)
+  7. Usuarios sin `billing.read` reciben HTTP 403 al intentar acceder al panel
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -1575,4 +1635,4 @@ Proveer métricas de efectividad de promociones para decisiones de marketing.
 
 ---
 
-**Última actualización**: 2026-02-17
+**Última actualización**: 2026-02-22

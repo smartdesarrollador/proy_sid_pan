@@ -84,6 +84,13 @@ export const usePermissions = () => {
   // Analytics
   const canExportAnalytics = () => hasPermission('analytics.export');
 
+  // Support / Tickets permissions
+  const canReadTickets = () => hasPermission('support.read');
+  const canCreateTickets = () => hasPermission('support.create');
+  const canUpdateTickets = () => hasPermission('support.update');
+  const canAssignTickets = () => hasPermission('support.assign');
+  const canCloseTickets = () => hasPermission('support.close');
+
   // Helper para verificar roles actualizados
   const isOwner = () => currentUser?.roles?.includes('Owner') || isOrgAdmin();
   const isServiceManager = () => currentUser?.roles?.includes('Service Manager');
@@ -160,6 +167,11 @@ export const usePermissions = () => {
     canManagePublicCV,
     canManagePublicPortfolio,
     canExportAnalytics,
+    canReadTickets,
+    canCreateTickets,
+    canUpdateTickets,
+    canAssignTickets,
+    canCloseTickets,
     isOwner,
     isServiceManager,
     isCustomerSuccessManager,

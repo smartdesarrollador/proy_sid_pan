@@ -8,6 +8,7 @@
 - [Formularios](#formularios)
 - [Log de Auditoría](#log-de-auditoría)
 - [Reportes del Sistema](#reportes-del-sistema)
+- [Centro de Notificaciones](#centro-de-notificaciones)
 
 ---
 
@@ -167,22 +168,26 @@ Timeline cronológico inmutable de todas las acciones realizadas en el sistema. 
 ## Reportes del Sistema
 
 ### Descripción
-Dashboard de métricas del tenant con estadísticas de uso: usuarios activos, proyectos, storage consumido, API calls, tareas completadas y actividad reciente. Solo lectura — datos calculados por el sistema.
+Dashboard de métricas del tenant con estadísticas de uso: usuarios activos, proyectos, storage consumido, API calls, tareas completadas y actividad reciente. Incluye KPIs de actividad, distribución de roles, ranking de permisos más usados y (condicionalmente) métricas financieras. Solo lectura — datos calculados por el sistema.
 
 ### Características Clave
-1. **Métricas de uso**: Usuarios activos, storage, API calls
-2. **Tendencias**: Comparativa período actual vs anterior
-3. **Visualizaciones**: Barras CSS (sin librería externa)
-4. **Filtros temporales**: Última semana, mes, trimestre
-5. **Exportación**: PDF ejecutivo (Enterprise)
+1. **KPI cards de actividad**: Usuarios Activos, Nuevos Este Mes, Churn Rate, MRR
+2. **Tabla de actividad de usuarios**: Último acceso con badge dinámico (Muy activo / Activo / Inactivo)
+3. **Distribución de roles**: Barras de progreso con porcentaje y conteo por rol
+4. **Permisos más usados**: Ranking con barras proporcionales al uso máximo
+5. **Métricas financieras** (condicional a `billing.read`): MRR, ARR, ARPU, conversiones trial, tabla de crecimiento mensual
+6. **Tendencias**: Comparativa período actual vs anterior
+7. **Visualizaciones**: Barras CSS (sin librería externa)
+8. **Filtros temporales**: Última semana, mes, trimestre
+9. **Exportación**: PDF ejecutivo (Enterprise)
 
 ### Feature Gates por Plan
 
 | Plan | Disponible | Métricas | Período histórico | Exportar |
 |------|-----------|---------|------------------|---------|
 | Free | ❌ | — | — | — |
-| Starter | ✅ | Básicas | 30 días | ❌ |
-| Professional | ✅ | Avanzadas | 90 días | ❌ |
+| Starter | ✅ | Básicas + KPIs actividad | 30 días | ❌ |
+| Professional | ✅ | Avanzadas + Distribución roles + Financiero | 90 días | ❌ |
 | Enterprise | ✅ | Personalizadas | 365 días | ✅ |
 
 ### Casos de Uso Referenciados
@@ -192,11 +197,16 @@ Dashboard de métricas del tenant con estadísticas de uso: usuarios activos, pr
 - **US-106**: Ver métricas de uso del workspace (Starter+)
 - **US-107**: Comparar métricas entre períodos
 - **US-108**: Exportar reporte ejecutivo (Enterprise)
+- **US-109**: Panel de reportes admin con KPIs de actividad
+- **US-110**: Distribución de roles y permisos más usados en reportes
 
 ### Requerimientos Funcionales
 - **FR-128**: Dashboard de métricas con usuarios activos, storage, API calls y proyectos
 - **FR-129**: Comparativas de tendencia vs período anterior con indicadores de cambio
 - **FR-130**: Exportación de reporte ejecutivo en PDF (Enterprise)
+- **FR-131**: Panel de reportes admin con KPIs de actividad y tabla de usuarios con badges
+- **FR-132**: Visualizaciones de distribución de roles y permisos más usados con barras CSS
+- **FR-133**: Sección de métricas financieras condicional al permiso `billing.read`
 
 ### Datos del Dashboard
 
@@ -234,12 +244,53 @@ class TenantReport:
 
 ### Permisos RBAC por Rol
 
-| Rol | Ver métricas básicas | Ver métricas avanzadas | Exportar |
-|-----|---------------------|----------------------|---------|
-| Owner | ✅ | ✅ | ✅ (Enterprise) |
-| Service Manager | ✅ | ✅ | ❌ |
-| Member | ❌ | ❌ | ❌ |
-| Viewer | ❌ | ❌ | ❌ |
+| Rol | Ver métricas básicas | Ver métricas avanzadas + KPIs | Ver métricas financieras | Exportar |
+|-----|---------------------|------------------------------|------------------------|---------|
+| Owner | ✅ | ✅ | ✅ | ✅ (Enterprise) |
+| Service Manager | ✅ | ✅ | ❌ | ❌ |
+| Member | ❌ | ❌ | ❌ | ❌ |
+| Viewer | ❌ | ❌ | ❌ | ❌ |
+
+---
+
+## Centro de Notificaciones
+
+### Descripción
+Centro de notificaciones administrativo con filtrado por categoría, gestión de estado de lectura y descarte de notificaciones. Disponible para todos los roles con acceso al panel admin. Centraliza alertas de seguridad, cambios de usuarios, eventos de facturación, actualizaciones del sistema y modificaciones de roles.
+
+### Características Clave
+1. **Categorías**: Seguridad, Usuarios, Facturación, Sistema, Roles
+2. **Filtros**: Por categoría y por estado (Sin leer / Todas)
+3. **Badge de sin leer**: Contador visible en el icono de notificaciones del menú
+4. **Marcar como leída**: Individual (toggle) o todas a la vez
+5. **Descartar notificación**: Eliminar individualmente con botón "×"
+6. **Timestamp relativo**: "Hace X min", "Hace X h", "Hace X días"
+7. **Empty state**: Mensaje descriptivo cuando el filtro activo no retorna resultados
+8. **Actualización automática**: Polling cada 60 s para badge de sin leer
+
+### Feature Gates por Plan
+
+| Plan | Notificaciones/día | Historial | Filtros | Email digest |
+|------|-------------------|-----------|---------|-------------|
+| Free | 100 | 7 días | Básico | ❌ |
+| Starter | 500 | 30 días | Completo | ❌ |
+| Professional | Ilimitado | 90 días | Completo | ✅ |
+| Enterprise | Ilimitado | 365 días | Completo | ✅ |
+
+### User Stories Referenciadas
+- **US-111**: Centro de notificaciones administrativo filtrable con gestión de leídas
+
+### Requerimientos Funcionales
+- **FR-134**: Centro de notificaciones administrativo con categorías, filtros, marcado y descarte
+
+### Permisos RBAC por Rol
+
+| Rol | Ver notificaciones | Marcar como leída | Descartar | Configurar alertas |
+|-----|-------------------|-------------------|-----------|-------------------|
+| Owner | ✅ | ✅ | ✅ | ✅ |
+| Service Manager | ✅ | ✅ | ✅ | ✅ |
+| Member | ✅ (propias) | ✅ | ✅ | ❌ |
+| Viewer | ✅ (propias) | ✅ | ✅ | ❌ |
 
 ---
 
@@ -251,4 +302,4 @@ class TenantReport:
 
 ---
 
-**Última actualización**: 2026-02-17
+**Última actualización**: 2026-02-22

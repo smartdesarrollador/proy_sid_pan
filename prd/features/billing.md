@@ -362,6 +362,53 @@
 
 ---
 
+## Panel de Historial Financiero
+
+### Descripción
+Panel UI administrativo dedicado a la gestión y visualización del historial financiero del workspace. Complementa la sección de "Gestión de Suscripciones" (plan actual y upgrades) con el historial detallado de transacciones, facturas descargables y estado de métodos de pago. Es la vista de facturación que los administradores consultan para reporting financiero y resolución de disputas.
+
+**Diferenciación con SubscriptionManagement:**
+- **SubscriptionManagement**: Plan actual, comparativa de planes, upgrade/downgrade → orientado a decisiones de compra
+- **Panel de Historial Financiero**: Historial de pagos, facturas, transacciones, métodos registrados → orientado a accounting y compliance
+
+### Características Clave
+1. **Stats row**: 3 cards — Total Facturado (paid), Pendiente de Cobro (pending), Próxima Factura (fecha + monto estimado)
+2. **Métodos de pago**: Cards con brand, últimos 4 dígitos, vencimiento, badge "Principal" para el predeterminado
+3. **Agregar método**: Botón disponible solo con `billing.manage`; oculto (no deshabilitado) para `billing.read`
+4. **Tabla de facturas**: # factura, período de cobertura, monto, badge de estado, botón descarga PDF
+5. **Timeline de transacciones**: Lista vertical con dot de color por estado (verde/amarillo/rojo), monto, descripción y timestamp
+6. **Ordenamiento**: Cronológico descendente (más reciente primero)
+
+### Feature Gates por Plan
+
+| Plan | Disponible | Historial facturas | Descarga PDF | Timeline transacciones |
+|------|-----------|-------------------|-------------|----------------------|
+| Free | ❌ | — | — | — |
+| Starter | ✅ | 12 meses | ✅ | 30 días |
+| Professional | ✅ | 24 meses | ✅ | 12 meses |
+| Enterprise | ✅ | Ilimitado | ✅ | Ilimitado |
+
+### User Stories Referenciadas
+- **US-016**: Gestionar métodos de pago registrados
+- **US-017**: Ver historial de facturación automática
+- **US-112**: Panel de historial financiero admin con stats, métodos de pago y timeline
+
+### Requerimientos Funcionales
+- **FR-135**: Panel de historial financiero administrativo con stats cards, métodos de pago, tabla de facturas y timeline de transacciones
+
+### Permisos RBAC por Rol
+
+| Rol | Ver historial | Ver métodos de pago | Agregar método de pago | Descargar facturas |
+|-----|--------------|--------------------|-----------------------|-------------------|
+| Owner | ✅ | ✅ | ✅ | ✅ |
+| Service Manager | ❌ | ❌ | ❌ | ❌ |
+| Member | ❌ | ❌ | ❌ | ❌ |
+| Viewer | ❌ | ❌ | ❌ | ❌ |
+
+> **Nota**: El permiso `billing.read` lo tienen Owner y, opcionalmente, roles personalizados configurados por el Owner. `billing.manage` es exclusivo del Owner por defecto.
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -370,4 +417,4 @@
 
 ---
 
-**Última actualización**: 2026-02-10
+**Última actualización**: 2026-02-22

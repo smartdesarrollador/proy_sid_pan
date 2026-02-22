@@ -12,6 +12,7 @@ import {
   FileBarChart,
   Bell,
   Receipt,
+  Headphones,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +35,7 @@ function Sidebar({ isOpen, activeView, onNavigate }) {
     { id: 'subscription', label: t('menu.subscription'), icon: CreditCard, permission: 'billing.read' },
     { id: 'promotions', label: t('menu.promotions'), icon: Tag, permission: 'promotions.read' },
     { id: 'audit', label: t('menu.audit'), icon: FileText, permission: 'audit.read' },
+    { id: 'support', label: 'Soporte', icon: Headphones, permission: 'support.read' },
     { id: 'settings', label: t('menu.settings'), icon: Settings, permission: 'settings.read' },
   ];
 
