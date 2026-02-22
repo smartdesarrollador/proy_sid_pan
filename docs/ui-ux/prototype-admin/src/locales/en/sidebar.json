@@ -9,7 +9,10 @@
     "subscription": "Subscription",
     "promotions": "Promotions",
     "audit": "Audit",
-    "settings": "Settings"
+    "settings": "Settings",
+    "reports": "Reports",
+    "notifications": "Notifications",
+    "billing": "Billing"
   },
   "upgrade": {
     "title": "Need more users?",

@@ -14,6 +14,9 @@ import AuditLogs from './components/AuditLogs';
 import CustomerAnalytics from './components/CustomerAnalytics';
 import PromotionManagement from './components/PromotionManagement';
 import Settings from './components/Settings';
+import Reports from './components/Reports';
+import Notifications from './components/Notifications';
+import Billing from './components/Billing';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -42,6 +45,12 @@ function AppContent() {
         return <PromotionManagement />;
       case 'settings':
         return <Settings />;
+      case 'reports':
+        return <Reports />;
+      case 'notifications':
+        return <Notifications />;
+      case 'billing':
+        return <Billing />;
       default:
         return <Dashboard />;
     }

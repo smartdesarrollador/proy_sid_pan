@@ -8,7 +8,10 @@ import {
   Settings,
   Building2,
   BarChart3,
-  Tag
+  Tag,
+  FileBarChart,
+  Bell,
+  Receipt,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +26,9 @@ function Sidebar({ isOpen, activeView, onNavigate }) {
     { id: 'users', label: t('menu.users'), icon: Users, permission: 'users.read' },
     { id: 'clients', label: t('menu.clients'), icon: Building2, permission: 'customers.read' },
     { id: 'analytics', label: t('menu.analytics'), icon: BarChart3, permission: 'analytics.read' },
+    { id: 'reports', label: t('menu.reports'), icon: FileBarChart, permission: 'analytics.read' },
+    { id: 'notifications', label: t('menu.notifications'), icon: Bell, permission: 'dashboard.read' },
+    { id: 'billing', label: t('menu.billing'), icon: Receipt, permission: 'billing.read' },
     { id: 'roles', label: t('menu.roles'), icon: Shield, permission: 'roles.read' },
     { id: 'permissions', label: t('menu.permissions'), icon: Key, permission: 'roles.read' },
     { id: 'subscription', label: t('menu.subscription'), icon: CreditCard, permission: 'billing.read' },
