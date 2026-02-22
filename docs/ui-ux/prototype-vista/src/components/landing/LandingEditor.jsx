@@ -8,6 +8,8 @@ const getSectionTypeName = (type) => {
     hero: 'Hero',
     about: 'Acerca de',
     services: 'Servicios',
+    testimonials: 'Testimonios',
+    stats: 'Estadísticas',
     contact: 'Contacto',
   };
   return typeNames[type] || type;
@@ -34,6 +36,21 @@ const getDefaultContent = (type) => {
         title: 'Servicios',
         items: [
           { icon: 'Code', title: 'Servicio 1', description: 'Descripción del servicio' },
+        ],
+      };
+    case 'testimonials':
+      return {
+        title: 'Lo que dicen mis clientes',
+        items: [
+          { name: 'Cliente Ejemplo', role: 'CEO, Empresa', quote: 'Excelente trabajo, muy profesional y puntual.', rating: 5 },
+        ],
+      };
+    case 'stats':
+      return {
+        title: '',
+        items: [
+          { value: '5+', label: 'Años de experiencia', icon: 'Calendar' },
+          { value: '50+', label: 'Proyectos', icon: 'Briefcase' },
         ],
       };
     case 'contact':

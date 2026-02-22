@@ -309,9 +309,24 @@ export const userLandingPages = {
         },
       },
       {
+        id: 'stats-001',
+        type: 'stats',
+        order: 1,
+        visible: true,
+        content: {
+          title: '',
+          items: [
+            { value: '15+', label: 'Años de experiencia', icon: 'Calendar' },
+            { value: '200+', label: 'Proyectos', icon: 'Briefcase' },
+            { value: '80+', label: 'Clientes', icon: 'Users' },
+            { value: '99%', label: 'Uptime garantizado', icon: 'Shield' },
+          ],
+        },
+      },
+      {
         id: 'about-001',
         type: 'about',
-        order: 1,
+        order: 2,
         visible: true,
         content: {
           title: 'About Me',
@@ -321,9 +336,38 @@ export const userLandingPages = {
         },
       },
       {
+        id: 'testimonials-001',
+        type: 'testimonials',
+        order: 3,
+        visible: true,
+        content: {
+          title: 'Lo que dicen mis clientes',
+          items: [
+            {
+              name: 'Maria González',
+              role: 'CTO, TechCorp',
+              quote: 'Entregó la arquitectura a tiempo y con una calidad excepcional. El sistema ha estado al 99.9% de uptime desde su implementación.',
+              rating: 5,
+            },
+            {
+              name: 'Carlos Ruiz',
+              role: 'VP Engineering, GlobalSoft',
+              quote: 'Profundo conocimiento técnico y excelente comunicación. Transformó nuestra infraestructura legacy en un sistema cloud moderno.',
+              rating: 5,
+            },
+            {
+              name: 'Ana Torres',
+              role: 'Founder, StartupABC',
+              quote: 'Transformó nuestra infraestructura de startup en un sistema enterprise. No podríamos estar más satisfechos con los resultados.',
+              rating: 5,
+            },
+          ],
+        },
+      },
+      {
         id: 'services-001',
         type: 'services',
-        order: 2,
+        order: 4,
         visible: true,
         content: {
           title: 'Services',
@@ -337,7 +381,7 @@ export const userLandingPages = {
       {
         id: 'contact-001',
         type: 'contact',
-        order: 3,
+        order: 5,
         visible: true,
         content: {
           title: 'Contact',
@@ -1101,4 +1145,16 @@ export const getDigitalCardByUsername = (username) => {
   const user = getUserByUsername(username);
   if (!user) return null;
   return userDigitalCards[user.id] || null;
+};
+
+export const getLandingPageByUsername = (username) => {
+  const user = getUserByUsername(username);
+  if (!user) return null;
+  return userLandingPages[user.id] || null;
+};
+
+export const getPortfolioByUsername = (username) => {
+  const user = getUserByUsername(username);
+  if (!user) return null;
+  return userPortfolios[user.id] || null;
 };

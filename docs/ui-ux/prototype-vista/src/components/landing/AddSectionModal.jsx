@@ -1,4 +1,4 @@
-import { X, Layout, User, Code, Mail } from 'lucide-react';
+import { X, Layout, User, Code, Mail, MessageSquare, TrendingUp } from 'lucide-react';
 
 const sectionTypes = [
   {
@@ -18,6 +18,18 @@ const sectionTypes = [
     name: 'Servicios',
     icon: Code,
     description: 'Grid de servicios o características',
+  },
+  {
+    id: 'testimonials',
+    name: 'Testimonios',
+    icon: MessageSquare,
+    description: 'Opiniones y reseñas de clientes',
+  },
+  {
+    id: 'stats',
+    name: 'Estadísticas',
+    icon: TrendingUp,
+    description: 'Números y logros destacados',
   },
   {
     id: 'contact',

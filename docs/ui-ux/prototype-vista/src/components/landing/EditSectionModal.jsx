@@ -34,12 +34,12 @@ export const EditSectionModal = ({ section, onSave, onClose }) => {
     }));
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = (defaultItem) => {
     setFormData(prev => ({
       ...prev,
       items: [
         ...(prev.items || []),
-        { icon: 'Code', title: '', description: '' },
+        defaultItem || { icon: 'Code', title: '', description: '' },
       ],
     }));
   };
@@ -72,6 +72,16 @@ export const EditSectionModal = ({ section, onSave, onClose }) => {
 
     if (section.type === 'contact' && !formData.title) {
       alert('El título es requerido');
+      return;
+    }
+
+    if (section.type === 'testimonials' && !formData.items?.length) {
+      alert('Debes agregar al menos un testimonio');
+      return;
+    }
+
+    if (section.type === 'stats' && !formData.items?.length) {
+      alert('Debes agregar al menos una estadística');
       return;
     }
 
@@ -393,6 +403,205 @@ export const EditSectionModal = ({ section, onSave, onClose }) => {
                 className="input"
                 placeholder="Ciudad, País"
               />
+            </div>
+          </>
+        );
+
+      case 'testimonials':
+        return (
+          <>
+            <div>
+              <label htmlFor="title" className="label">
+                Título de Sección
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title || ''}
+                onChange={handleChange}
+                className="input"
+                placeholder="Lo que dicen mis clientes"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="label mb-0">Testimonios *</label>
+                <button
+                  type="button"
+                  onClick={() => handleAddItem({ name: '', role: '', quote: '', rating: 5 })}
+                  className="btn-secondary text-sm flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Agregar
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(formData.items || []).map((item, index) => (
+                  <div key={index} className="card card-body p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Testimonio {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(index)}
+                        className="text-red-600 hover:text-red-700 dark:text-red-400"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="label text-sm">Nombre</label>
+                      <input
+                        type="text"
+                        value={item.name || ''}
+                        onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+                        className="input text-sm"
+                        placeholder="Nombre del cliente"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label text-sm">Cargo / Empresa</label>
+                      <input
+                        type="text"
+                        value={item.role || ''}
+                        onChange={(e) => handleItemChange(index, 'role', e.target.value)}
+                        className="input text-sm"
+                        placeholder="CEO, Empresa X"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label text-sm">Testimonio</label>
+                      <textarea
+                        value={item.quote || ''}
+                        onChange={(e) => handleItemChange(index, 'quote', e.target.value)}
+                        rows={3}
+                        className="input text-sm resize-none"
+                        placeholder="Escribe el testimonio..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label text-sm">Puntuación (1-5)</label>
+                      <select
+                        value={item.rating || 5}
+                        onChange={(e) => handleItemChange(index, 'rating', Number(e.target.value))}
+                        className="input text-sm"
+                      >
+                        {[1, 2, 3, 4, 5].map(n => (
+                          <option key={n} value={n}>{n} estrella{n > 1 ? 's' : ''}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+
+                {(!formData.items || formData.items.length === 0) && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                    No hay testimonios. Haz clic en "Agregar" para crear uno.
+                  </p>
+                )}
+              </div>
+            </div>
+          </>
+        );
+
+      case 'stats':
+        return (
+          <>
+            <div>
+              <label htmlFor="title" className="label">
+                Título de Sección (opcional)
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title || ''}
+                onChange={handleChange}
+                className="input"
+                placeholder="Números que hablan"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="label mb-0">Estadísticas *</label>
+                <button
+                  type="button"
+                  onClick={() => handleAddItem({ value: '', label: '', icon: 'Star' })}
+                  className="btn-secondary text-sm flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Agregar
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(formData.items || []).map((item, index) => (
+                  <div key={index} className="card card-body p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Stat {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(index)}
+                        className="text-red-600 hover:text-red-700 dark:text-red-400"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="label text-sm">Valor</label>
+                      <input
+                        type="text"
+                        value={item.value || ''}
+                        onChange={(e) => handleItemChange(index, 'value', e.target.value)}
+                        className="input text-sm"
+                        placeholder="150+"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label text-sm">Etiqueta</label>
+                      <input
+                        type="text"
+                        value={item.label || ''}
+                        onChange={(e) => handleItemChange(index, 'label', e.target.value)}
+                        className="input text-sm"
+                        placeholder="Proyectos Completados"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label text-sm">Ícono</label>
+                      <select
+                        value={item.icon || 'Star'}
+                        onChange={(e) => handleItemChange(index, 'icon', e.target.value)}
+                        className="input text-sm"
+                      >
+                        {['Calendar', 'Briefcase', 'Users', 'Heart', 'Shield', 'Star', 'Award'].map(icon => (
+                          <option key={icon} value={icon}>{icon}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+
+                {(!formData.items || formData.items.length === 0) && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                    No hay estadísticas. Haz clic en "Agregar" para crear una.
+                  </p>
+                )}
+              </div>
             </div>
           </>
         );

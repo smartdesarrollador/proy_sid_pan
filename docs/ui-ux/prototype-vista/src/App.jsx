@@ -11,6 +11,8 @@ import { CVDigital } from './components/cv/CVDigital';
 import { PublicLanding } from './components/auth/LandingPage';
 import { Login } from './components/auth/Login';
 import { PublicCardViewer } from './components/public/PublicCardViewer';
+import { PublicLandingViewer } from './components/public/PublicLandingViewer';
+import { PublicPortfolioViewer } from './components/public/PublicPortfolioViewer';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -138,6 +140,66 @@ function App() {
       <AuthProvider>
         <ThemeProvider>
           <PublicCardViewer username={username} />
+        </ThemeProvider>
+      </AuthProvider>
+    );
+  }
+
+  // Public landing page route - no login required
+  const isPublicLandingRoute = pathname.startsWith('/landing/');
+  if (isPublicLandingRoute) {
+    const landingUsername = pathname.split('/')[2];
+    if (!landingUsername) {
+      return (
+        <AuthProvider>
+          <ThemeProvider>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+              <div className="text-center">
+                <h1 className="text-6xl font-bold text-gray-900 dark:text-white mb-4">404</h1>
+                <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">URL inválida</p>
+                <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Volver al inicio
+                </a>
+              </div>
+            </div>
+          </ThemeProvider>
+        </AuthProvider>
+      );
+    }
+    return (
+      <AuthProvider>
+        <ThemeProvider>
+          <PublicLandingViewer username={landingUsername} />
+        </ThemeProvider>
+      </AuthProvider>
+    );
+  }
+
+  // Public portfolio route - no login required
+  const isPublicPortfolioRoute = pathname.startsWith('/portafolio/');
+  if (isPublicPortfolioRoute) {
+    const portfolioUsername = pathname.split('/')[2];
+    if (!portfolioUsername) {
+      return (
+        <AuthProvider>
+          <ThemeProvider>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+              <div className="text-center">
+                <h1 className="text-6xl font-bold text-gray-900 dark:text-white mb-4">404</h1>
+                <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">URL inválida</p>
+                <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Volver al inicio
+                </a>
+              </div>
+            </div>
+          </ThemeProvider>
+        </AuthProvider>
+      );
+    }
+    return (
+      <AuthProvider>
+        <ThemeProvider>
+          <PublicPortfolioViewer username={portfolioUsername} />
         </ThemeProvider>
       </AuthProvider>
     );

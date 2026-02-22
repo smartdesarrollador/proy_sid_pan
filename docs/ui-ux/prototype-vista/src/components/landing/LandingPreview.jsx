@@ -2,6 +2,17 @@ import { HeroSection } from './HeroSection';
 import { AboutSection } from './AboutSection';
 import { ServicesSection } from './ServicesSection';
 import { ContactSection } from './ContactSection';
+import { TestimonialsSection } from './TestimonialsSection';
+import { StatsSection } from './StatsSection';
+
+const SECTION_ANCHORS = {
+  hero:         'inicio',
+  about:        'sobre-mi',
+  services:     'servicios',
+  testimonials: 'testimonios',
+  stats:        'logros',
+  contact:      'contacto',
+};
 
 export const LandingPreview = ({ landingData, template }) => {
   const { sections = [] } = landingData;
@@ -15,18 +26,28 @@ export const LandingPreview = ({ landingData, template }) => {
 
   // Render section based on type
   const renderSection = (section) => {
-    switch (section.type) {
-      case 'hero':
-        return <HeroSection key={section.id} content={section.content} template={template} />;
-      case 'about':
-        return <AboutSection key={section.id} content={section.content} />;
-      case 'services':
-        return <ServicesSection key={section.id} content={section.content} />;
-      case 'contact':
-        return <ContactSection key={section.id} content={section.content} />;
-      default:
-        return null;
-    }
+    const anchorId = SECTION_ANCHORS[section.type];
+    const inner = (() => {
+      switch (section.type) {
+        case 'hero':
+          return <HeroSection content={section.content} template={template} />;
+        case 'about':
+          return <AboutSection content={section.content} />;
+        case 'services':
+          return <ServicesSection content={section.content} />;
+        case 'testimonials':
+          return <TestimonialsSection content={section.content} />;
+        case 'stats':
+          return <StatsSection content={section.content} template={template} />;
+        case 'contact':
+          return <ContactSection content={section.content} />;
+        default:
+          return null;
+      }
+    })();
+
+    if (!inner) return null;
+    return <div key={section.id} id={anchorId}>{inner}</div>;
   };
 
   const visibleSections = getSortedSections();
@@ -51,4 +72,5 @@ export const LandingPreview = ({ landingData, template }) => {
       {visibleSections.map(section => renderSection(section))}
     </div>
   );
+
 };

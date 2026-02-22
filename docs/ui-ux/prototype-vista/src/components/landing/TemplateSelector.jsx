@@ -26,6 +26,28 @@ const templates = [
       text: 'Ideal para creativos y diseñadores',
     },
   },
+  {
+    id: 'dark',
+    name: 'Dark Pro',
+    description: 'Oscuro y elegante para desarrolladores y tech',
+    requiredPlan: 'professional',
+    preview: {
+      primary: 'bg-gray-900',
+      secondary: 'bg-gray-800',
+      text: 'Ideal para desarrolladores y perfiles tech',
+    },
+  },
+  {
+    id: 'minimal',
+    name: 'Minimal',
+    description: 'Blanco y negro, máximo impacto con mínimo ruido',
+    requiredPlan: 'professional',
+    preview: {
+      primary: 'bg-gray-900',
+      secondary: 'bg-white border border-gray-200',
+      text: 'Ideal para consultores y ejecutivos',
+    },
+  },
 ];
 
 export const TemplateSelector = ({ currentTemplate, onSelect }) => {
