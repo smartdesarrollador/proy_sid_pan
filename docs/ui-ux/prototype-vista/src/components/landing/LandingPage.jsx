@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, Edit2, Layout, Globe } from 'lucide-react';
+import { Globe, Layout } from 'lucide-react';
 import { LandingPreview } from './LandingPreview';
 import { LandingEditor } from './LandingEditor';
 import { TemplateSelector } from './TemplateSelector';
@@ -8,9 +8,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { UpgradePrompt } from '../shared/UpgradePrompt';
 
-export const LandingPage = () => {
+export const LandingPage = ({ mode = 'preview', onModeChange }) => {
   const { currentUser } = useAuth();
-  const [mode, setMode] = useState('preview'); // preview | edit | templates
   const [landingData, setLandingData] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const { hasFeature, getUpgradeMessage } = useFeatureGate();
@@ -88,7 +87,7 @@ export const LandingPage = () => {
       ...prev,
       ...newData,
     }));
-    setMode('preview');
+    if (onModeChange) onModeChange('preview');
     // TODO: In real app, call API to save changes
   };
 
@@ -105,7 +104,7 @@ export const LandingPage = () => {
       ...prev,
       template,
     }));
-    setMode('preview');
+    if (onModeChange) onModeChange('preview');
     // TODO: In real app, call API to save template change
   };
 
@@ -114,40 +113,13 @@ export const LandingPage = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Landing Page
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Crea tu página de aterrizaje profesional
-          </p>
-        </div>
-
-        {/* Mode Toggle */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setMode('preview')}
-            className={`btn ${mode === 'preview' ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
-          >
-            <Eye className="w-4 h-4" />
-            <span className="hidden sm:inline">Vista Previa</span>
-          </button>
-          <button
-            onClick={() => setMode('edit')}
-            className={`btn ${mode === 'edit' ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
-          >
-            <Edit2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Editar</span>
-          </button>
-          <button
-            onClick={() => setMode('templates')}
-            className={`btn ${mode === 'templates' ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
-          >
-            <Layout className="w-4 h-4" />
-            <span className="hidden sm:inline">Plantillas</span>
-          </button>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Landing Page
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Crea tu página de aterrizaje profesional
+        </p>
       </div>
 
       {/* Public URL Section */}
@@ -193,7 +165,7 @@ export const LandingPage = () => {
         <LandingEditor
           landingData={landingData}
           onSave={handleSave}
-          onCancel={() => setMode('preview')}
+          onCancel={() => onModeChange && onModeChange('preview')}
         />
       )}
 

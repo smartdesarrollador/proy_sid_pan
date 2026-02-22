@@ -1,9 +1,9 @@
-import { Moon, Sun, Home, LogOut } from 'lucide-react';
+import { Moon, Sun, Home, LogOut, Menu } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPlanDisplayName } from '../../data/featureGates';
 
-export const Navbar = ({ activeService, onNavigate }) => {
+export const Navbar = ({ activeService, onNavigate, onToggleSidebar }) => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { currentUser, currentPlan, logout } = useAuth();
 
@@ -30,10 +30,19 @@ export const Navbar = ({ activeService, onNavigate }) => {
 
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-full px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center gap-4">
+          {/* Left side: hamburger (mobile) + logo */}
+          <div className="flex items-center gap-3">
+            {onToggleSidebar && (
+              <button
+                onClick={onToggleSidebar}
+                className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors md:hidden"
+                aria-label="Abrir menú"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
             <button
               onClick={() => onNavigate('dashboard')}
               className="flex items-center gap-2 text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"

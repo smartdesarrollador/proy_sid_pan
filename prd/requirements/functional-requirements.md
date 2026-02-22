@@ -1627,6 +1627,72 @@ Proveer métricas de efectividad de promociones para decisiones de marketing.
 
 ---
 
+#### FR-136: Bandeja de Tickets Activos con KPI Cards
+- **Descripción:** El sistema debe mostrar una bandeja de tickets activos encabezada por 4 KPI cards de estado general
+- **Plan:** Todos los planes (funcionalidad base del panel admin)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. El sistema DEBE mostrar 4 KPI cards al tope de la vista: Total Tickets, Abiertos, En Progreso, Resueltos Hoy
+  2. El sistema DEBE mostrar tab "Bandeja" activo por defecto con tickets en estado `open`, `in_progress` y `waiting_client`
+  3. La tabla DEBE incluir columnas: ID (formato TKT-XXX), Asunto, Cliente, Email, Categoría, Prioridad, Estado, Fecha de creación
+  4. Los badges de prioridad DEBEN estar coloreados: urgente (rojo), alta (naranja), media (amarillo), baja (gris)
+  5. Los badges de estado DEBEN reflejar el estado actual del ticket con color diferenciado por estado
+  6. Cada fila DEBE ser clickeable y abrir el modal de detalle del ticket
+  7. El sistema DEBE mostrar un empty state descriptivo cuando no hay tickets activos
+
+#### FR-137: Tab Historial de Tickets Resueltos y Cerrados
+- **Descripción:** El sistema debe proveer un tab de historial con tickets en estado `resolved` y `closed`
+- **Plan:** Todos los planes (lectura); Professional+ (exportación)
+- **Prioridad:** Media
+- **Criterios de aceptación:**
+  1. El sistema DEBE mostrar un tab "Historial" junto al tab "Bandeja", accesible mediante click
+  2. La tabla de historial DEBE incluir las mismas columnas que la bandeja más la columna "Resuelto el" con el valor de `resolved_at`
+  3. Los filtros de prioridad y categoría DEBEN aplicarse también en la vista de historial
+  4. La búsqueda full-text DEBE funcionar sobre los tickets del historial
+  5. En Professional+: el sistema DEBE mostrar un botón "Exportar CSV/PDF" en el tab historial
+  6. Usuarios sin `support.read` DEBEN recibir HTTP 403 al intentar acceder al endpoint de historial
+
+#### FR-138: Modal de Detalle con Timeline de Comentarios Estilo Chat
+- **Descripción:** El sistema debe proveer un modal de detalle del ticket con timeline de comentarios que diferencia visualmente los mensajes del cliente y del agente
+- **Plan:** Todos los planes (funcionalidad base del panel admin)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. El modal DEBE mostrar en el header: ID del ticket, asunto, badge de estado y badge de prioridad
+  2. El modal DEBE mostrar un panel de metadatos con: categoría, cliente, email, fecha de creación, asignado a
+  3. El modal DEBE incluir la descripción original del ticket en una sección dedicada
+  4. El timeline DEBE renderizar comentarios del cliente alineados a la izquierda y del agente a la derecha
+  5. Cada comentario DEBE mostrar: avatar/inicial del autor, nombre, rol (cliente/agente) y timestamp relativo
+  6. El modal DEBE hacer scroll automático al comentario más reciente al abrirse
+  7. El sistema DEBE mostrar un empty state "Sé el primero en responder" cuando no hay comentarios
+
+#### FR-139: Filtrado y Búsqueda Full-Text de Tickets
+- **Descripción:** El sistema debe proveer filtros combinables por prioridad y categoría, más búsqueda full-text en tiempo real
+- **Plan:** Todos los planes (funcionalidad base del panel admin)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. El sistema DEBE proveer un selector de prioridad con opciones: Todas / Urgente / Alta / Media / Baja
+  2. El sistema DEBE proveer un selector de categoría con opciones: Todas / Técnico / Facturación / Acceso / Solicitud / Otro
+  3. El campo de búsqueda DEBE aplicar debounce de 300 ms y filtrar sobre: asunto, nombre de cliente y email
+  4. Los filtros de prioridad, categoría y búsqueda DEBEN combinarse con lógica AND
+  5. Al cambiar cualquier filtro, la tabla DEBE actualizarse sin recargar la página
+  6. El sistema DEBE mostrar empty state descriptivo cuando ningún ticket coincide con los filtros activos
+  7. El sistema DEBE mostrar un botón "Limpiar filtros" visible únicamente cuando hay al menos un filtro activo
+
+#### FR-140: Gestión de Estado y Respuesta desde el Modal
+- **Descripción:** El sistema debe permitir a agentes con `support.update` enviar respuestas y cambiar el estado del ticket desde el modal de detalle
+- **Plan:** Todos los planes (funcionalidad base del panel admin)
+- **Prioridad:** Alta
+- **Criterios de aceptación:**
+  1. El modal DEBE mostrar un textarea para escribir respuestas en la parte inferior
+  2. El botón "Enviar" DEBE permanecer deshabilitado mientras el textarea esté vacío
+  3. Al enviar, el comentario DEBE aparecer inmediatamente en el timeline con rol `agent` sin recargar el modal
+  4. El selector de estado DEBE ofrecer las transiciones válidas según el estado actual del ticket
+  5. El botón "Guardar" DEBE aplicar el cambio de estado y actualizar el badge en la tabla y en el modal
+  6. Cuando el estado cambia a `resolved` o `closed`, el sistema DEBE registrar `resolved_at` automáticamente
+  7. Usuarios sin permiso `support.update` DEBEN ver el modal en modo solo lectura: textarea y selector de estado ocultos
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)

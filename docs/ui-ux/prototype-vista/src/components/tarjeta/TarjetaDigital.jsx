@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, Edit2, BarChart3, Share2 } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { TarjetaPreview } from './TarjetaPreview';
 import { TarjetaEditor } from './TarjetaEditor';
 import { AnalyticsPanel } from './AnalyticsPanel';
@@ -9,9 +9,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { UpgradePrompt } from '../shared/UpgradePrompt';
 
-export const TarjetaDigital = () => {
+export const TarjetaDigital = ({ mode = 'preview', onModeChange }) => {
   const { currentUser } = useAuth();
-  const [mode, setMode] = useState('preview'); // preview | edit | analytics
   const [cardData, setCardData] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const { hasFeature, getUpgradeMessage } = useFeatureGate();
@@ -27,6 +26,14 @@ export const TarjetaDigital = () => {
       setCardData(userData);
     }
   }, [currentUser]);
+
+  // Guard analytics mode: redirect to preview if no feature access
+  useEffect(() => {
+    if (mode === 'analytics' && !hasFeature('digitalCardAnalytics')) {
+      setShowUpgrade(true);
+      if (onModeChange) onModeChange('preview');
+    }
+  }, [mode, hasFeature, onModeChange]);
 
   // Show loading while data is being fetched
   if (!cardData) {
@@ -45,7 +52,7 @@ export const TarjetaDigital = () => {
       ...prev,
       ...newData,
     }));
-    setMode('preview');
+    if (onModeChange) onModeChange('preview');
     // TODO: In real app, call API to save changes
   };
 
@@ -71,51 +78,16 @@ export const TarjetaDigital = () => {
     }
   };
 
-  const handleShowAnalytics = () => {
-    if (!hasFeature('digitalCardAnalytics')) {
-      setShowUpgrade(true);
-      return;
-    }
-    setMode('analytics');
-  };
-
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Tarjeta Digital
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Comparte tu información de contacto con un código QR
-          </p>
-        </div>
-
-        {/* Mode Toggle */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setMode('preview')}
-            className={`btn ${mode === 'preview' ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
-          >
-            <Eye className="w-4 h-4" />
-            <span className="hidden sm:inline">Vista Previa</span>
-          </button>
-          <button
-            onClick={() => setMode('edit')}
-            className={`btn ${mode === 'edit' ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
-          >
-            <Edit2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Editar</span>
-          </button>
-          <button
-            onClick={handleShowAnalytics}
-            className={`btn ${mode === 'analytics' ? 'btn-primary' : 'btn-secondary'} flex items-center gap-2`}
-          >
-            <BarChart3 className="w-4 h-4" />
-            <span className="hidden sm:inline">Estadísticas</span>
-          </button>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Tarjeta Digital
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Comparte tu información de contacto con un código QR
+        </p>
       </div>
 
       {/* Public URL Section */}
@@ -133,7 +105,7 @@ export const TarjetaDigital = () => {
         <TarjetaEditor
           cardData={cardData}
           onSave={handleSave}
-          onCancel={() => setMode('preview')}
+          onCancel={() => onModeChange && onModeChange('preview')}
         />
       )}
 

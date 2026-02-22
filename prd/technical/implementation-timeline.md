@@ -582,6 +582,30 @@ Total: ~74 weeks (~17 months)
 
 ---
 
+## Prototipo Completado — Features Pendientes de Backend
+
+Los siguientes features fueron diseñados en prototipo React y documentados en el PRD. Su implementación backend (Django + API REST) queda pendiente para fases futuras según prioridad de negocio.
+
+| Feature | Prototipo | Documentado en PRD | Backend pendiente |
+|---------|-----------|-------------------|-------------------|
+| 10 servicios (Notes, Contacts, Bookmarks, EnvVars, SSHKeys, SSLCerts, Snippets, Forms, AuditLog, Reports) | ✅ Feb 2026 | ✅ Feb 2026 | ⏳ |
+| Notificaciones administrativas | ✅ Feb 2026 | ✅ Feb 2026 | ⏳ |
+| Panel de Facturación (Billing) | ✅ Feb 2026 | ✅ Feb 2026 | ⏳ |
+| **Soporte y Tickets** | ✅ **Feb 2026** | ✅ **Feb 2026** | ⏳ |
+
+### Soporte y Tickets — Notas de Implementación
+
+- **Prototipo**: `docs/ui-ux/prototype-admin/` — componentes `Support.jsx`, `SupportModal.jsx`
+- **PRD Feature**: `prd/features/support.md`
+- **Casos de uso**: CU-026, CU-027
+- **User stories**: US-113 → US-117
+- **Requerimientos funcionales**: FR-136 → FR-140
+- **Modelos Django**: `SupportTicket`, `TicketComment` (ver `prd/features/support.md`)
+- **Endpoints**: 6 endpoints bajo `/api/v1/support/tickets/`
+- **Estimación backend**: ~3 sprints (modelado + API + permisos RBAC + tests)
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -591,4 +615,4 @@ Total: ~74 weeks (~17 months)
 
 ---
 
-**Última actualización**: 2026-02-12
+**Última actualización**: 2026-02-22

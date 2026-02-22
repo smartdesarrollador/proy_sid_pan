@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Navbar } from './components/shared/Navbar';
+import { Sidebar } from './components/shared/Sidebar';
 import { ServiceDashboard } from './components/dashboard/ServiceDashboard';
 import { TarjetaDigital } from './components/tarjeta/TarjetaDigital';
 import { LandingPage } from './components/landing/LandingPage';
@@ -15,6 +16,9 @@ function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const [appState, setAppState] = useState('landing'); // 'landing' | 'login' | 'authenticated'
   const [activeService, setActiveService] = useState('dashboard');
+  const [activeMode, setActiveMode] = useState('preview');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Update app state based on authentication
   useEffect(() => {
@@ -27,20 +31,25 @@ function AppContent() {
     }
   }, [isAuthenticated, isLoading]);
 
+  const handleNavigate = (service, mode = 'preview') => {
+    setActiveService(service);
+    setActiveMode(mode);
+  };
+
   const renderService = () => {
     switch (activeService) {
       case 'dashboard':
-        return <ServiceDashboard onSelectService={setActiveService} />;
+        return <ServiceDashboard onSelectService={(s) => handleNavigate(s)} />;
       case 'tarjeta':
-        return <TarjetaDigital />;
+        return <TarjetaDigital mode={activeMode} onModeChange={setActiveMode} />;
       case 'landing':
-        return <LandingPage />;
+        return <LandingPage mode={activeMode} onModeChange={setActiveMode} />;
       case 'portafolio':
-        return <Portafolio />;
+        return <Portafolio mode={activeMode} onModeChange={setActiveMode} />;
       case 'cv':
-        return <CVDigital />;
+        return <CVDigital mode={activeMode} onModeChange={setActiveMode} />;
       default:
-        return <ServiceDashboard onSelectService={setActiveService} />;
+        return <ServiceDashboard onSelectService={(s) => handleNavigate(s)} />;
     }
   };
 
@@ -71,11 +80,27 @@ function AppContent() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar
         activeService={activeService}
-        onNavigate={setActiveService}
+        onNavigate={(s) => handleNavigate(s)}
+        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
       />
-      <main className="container mx-auto px-4 py-8">
-        {renderService()}
-      </main>
+      <div className="flex h-[calc(100vh-4rem)]">
+        <Sidebar
+          activeService={activeService}
+          activeMode={activeMode}
+          onNavigate={handleNavigate}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          isCollapsed={isSidebarCollapsed}
+          onCollapsedChange={setIsSidebarCollapsed}
+        />
+        {/* Spacer for fixed sidebar on desktop */}
+        <div
+          className={`hidden md:block shrink-0 transition-all duration-300 ${isSidebarCollapsed ? 'w-16' : 'w-64'}`}
+        />
+        <main className="flex-1 overflow-y-auto p-6">
+          {renderService()}
+        </main>
+      </div>
     </div>
   );
 }

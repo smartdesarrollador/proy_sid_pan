@@ -20,6 +20,8 @@
 - [CU-013: Configurar Dominio Personalizado (Enterprise)](#cu-013-configurar-dominio-personalizado-enterprise)
 - [CU-014: Monitoreo de Métricas de Negocio](#cu-014-monitoreo-de-métricas-de-negocio)
 - [CU-015: Crear Promoción de Descuento Temporal](#cu-015-crear-promoción-de-descuento-temporal)
+- [CU-026: Gestionar Bandeja de Tickets de Soporte](#cu-026-gestionar-bandeja-de-tickets-de-soporte)
+- [CU-027: Responder y Resolver Ticket de Cliente](#cu-027-responder-y-resolver-ticket-de-cliente)
 
 ---
 
@@ -708,6 +710,55 @@
 
 ---
 
+## CU-026: Gestionar Bandeja de Tickets de Soporte
+
+**Actor**: Admin / Service Manager / Customer Success Manager
+
+**Precondiciones**:
+- Usuario autenticado con permiso `support.read`
+- Existen tickets en el sistema
+
+**Flujo principal**:
+1. Admin accede a "Soporte" desde el sidebar
+2. Sistema muestra 4 KPI cards: Total Tickets, Abiertos, En Progreso, Resueltos Hoy
+3. Sistema muestra tab "Bandeja" activo con tickets en estado `open`, `in_progress`, `waiting_client`
+4. Admin filtra por prioridad y/o categoría usando los selectores
+5. Admin escribe en el buscador; sistema filtra en tiempo real por asunto, cliente y email
+6. Admin hace clic en un ticket → sistema abre modal de detalle
+
+**Flujos alternativos**:
+- **5a. Sin resultados**: Sistema muestra empty state descriptivo
+
+**Postcondiciones**:
+- Admin tiene visibilidad completa de tickets activos pendientes de atención
+
+---
+
+## CU-027: Responder y Resolver Ticket de Cliente
+
+**Actor**: Admin / Agent con permiso `support.update`
+
+**Precondiciones**:
+- Modal de detalle del ticket abierto
+- Ticket en estado `open`, `in_progress` o `waiting_client`
+
+**Flujo principal**:
+1. Admin revisa el asunto, descripción e historial de comentarios del ticket
+2. Admin escribe una respuesta en el textarea del panel inferior
+3. Admin hace clic en "Enviar" → comentario aparece en el timeline con rol `agent`
+4. Admin selecciona nuevo estado en el selector (ej: `in_progress` → `resolved`)
+5. Admin hace clic en "Guardar" → badge de estado se actualiza en la tabla y en el modal
+6. Si estado es `resolved` o `closed`: sistema registra `resolved_at` automáticamente
+
+**Flujos alternativos**:
+- **2a. Sin texto**: Botón "Enviar" permanece deshabilitado
+
+**Postcondiciones**:
+- Ticket actualizado con nuevo estado y/o comentario del agente
+- `updated_at` actualizado en el registro
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -716,4 +767,4 @@
 
 ---
 
-**Última actualización**: 2026-02-17
+**Última actualización**: 2026-02-22

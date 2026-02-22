@@ -165,6 +165,20 @@
     @apply flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700;
   }
 
+  /* Sidebar */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer;
+  }
+  .sidebar-item-active {
+    @apply bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-800;
+  }
+  .sidebar-subitem {
+    @apply flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer;
+  }
+  .sidebar-subitem-active {
+    @apply bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 font-medium;
+  }
+
   /* Empty State */
   .empty-state {
     @apply flex flex-col items-center justify-center py-12 px-4 text-center;

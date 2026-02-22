@@ -1993,6 +1993,111 @@ Como Product Manager, quiero ver métricas agregadas por tenant (usuarios activo
 
 ---
 
+**US-113: Bandeja de Tickets de Soporte con KPIs**
+
+**Como** admin o agente de soporte,
+**Quiero** ver una bandeja de tickets activos encabezada por 4 KPI cards (Total Tickets, Abiertos, En Progreso, Resueltos Hoy),
+**Para** obtener un resumen ejecutivo del estado del soporte y acceder rápidamente a los tickets que requieren atención.
+
+**Criterios de Aceptación:**
+- [ ] 4 KPI cards visibles al tope: Total Tickets, Abiertos, En Progreso, Resueltos Hoy
+- [ ] Tab "Bandeja" activo por defecto mostrando tickets en estado `open`, `in_progress`, `waiting_client`
+- [ ] Tabla con columnas: ID (TKT-XXX), Asunto, Cliente, Email, Categoría, Prioridad, Estado, Fecha
+- [ ] Badge de prioridad coloreado: urgente (rojo), alta (naranja), media (amarillo), baja (gris)
+- [ ] Badge de estado coloreado por estado
+- [ ] Filas clickeables que abren el modal de detalle
+- [ ] Empty state descriptivo si no hay tickets activos
+
+**Permiso requerido:** `support.read`
+
+**Prioridad:** Alta | **Estimación:** 8 puntos
+
+---
+
+**US-114: Historial de Tickets Resueltos y Cerrados**
+
+**Como** admin o agente de soporte,
+**Quiero** acceder a un tab de historial que muestre tickets en estado `resolved` y `closed`,
+**Para** consultar el historial de incidencias resueltas y tener trazabilidad completa de la actividad de soporte.
+
+**Criterios de Aceptación:**
+- [ ] Tab "Historial" visible junto al tab "Bandeja"
+- [ ] Tabla de historial con las mismas columnas que la bandeja, más columna "Resuelto el"
+- [ ] Columna "Resuelto el" muestra `resolved_at` formateado
+- [ ] Filtros de prioridad y categoría también aplicables al historial
+- [ ] Búsqueda full-text funcional en la vista de historial
+- [ ] Professional+: botón "Exportar CSV/PDF" visible en tab historial
+
+**Permiso requerido:** `support.read`
+
+**Prioridad:** Media | **Estimación:** 5 puntos
+
+---
+
+**US-115: Filtrar y Buscar Tickets en Tiempo Real**
+
+**Como** admin o agente de soporte,
+**Quiero** filtrar tickets por prioridad y categoría, y buscar por texto libre (asunto, cliente, email),
+**Para** localizar rápidamente tickets específicos cuando la bandeja tiene muchos registros.
+
+**Criterios de Aceptación:**
+- [ ] Selector de prioridad: Todas / Urgente / Alta / Media / Baja
+- [ ] Selector de categoría: Todas / Técnico / Facturación / Acceso / Solicitud / Otro
+- [ ] Campo de búsqueda con debounce de 300 ms aplicado sobre asunto, nombre de cliente y email
+- [ ] Filtros y búsqueda se combinan (AND logic)
+- [ ] Al cambiar cualquier filtro, la tabla se actualiza sin recargar la página
+- [ ] Empty state descriptivo: "No se encontraron tickets con estos filtros"
+- [ ] Botón "Limpiar filtros" visible cuando hay algún filtro activo
+
+**Permiso requerido:** `support.read`
+
+**Prioridad:** Alta | **Estimación:** 5 puntos
+
+---
+
+**US-116: Modal de Detalle con Timeline de Comentarios**
+
+**Como** admin o agente de soporte,
+**Quiero** abrir un modal con el detalle completo del ticket y un timeline de comentarios estilo chat,
+**Para** entender el contexto de la solicitud y ver el historial de la conversación entre cliente y agente.
+
+**Criterios de Aceptación:**
+- [ ] Modal con header: ID del ticket, asunto, badges de estado y prioridad
+- [ ] Panel de metadatos: categoría, cliente, email, fecha de creación, asignado a
+- [ ] Sección de descripción original del ticket
+- [ ] Timeline de comentarios estilo chat: comentarios del cliente a la izquierda, del agente a la derecha
+- [ ] Cada comentario muestra: avatar/inicial, nombre del autor, rol (cliente/agente) y timestamp
+- [ ] Scroll automático al comentario más reciente al abrir el modal
+- [ ] Empty state si no hay comentarios: "Sé el primero en responder"
+
+**Permiso requerido:** `support.read`
+
+**Prioridad:** Alta | **Estimación:** 8 puntos
+
+---
+
+**US-117: Responder y Cambiar Estado de Ticket desde el Modal**
+
+**Como** admin o agente con permiso `support.update`,
+**Quiero** enviar respuestas y cambiar el estado del ticket directamente desde el modal de detalle,
+**Para** gestionar el ciclo de vida del ticket sin salir de la vista actual.
+
+**Criterios de Aceptación:**
+- [ ] Textarea de respuesta en la parte inferior del modal
+- [ ] Botón "Enviar" deshabilitado si el textarea está vacío
+- [ ] Al enviar, el comentario aparece inmediatamente en el timeline con rol `agent`
+- [ ] Selector de estado con opciones válidas según el estado actual del ticket
+- [ ] Botón "Guardar" aplica el cambio de estado
+- [ ] Al resolver o cerrar: `resolved_at` se registra automáticamente
+- [ ] Badge de estado en la tabla y en el modal se actualiza en tiempo real tras guardar
+- [ ] Usuarios sin `support.update` ven el modal en modo solo lectura (sin textarea ni selector de estado)
+
+**Permiso requerido:** `support.update`
+
+**Prioridad:** Alta | **Estimación:** 8 puntos
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
