@@ -10,6 +10,7 @@ export type PanelId =
   | "projects"
   | "snippets"
   | "shared"
+  | "reports"
   | "profile"
   | "settings";
 

@@ -12,6 +12,7 @@ import BookmarksPanel from "./BookmarksPanel";
 import ProjectsPanel from "./ProjectsPanel";
 import SnippetsPanel from "./SnippetsPanel";
 import SharedPanel from "./SharedPanel";
+import ReportsPanel from "./ReportsPanel";
 import SettingsPanel from "./SettingsPanel";
 
 const PANEL_MAP: Record<PanelId, React.ComponentType> = {
@@ -26,6 +27,7 @@ const PANEL_MAP: Record<PanelId, React.ComponentType> = {
   projects: ProjectsPanel,
   snippets: SnippetsPanel,
   shared: SharedPanel,
+  reports: ReportsPanel,
   profile: ProfilePanel,
   settings: SettingsPanel,
 };
