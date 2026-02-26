@@ -1,0 +1,159 @@
+@startuml class-diagram-core
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+title Diagrama de Clases - Dominio Core\nPlataforma SaaS Multi-Tenant
+
+package "Core" {
+  class Tenant {
+    +id: UUID <<PK>>
+    +name: CharField(255)
+    +slug: SlugField <<unique>>
+    +subdomain: CharField(63) <<unique>>
+    +plan: CharField(20) {free|starter|professional|enterprise}
+    +branding: JSONField
+    +settings: JSONField
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class User {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +email: EmailField <<unique>>
+    +name: CharField(255)
+    +avatar_url: URLField
+    +password: CharField(128) {Argon2id}
+    +is_active: BooleanField
+    +email_verified: BooleanField
+    +mfa_enabled: BooleanField
+    +mfa_secret: CharField(32)
+    +last_login: DateTimeField
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+}
+
+package "RBAC" {
+  class Role {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>> {nullable}
+    +name: CharField(100)
+    +description: TextField
+    +is_system_role: BooleanField
+    +inherits_from: UUID <<FK self>>
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class Permission {
+    +id: UUID <<PK>>
+    +codename: CharField(100) <<unique>>
+    +name: CharField(255)
+    +description: TextField
+    +resource: CharField(50)
+    +action: CharField(50)
+  }
+
+  class RolePermission {
+    +id: UUID <<PK>>
+    +role_id: UUID <<FK>>
+    +permission_id: UUID <<FK>>
+    +scope: CharField(20) {all|own|department|custom}
+  }
+
+  class UserRole {
+    +id: UUID <<PK>>
+    +user_id: UUID <<FK>>
+    +role_id: UUID <<FK>>
+    +assigned_by: UUID <<FK User>>
+    +assigned_at: DateTimeField
+  }
+}
+
+package "Subscriptions" {
+  class Subscription {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>> <<OneToOne>>
+    +plan: CharField(20)
+    +status: CharField(20) {active|trialing|canceled|past_due}
+    +billing_cycle: CharField(10) {monthly|annual}
+    +stripe_subscription_id: CharField(255)
+    +stripe_customer_id: CharField(255)
+    +trial_start: DateTimeField
+    +trial_end: DateTimeField
+    +current_period_start: DateTimeField
+    +current_period_end: DateTimeField
+    +cancel_at_period_end: BooleanField
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class Invoice {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +stripe_invoice_id: CharField(255)
+    +amount: Decimal(10,2)
+    +currency: CharField(3)
+    +status: CharField(20) {draft|open|paid|void}
+    +pdf_url: URLField
+    +invoice_date: DateTimeField
+    +due_date: DateTimeField
+    +paid_at: DateTimeField
+    +created_at: DateTimeField
+  }
+}
+
+package "Audit" {
+  class AuditLog {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +user_id: UUID <<FK>> {nullable}
+    +action: CharField(100)
+    +resource_type: CharField(50)
+    +resource_id: UUID
+    +changes: JSONField
+    +ip_address: GenericIPAddress
+    +user_agent: TextField
+    +timestamp: DateTimeField
+  }
+}
+
+' === Relationships ===
+
+Tenant "1" --> "0..*" User : has >
+Tenant "1" --> "0..*" Role : defines >
+Tenant "1" --> "1" Subscription : subscribes >
+Tenant "1" --> "0..*" Invoice : billed >
+Tenant "1" --> "0..*" AuditLog : logs >
+
+User "1" --> "0..*" UserRole : assigned >
+Role "1" --> "0..*" UserRole : includes >
+
+Role "1" --> "0..*" RolePermission : grants >
+Permission "1" --> "0..*" RolePermission : granted via >
+
+Role "0..1" <-- "0..*" Role : inherits_from
+
+User "1" --> "0..*" AuditLog : performs >
+
+UserRole "0..*" --> "0..1" User : assigned_by
+
+note right of Permission
+  62 permisos predefinidos
+  en 13 categorias:
+  Users, Roles, Tasks, Calendar,
+  Landing, Projects, Digital Services,
+  Billing, Customers, Analytics,
+  Settings, Audit, Dashboard
+end note
+
+note right of Role
+  10 system roles predefinidos:
+  Owner, Admin, Service Manager,
+  Marketing, Engineering, Operations,
+  Finance, Member, Viewer, Guest
+end note
+
+@enduml

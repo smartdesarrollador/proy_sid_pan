@@ -1,0 +1,129 @@
+@startuml sequence-diagram-auth
+!theme plain
+
+title Diagrama de Secuencia - Autenticacion y Onboarding\nRegistro, Verificacion, Login con MFA y Request Autenticado
+
+actor "User\n(Browser)" as User
+participant "API Gateway\n(Nginx)" as Gateway
+participant "Django REST\nBackend" as API
+participant "JWT Auth\nMiddleware" as JWTAuth
+participant "Tenant\nMiddleware" as TenantMW
+participant "RBAC\nMiddleware" as RBAC
+database "PostgreSQL\n(RLS)" as DB
+participant "Email Service\n(SendGrid/SES)" as Email
+database "Redis\n(Cache)" as Redis
+
+== 1. Registro de Organizacion ==
+
+User -> Gateway : POST /api/v1/auth/register\n{email, password, name, org_name}
+Gateway -> API : Forward request
+
+API -> API : Validar input\n(email unico, password strength)
+API -> DB : BEGIN TRANSACTION
+API -> DB : INSERT Tenant\n(name, slug, plan='free')
+API -> DB : INSERT User\n(tenant_id, email, name, password=Argon2id(pwd))
+API -> DB : INSERT UserRole\n(user_id, role='owner')
+API -> DB : INSERT Subscription\n(tenant_id, plan='free', status='trialing')
+API -> DB : COMMIT
+
+API -> Email : Enviar email verificacion\n(token temporal, TTL: 24h)
+API -> Redis : SET verify:{token} = user_id\nEX 86400
+
+API --> User : 201 Created\n{user_id, message: "Verifica tu email"}
+
+== 2. Verificacion de Email ==
+
+User -> Gateway : POST /api/v1/auth/verify-email\n{token: "abc123"}
+Gateway -> API : Forward request
+
+API -> Redis : GET verify:{token}
+Redis --> API : user_id
+
+API -> DB : UPDATE User\nSET email_verified = true\nWHERE id = user_id
+API -> Redis : DEL verify:{token}
+
+API --> User : 200 OK\n{message: "Email verificado"}
+
+== 3. Login (con MFA) ==
+
+User -> Gateway : POST /api/v1/auth/login\n{email, password}
+Gateway -> API : Forward request
+
+API -> DB : SELECT User\nWHERE email = ?
+DB --> API : user record
+
+API -> API : Verificar password\nArgon2id.verify(password, hash)
+
+alt MFA habilitado
+  API --> User : 200 OK\n{mfa_required: true, mfa_token: "temp_xyz"}
+
+  User -> Gateway : POST /api/v1/auth/mfa/verify\n{mfa_token, totp_code: "123456"}
+  Gateway -> API : Forward request
+
+  API -> API : Verificar TOTP code\n(pyotp.verify)
+end
+
+API -> API : Generar JWT tokens
+note right of API
+  Access Token (15 min):
+  {user_id, tenant_id,
+   roles: ["owner"],
+   permissions: ["users.*", ...]}
+
+  Refresh Token (7 days):
+  {jti, user_id, tenant_id}
+end note
+
+API -> Redis : SET refresh:{jti} = user_id\nEX 604800
+API -> DB : UPDATE User\nSET last_login = now()
+
+API --> User : 200 OK\n{access_token, refresh_token,\n user: {id, name, email, roles}}
+
+== 4. Request Autenticado con RLS ==
+
+User -> Gateway : GET /api/v1/app/projects\nAuthorization: Bearer {access_token}
+Gateway -> JWTAuth : Forward request
+
+JWTAuth -> JWTAuth : Decode & validate JWT\n(signature, expiry, claims)
+JWTAuth -> JWTAuth : Extract: user_id, tenant_id,\nroles, permissions
+
+JWTAuth -> TenantMW : request + user context
+
+TenantMW -> DB : SET LOCAL app.tenant_id\n= '{tenant_uuid}'
+note right of TenantMW
+  PostgreSQL RLS activado.
+  Todas las queries filtran
+  automaticamente por tenant_id.
+end note
+
+TenantMW -> RBAC : request + tenant context
+
+RBAC -> RBAC : Verificar permiso\n'projects.read' in user.permissions
+RBAC -> RBAC : Verificar scope\n(all / own / department)
+
+alt Permiso concedido
+  RBAC -> API : Forward to view
+  API -> DB : SELECT * FROM projects\n(RLS auto-filtra por tenant)
+  DB --> API : projects (filtered by tenant)
+  API --> User : 200 OK\n{projects: [...]}
+else Permiso denegado
+  RBAC --> User : 403 Forbidden\n{error: "Insufficient permissions"}
+end
+
+== 5. Refresh Token ==
+
+User -> Gateway : POST /api/v1/auth/token/refresh\n{refresh_token}
+Gateway -> API : Forward request
+
+API -> API : Validate refresh token JWT
+API -> Redis : GET refresh:{jti}
+
+alt Token valido
+  Redis --> API : user_id
+  API -> API : Generar nuevo access_token
+  API --> User : 200 OK\n{access_token: "new_token"}
+else Token invalido/expirado
+  API --> User : 401 Unauthorized\n{error: "Token expired, please login"}
+end
+
+@enduml

@@ -1,0 +1,142 @@
+@startuml use-case-diagram
+!theme plain
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+
+title Diagrama de Casos de Uso\nPlataforma SaaS Multi-Tenant
+
+' === Actors ===
+actor "Owner / Admin" as Owner
+actor "Member / User" as Member
+actor "Service Manager" as ServiceMgr
+actor "Public User\n(Anonymous)" as PublicUser
+actor "Stripe\n(Webhook)" as Stripe
+
+' === Use Case Groups ===
+
+rectangle "IAM (Identity & Access)" {
+  usecase "Registrar organizacion\n(Onboarding)" as UC_Register
+  usecase "Verificar email" as UC_VerifyEmail
+  usecase "Login con JWT\n+ MFA (TOTP)" as UC_Login
+  usecase "Gestionar usuarios\n(CRUD, invitar)" as UC_ManageUsers
+  usecase "Gestionar roles\ny permisos" as UC_ManageRoles
+  usecase "Crear roles\npersonalizados" as UC_CustomRoles
+  usecase "Delegar permisos\ntemporalmente" as UC_Delegate
+  usecase "Consultar\naudit logs" as UC_AuditLogs
+}
+
+rectangle "Proyectos y Colaboracion" {
+  usecase "CRUD Proyectos" as UC_Projects
+  usecase "Gestionar secciones\ne items" as UC_Sections
+  usecase "Compartir proyecto\ncon permisos" as UC_Share
+  usecase "Herencia de permisos\n(cascada)" as UC_Inherit
+  usecase "Revocar acceso" as UC_Revoke
+  usecase "Ver elementos\ncompartidos conmigo" as UC_SharedWithMe
+}
+
+rectangle "Servicios Digitales" {
+  usecase "Crear/editar\ntarjeta digital" as UC_Card
+  usecase "Personalizar\nlanding page" as UC_Landing
+  usecase "Gestionar\nportfolio" as UC_Portfolio
+  usecase "Generar CV\ndigital" as UC_CV
+  usecase "Configurar dominio\npersonalizado" as UC_Domain
+  usecase "Ver analytics\nde servicios" as UC_ServiceAnalytics
+}
+
+rectangle "Billing & Subscriptions" {
+  usecase "Gestionar\nsuscripcion" as UC_Subscription
+  usecase "Upgrade/downgrade\nde plan" as UC_Upgrade
+  usecase "Ver facturas\ne historial" as UC_Invoices
+  usecase "Procesar pagos\ny renovaciones" as UC_Payments
+  usecase "Crear promociones\ny descuentos" as UC_Promos
+}
+
+rectangle "Productividad" {
+  usecase "Gestionar tareas\n(Kanban)" as UC_Tasks
+  usecase "Calendario\n+ Google Sync" as UC_Calendar
+  usecase "Notas personales" as UC_Notes
+  usecase "Contactos" as UC_Contacts
+  usecase "Bookmarks" as UC_Bookmarks
+  usecase "Snippets de codigo" as UC_Snippets
+  usecase "Variables de\nentorno (cifradas)" as UC_EnvVars
+}
+
+rectangle "Acceso Publico (SSR)" {
+  usecase "Ver tarjeta\ndigital publica" as UC_ViewCard
+  usecase "Ver landing\npage publica" as UC_ViewLanding
+  usecase "Ver portfolio\npublico" as UC_ViewPortfolio
+  usecase "Ver CV\ndigital publico" as UC_ViewCV
+}
+
+' === Actor Relationships ===
+
+' Owner/Admin
+Owner --> UC_Register
+Owner --> UC_ManageUsers
+Owner --> UC_ManageRoles
+Owner --> UC_CustomRoles
+Owner --> UC_Delegate
+Owner --> UC_AuditLogs
+Owner --> UC_Subscription
+Owner --> UC_Upgrade
+Owner --> UC_Invoices
+Owner --> UC_Promos
+Owner --> UC_Share
+Owner --> UC_Revoke
+
+' Member/User
+Member --> UC_Login
+Member --> UC_VerifyEmail
+Member --> UC_Projects
+Member --> UC_Sections
+Member --> UC_SharedWithMe
+Member --> UC_Card
+Member --> UC_Landing
+Member --> UC_Portfolio
+Member --> UC_CV
+Member --> UC_ServiceAnalytics
+Member --> UC_Tasks
+Member --> UC_Calendar
+Member --> UC_Notes
+Member --> UC_Contacts
+Member --> UC_Bookmarks
+Member --> UC_Snippets
+Member --> UC_EnvVars
+
+' Service Manager
+ServiceMgr --> UC_ManageUsers
+ServiceMgr --> UC_AuditLogs
+ServiceMgr --> UC_Projects
+ServiceMgr --> UC_Share
+
+' Public User (anonymous)
+PublicUser --> UC_ViewCard
+PublicUser --> UC_ViewLanding
+PublicUser --> UC_ViewPortfolio
+PublicUser --> UC_ViewCV
+
+' Stripe
+Stripe --> UC_Payments
+
+' Enterprise feature
+UC_Domain .up.> UC_Landing : <<extends>>
+Member --> UC_Domain
+
+' Include relationships
+UC_Share ..> UC_Inherit : <<include>>
+UC_Register ..> UC_VerifyEmail : <<include>>
+UC_Upgrade ..> UC_Payments : <<include>>
+
+' Notes
+note right of UC_Inherit
+  Permisos Project -> Section -> Item
+  Local override con icono
+end note
+
+note right of UC_Domain
+  Solo plan Enterprise.
+  Verificacion DNS + SSL auto.
+end note
+
+@enduml

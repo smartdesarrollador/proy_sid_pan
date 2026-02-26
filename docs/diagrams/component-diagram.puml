@@ -1,0 +1,125 @@
+@startuml component-diagram
+!theme plain
+skinparam componentStyle rectangle
+
+title Diagrama de Componentes - Arquitectura del Sistema\nPlataforma SaaS Multi-Tenant
+
+' === Frontend Layer ===
+package "Frontend Layer" {
+  component [Admin Panel\n---\nReact + Vite + TS\nshadcn/ui + Tailwind\nTanStack Query + Zustand\nReact Router v6] as AdminPanel
+
+  component [Client Panel\n---\nReact + Vite + TS\nTailwind CSS\nFullCalendar, dnd-kit\nRecharts] as ClientPanel
+
+  component [Digital Services\n---\nNext.js 14+ (SSR)\nApp Router\nnext-intl\nISR + Streaming] as DigitalSSR
+
+  component [Desktop App\n---\nTauri (Rust + WebView)\nReact + Vite\nLocal sync + Offline] as DesktopApp
+}
+
+' === API Layer ===
+package "API Gateway" {
+  component [Nginx / AWS ALB\n---\nReverse Proxy\nSSL Termination\nLoad Balancing] as Gateway
+}
+
+package "Middleware" {
+  component [JWT Auth\nMiddleware] as JWTAuth
+  component [Tenant Isolation\nMiddleware] as TenantMW
+  component [RBAC Enforcement\nMiddleware] as RBACMW
+  component [Rate Limiting\nMiddleware] as RateLimitMW
+}
+
+package "Backend API (Django REST Framework)" {
+  component [Auth Module\n---\n/api/v1/auth/\nLogin, Register\nMFA, Refresh\nPassword Reset] as AuthModule
+
+  component [Admin Module\n---\n/api/v1/admin/\nTenants, Users\nRoles, Permissions\nAudit Logs] as AdminModule
+
+  component [App Module\n---\n/api/v1/app/\nProjects, Tasks\nCalendar, Files\nDashboard, Shares] as AppModule
+
+  component [Digital Services Module\n---\n/api/v1/digital-services/\nProfiles, Cards\nLandings, Portfolio\nCV, Analytics] as DigitalModule
+
+  component [Billing Module\n---\n/api/v1/billing/\nSubscriptions\nInvoices, Payments\nPromos, Feature Gates] as BillingModule
+
+  component [Analytics Module\n---\n/api/v1/analytics/\nDashboards, KPIs\nReports, Export] as AnalyticsModule
+
+  component [Celery Workers\n---\nEmail sending\nBilling webhooks\nCache invalidation\nScheduled tasks] as CeleryWorkers
+}
+
+' === Data Layer ===
+package "Data Layer" {
+  database "PostgreSQL 15+\n---\nRow-Level Security\nMulti-tenant isolation\nPgBouncer pooling" as PostgreSQL
+
+  database "Redis 7+\n---\nCache & Sessions\nRate limit counters\nCelery broker\nFeature flags" as Redis
+
+  storage "S3 / MinIO\n---\nFile uploads\nAvatars, images\nPDF exports\nCDN origin" as S3
+}
+
+' === External Services ===
+package "External Services" {
+  component [Stripe\n---\nPayments\nSubscriptions\nWebhooks\nInvoicing] as Stripe
+
+  component [SendGrid / SES\n---\nTransactional email\nVerification\nNotifications] as EmailService
+
+  component [Google Calendar\n---\nCalDAV sync\nOAuth2 flow] as GoogleCal
+
+  component [OAuth2 Providers\n---\nGoogle, GitHub\nMicrosoft SSO] as OAuth2
+
+  component [Let's Encrypt\n---\nSSL certificates\nAuto-renewal\nCustom domains] as LetsEncrypt
+}
+
+' === Connections: Frontend -> Gateway ===
+AdminPanel -down-> Gateway : HTTPS/REST
+ClientPanel -down-> Gateway : HTTPS/REST
+DigitalSSR -down-> Gateway : HTTPS/REST\n(Server-side fetch)
+DesktopApp -down-> Gateway : HTTPS/REST
+
+' === Gateway -> Middleware -> Backend ===
+Gateway -down-> JWTAuth
+JWTAuth -down-> TenantMW
+TenantMW -down-> RBACMW
+RBACMW -down-> RateLimitMW
+
+RateLimitMW -down-> AuthModule
+RateLimitMW -down-> AdminModule
+RateLimitMW -down-> AppModule
+RateLimitMW -down-> DigitalModule
+RateLimitMW -down-> BillingModule
+RateLimitMW -down-> AnalyticsModule
+
+' === Backend -> Data ===
+AuthModule -down-> PostgreSQL
+AdminModule -down-> PostgreSQL
+AppModule -down-> PostgreSQL
+DigitalModule -down-> PostgreSQL
+BillingModule -down-> PostgreSQL
+AnalyticsModule -down-> PostgreSQL
+
+AuthModule -down-> Redis
+RateLimitMW -down-> Redis
+AppModule -down-> S3
+DigitalModule -down-> S3
+
+CeleryWorkers -down-> Redis : broker
+CeleryWorkers -down-> PostgreSQL
+
+' === Backend -> External ===
+BillingModule -right-> Stripe
+CeleryWorkers -right-> EmailService
+AppModule ..> GoogleCal
+AuthModule ..> OAuth2
+DigitalModule ..> LetsEncrypt
+
+' === SSR specific ===
+DigitalSSR -down-> Redis : ISR Cache
+
+note right of Gateway
+  Subdomain-based routing:
+  {slug}.platform.com -> Admin/Client
+  platform.com/{service}/{username} -> SSR
+end note
+
+note bottom of TenantMW
+  SET LOCAL app.tenant_id = '{uuid}'
+  PostgreSQL RLS auto-filters
+  all queries by tenant
+end note
+
+@enduml

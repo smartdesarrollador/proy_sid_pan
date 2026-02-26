@@ -1,0 +1,153 @@
+@startuml class-diagram-digital-services
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+title Diagrama de Clases - Servicios Digitales
+
+class User <<external>> {
+  +id: UUID
+}
+
+package "Digital Services" {
+  class PublicProfile {
+    +user_id: UUID <<PK, FK>> <<OneToOne>>
+    +username: SlugField(50) <<unique>>
+    +display_name: CharField(100)
+    +title: CharField(100)
+    +bio: TextField(500)
+    +avatar: ImageField
+    +is_public: BooleanField
+    +meta_title: CharField(60)
+    +meta_description: CharField(160)
+    +og_image: ImageField
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class DigitalCard {
+    +profile_id: UUID <<PK, FK>> <<OneToOne>>
+    +email: EmailField
+    +phone: CharField(20)
+    +location: CharField(100)
+    +linkedin_url: URLField
+    +twitter_url: URLField
+    +github_url: URLField
+    +instagram_url: URLField
+    +facebook_url: URLField
+    +website_url: URLField
+    +primary_color: CharField(7)
+    +background_color: CharField(7)
+    +qr_code: ImageField
+    +total_views: IntegerField
+    +unique_visitors: IntegerField
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class LandingTemplate {
+    +profile_id: UUID <<PK, FK>> <<OneToOne>>
+    +template_type: CharField(20) {basic|minimal|corporate|creative}
+    +sections: JSONField {list of section objects}
+    +contact_email: EmailField
+    +enable_contact_form: BooleanField
+    +custom_css: TextField {Professional+}
+    +ga_tracking_id: CharField(20) {Professional+}
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class PortfolioItem {
+    +id: UUID <<PK>>
+    +profile_id: UUID <<FK>>
+    +title: CharField(100)
+    +slug: SlugField(100)
+    +description_short: CharField(200)
+    +description_full: TextField {markdown}
+    +cover_image: ImageField
+    +gallery_images: JSONField
+    +demo_url: URLField
+    +repo_url: URLField
+    +case_study_url: URLField
+    +tags: JSONField {list}
+    +is_featured: BooleanField
+    +order: IntegerField
+    +project_date: DateField
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class CVDocument {
+    +profile_id: UUID <<PK, FK>> <<OneToOne>>
+    +professional_summary: TextField(500)
+    +experience: JSONField {list}
+    +education: JSONField {list}
+    +skills: JSONField {list}
+    +languages: JSONField {list}
+    +certifications: JSONField {list}
+    +template_type: CharField(20) {classic|modern|minimal}
+    +show_photo: BooleanField
+    +show_contact: BooleanField
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class CustomDomain {
+    +profile_id: UUID <<PK, FK>> <<OneToOne>>
+    +domain: CharField(255) <<unique>>
+    +verification_status: CharField(20) {pending|verified|failed}
+    +verification_token: CharField(64) <<unique>>
+    +last_verification_attempt: DateTimeField
+    +ssl_status: CharField(20) {pending|active|renewing|failed}
+    +ssl_cert_expires_at: DateTimeField
+    +default_service: CharField(20) {landing|tarjeta|portafolio|cv}
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class ServiceAnalytics {
+    +id: UUID <<PK>>
+    +profile_id: UUID <<FK>>
+    +service: CharField(20) {tarjeta|landing|portafolio|cv}
+    +date: DateField
+    +page_views: IntegerField
+    +unique_visitors: IntegerField
+    +clicks: JSONField {dict}
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+}
+
+' === Relationships ===
+
+User "1" --> "1" PublicProfile : has profile >
+
+PublicProfile "1" --> "0..1" DigitalCard : has card >
+PublicProfile "1" --> "0..1" LandingTemplate : has landing >
+PublicProfile "1" --> "0..1" CVDocument : has CV >
+PublicProfile "1" --> "0..1" CustomDomain : has domain >
+PublicProfile "1" --> "0..*" PortfolioItem : showcases >
+PublicProfile "1" --> "0..*" ServiceAnalytics : tracks >
+
+note right of PublicProfile
+  URL publica por servicio:
+  /tarjeta/{username}
+  /landing/{username}
+  /portafolio/{username}
+  /cv/{username}
+end note
+
+note bottom of CustomDomain
+  Solo plan Enterprise.
+  Verificacion DNS via CNAME.
+  SSL automatico con Let's Encrypt.
+  Retry verificacion cada 30 min.
+end note
+
+note bottom of ServiceAnalytics
+  Metricas agregadas por dia.
+  unique_together: [profile, service, date]
+  Clicks tracking por enlace individual.
+end note
+
+@enduml

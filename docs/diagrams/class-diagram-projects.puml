@@ -1,0 +1,124 @@
+@startuml class-diagram-projects
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+title Diagrama de Clases - Proyectos y Colaboracion
+
+package "Projects" {
+  class Project {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +name: CharField(255)
+    +description: TextField
+    +color: CharField(7)
+    +icon: CharField(50)
+    +owner_id: UUID <<FK User>>
+    +status: CharField(20) {active|archived|paused}
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class ProjectSection {
+    +id: UUID <<PK>>
+    +project_id: UUID <<FK>>
+    +name: CharField(255)
+    +color: CharField(7)
+    +order: IntegerField
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class ProjectItem {
+    +id: UUID <<PK>>
+    +section_id: UUID <<FK>>
+    +name: CharField(255)
+    +item_type: CharField(50) {credential|document|link|note|config}
+    +order: IntegerField
+    +created_by: UUID <<FK User>>
+    +created_at: DateTimeField
+    +updated_at: DateTimeField
+  }
+
+  class ProjectItemField {
+    +id: UUID <<PK>>
+    +item_id: UUID <<FK>>
+    +field_name: CharField(100)
+    +field_type: CharField(20) {text|password|email|url|date|textarea}
+    +value: TextField {encrypted if password}
+    +is_encrypted: BooleanField
+  }
+}
+
+package "Sharing" {
+  class Share {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +resource_type: CharField(50) {project|section|item|task|file}
+    +resource_id: UUID
+    +shared_by: UUID <<FK User>>
+    +shared_with: UUID <<FK User>>
+    +permission_level: CharField(20) {viewer|commenter|editor|admin}
+    +is_inherited: BooleanField
+    +notify_on_changes: BooleanField
+    +shared_at: DateTimeField
+    +updated_at: DateTimeField
+    +expires_at: DateTimeField {nullable}
+  }
+
+  class SharePermission {
+    +id: UUID <<PK>>
+    +permission_level: CharField(20)
+    +resource_type: CharField(50)
+    +permissions: JSONField {read, create, update, delete, share}
+  }
+}
+
+' === External references ===
+class Tenant <<external>> {
+  +id: UUID
+}
+
+class User <<external>> {
+  +id: UUID
+}
+
+' === Relationships ===
+
+Tenant "1" --> "0..*" Project : contains >
+User "1" --> "0..*" Project : owns >
+User "1" --> "0..*" ProjectItem : creates >
+
+Project "1" --> "0..*" ProjectSection : has sections >
+ProjectSection "1" --> "0..*" ProjectItem : has items >
+ProjectItem "1" --> "0..*" ProjectItemField : has fields >
+
+Project "1" --> "0..*" Share : shared via >
+ProjectSection "1" ..> "0..*" Share : shared via >
+ProjectItem "1" ..> "0..*" Share : shared via >
+
+User "1" --> "0..*" Share : shares (shared_by) >
+User "1" --> "0..*" Share : receives (shared_with) >
+
+Share "0..*" --> "1" SharePermission : defines access >
+
+note right of Share
+  Herencia de permisos:
+  Project -> Sections -> Items
+
+  - Permisos heredados (is_inherited=true)
+    se propagan automaticamente
+  - Permisos locales (is_inherited=false)
+    sobrescriben heredados
+  - Cambio en padre actualiza hijos
+    excepto los locales
+end note
+
+note bottom of SharePermission
+  Viewer: {read: true}
+  Commenter: {read: true, comment: true}
+  Editor: {read, create, update, delete: true}
+  Admin: {all: true, share: true}
+end note
+
+@enduml
