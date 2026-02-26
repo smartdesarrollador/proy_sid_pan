@@ -17,7 +17,8 @@ Este documento describe la estructura modular del PRD después de la división.
 ├── features/                          # Funcionalidades específicas
 │   ├── sharing-collaboration.md       # Sistema de compartición con permisos
 │   ├── projects.md                    # Gestión de proyectos/portafolio
-│   └── billing.md                     # Planes, facturación, feature gates
+│   ├── billing.md                     # Planes, facturación, feature gates
+│   └── desktop-app.md                # App desktop (Tauri) sidebar panel
 │
 └── technical/                         # Documentación técnica
     ├── architecture.md                # Arquitectura general, multi-tenancy, seguridad
@@ -41,7 +42,8 @@ Este documento describe la estructura modular del PRD después de la división.
 | technical/api-endpoints.md | 564 | Endpoints REST |
 | technical/data-models.md | 452 | Modelos Django |
 | technical/implementation-timeline.md | 336 | Timeline de desarrollo |
-| **Total archivos modulares** | **4,710** | **11 archivos modulares** |
+| features/desktop-app.md | 536 | App desktop Tauri sidebar |
+| **Total archivos modulares** | **5,246** | **12 archivos modulares** |
 
 **Archivo original**: rbac-subscription-system.md (~3,997 líneas)
 

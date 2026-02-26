@@ -27,6 +27,7 @@ Este PRD está organizado en módulos para facilitar la navegación y mantenimie
 - **[Productivity Services](features/productivity-services.md)** - Notas, Contactos, Bookmarks con feature gates por plan
 - **[DevOps Services](features/devops-services.md)** - Variables de Entorno (cifradas), Claves SSH, Certificados SSL, Snippets
 - **[Admin Services](features/admin-services.md)** - Formularios, Log de Auditoría (immutable), Reportes del Sistema
+- **[Desktop App](features/desktop-app.md)** - Aplicacion de escritorio (Tauri) con sidebar para acceso rapido a servicios
 
 ### 🔧 Technical (Documentación Técnica)
 - **[Architecture](technical/architecture.md)** - Arquitectura general del sistema, multi-tenancy, seguridad
@@ -228,6 +229,12 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - 📝 **Formularios**: Constructor con tipos de preguntas, submissions anónimos, exportación CSV (Free 1)
 - 📝 **Log de Auditoría**: Timeline inmutable con filtros, retención 30/365 días (Professional+)
 - 📝 **Reportes del Sistema**: Dashboard de métricas, tendencias y exportación PDF (Starter+)
+
+#### Fase 7 (TBD) - Desktop App
+- 📝 Sidebar AppBar nativa (Windows) con Tauri v2
+- ✅ 8 paneles funcionales: Tasks, Notes, Contacts, Bookmarks, Snippets, Projects, Shared, Reports
+- 📝 6 paneles pendientes: Home, Files, Chat, Alerts, Profile, Settings
+- 📝 Consume API REST existente (sin tablas adicionales)
 
 #### Future Phases (Post-MVP)
 - Attribute-Based Access Control (ABAC)
