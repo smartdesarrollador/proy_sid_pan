@@ -7,6 +7,9 @@ export type PanelId =
   | "notes"
   | "contacts"
   | "bookmarks"
+  | "projects"
+  | "snippets"
+  | "shared"
   | "profile"
   | "settings";
 
