@@ -1,107 +1,143 @@
-# proy_temp
+# proy_sidebar_panel
 
-AI/ML Development Project with modern tooling and AI-assisted development support.
+Proyecto de desarrollo de software con soporte avanzado para agentes de IA (Claude Code), documentacion de producto y arquitectura multi-app.
 
-## Features
-
-- Multi-provider LLM integration (Anthropic Claude, OpenAI, Ollama)
-- AI agent orchestration with tool support
-- Prompt versioning and template management
-- Data pipelines for RAG and embeddings
-- Full CI/CD with GitHub Actions
-- Docker-based development environment
-- AI coding agent support (Claude Code, Cursor, Copilot)
-
-## Quick Start
-
-```bash
-# Option 1: Automated setup
-./scripts/setup.sh
-
-# Option 2: Manual setup
-cp .env.example .env              # Configure API keys
-python3 -m venv .venv             # Create virtual environment
-source .venv/bin/activate         # Activate it
-pip install -e ".[dev]"           # Install with dev dependencies
-pre-commit install                # Set up git hooks
-make test                         # Verify everything works
-```
-
-## Project Structure
+## Estructura del Proyecto
 
 ```
 .
-├── src/                       # Source code
-│   ├── agents/                #   AI agent definitions
-│   ├── llm/                   #   LLM provider clients
-│   ├── prompts/               #   Prompt engineering
-│   ├── tools/                 #   Agent tools
-│   ├── pipelines/             #   Data/AI pipelines
-│   ├── api/                   #   REST endpoints
-│   └── utils/                 #   Shared utilities
+├── apps/
+│   └── backend_django             # App backend Django (en preparacion)
 │
-├── tests/                     # Test suite
-├── config/                    # Model, prompt, logging config
-├── data/                      # Data artifacts (gitignored)
-├── notebooks/                 # Jupyter experimentation
-├── schemas/                   # JSON schemas & data models
-├── scripts/                   # Automation scripts
-├── docs/                      # Documentation
-├── prd/                       # Product Requirements
-├── reports/                   # Generated reports
+├── docs/                          # Documentacion tecnica
+│   ├── adr/                       #   Architecture Decision Records
+│   │   ├── 001-project-structure.md
+│   │   └── 002-auto-documentation-hook.md
+│   ├── api/                       #   Referencia de APIs
+│   ├── architecture/              #   Diseno del sistema
+│   │   ├── system-overview.md
+│   │   ├── frontend-architecture.md
+│   │   ├── data-architecture.md
+│   │   ├── infrastructure.md
+│   │   ├── multi-tenancy.md
+│   │   ├── rbac.md
+│   │   └── security.md
+│   ├── diagrams/                  #   Diagramas de arquitectura
+│   ├── guides/                    #   Guias de desarrollo
+│   │   ├── getting-started.md
+│   │   ├── ai-workflow.md
+│   │   └── project-structure.md
+│   ├── runbooks/                  #   Runbooks operacionales
+│   └── ui-ux/                    #   Diseno UI/UX y prototipos
+│       ├── prototype-admin/
+│       ├── prototype-cliente/
+│       ├── prototype-desktop/
+│       └── prototype-vista/
 │
-├── .claude/                   # Claude Code AI config
-├── .agent/                    # Open standard agent context
-├── .github/workflows/         # CI/CD pipelines
+├── prd/                           # Product Requirements Documents
+│   ├── features/                  #   PRDs por feature
+│   │   ├── billing.md
+│   │   ├── analytics.md
+│   │   ├── desktop-app.md
+│   │   ├── projects.md
+│   │   └── ...
+│   ├── requirements/              #   Requisitos del sistema
+│   │   ├── functional-requirements.md
+│   │   ├── use-cases.md
+│   │   └── user-stories.md
+│   └── technical/                 #   Decisiones tecnicas
+│       ├── architecture.md
+│       ├── data-models.md
+│       ├── api-endpoints.md
+│       ├── rbac-roles-permissions.md
+│       └── implementation-timeline.md
 │
-├── pyproject.toml             # Dependencies & tool config
-├── Dockerfile                 # Container definition
-├── docker-compose.yml         # Service orchestration
-├── Makefile                   # Task automation
-├── CLAUDE.md                  # AI agent project memory
-└── AGENTS.md                  # Open standard agent config
+├── plans/                         # Planes de implementacion
+├── reports/                       # Reportes generados
+├── util/
+│   └── capturas/                  # Capturas de pantalla
+│
+├── .claude/                       # Configuracion Claude Code
+│   ├── agents/                    #   13 agentes especializados
+│   │   ├── api-documenter.md
+│   │   ├── code-reviewer.md
+│   │   ├── database-optimizer.md
+│   │   ├── migration-manager.md
+│   │   ├── security-auditor.md
+│   │   ├── tauri-desktop-builder.md
+│   │   ├── test-generator.md
+│   │   └── ...
+│   ├── commands/                  #   Comandos custom
+│   │   ├── create-prd
+│   │   ├── generate-report
+│   │   ├── onboard
+│   │   └── pr-review
+│   ├── hooks/                     #   Automatizacion de eventos
+│   │   ├── detect-doc-changes.sh
+│   │   ├── sync-claude-md.sh
+│   │   └── task-finished-alert.py
+│   ├── rules/                     #   Reglas de desarrollo
+│   │   ├── ai-development.md
+│   │   ├── code-style.md
+│   │   └── security.md
+│   └── skills/                    #   42 skills especializados
+│       ├── django-db-models/
+│       ├── drf-*/                 #   Django REST Framework
+│       ├── react-*/               #   React + TypeScript
+│       ├── nextjs-*/              #   Next.js
+│       ├── tauri-*/               #   Tauri desktop
+│       └── ui-*/                  #   UI/UX components
+│
+├── .github/workflows/             # CI/CD pipelines
+│
+├── CLAUDE.md                      # Configuracion principal del agente
+├── AGENTS.md                      # Estandar abierto de agentes
+├── pyproject.toml                 # Dependencias y configuracion de herramientas
+├── Makefile                       # Automatizacion de tareas
+├── Dockerfile                     # Definicion del contenedor
+└── docker-compose.yml             # Orquestacion de servicios
 ```
 
-## Development
+## Comandos de Desarrollo
 
 ```bash
-make help          # See all available commands
-make dev           # Start development server
-make test          # Run test suite
-make lint          # Run linters
-make format        # Format code
-make docker-up     # Start Docker services
+make help          # Ver todos los comandos disponibles
+make dev           # Iniciar servidor de desarrollo
+make test          # Ejecutar suite de tests
+make lint          # Ejecutar linters (ruff)
+make format        # Formatear codigo
+make typecheck     # Verificar tipos (mypy)
+make docker-up     # Iniciar servicios Docker
+make docker-down   # Detener servicios Docker
 ```
 
-## Docker Services
+## Agentes Disponibles
 
-```bash
-# Core app
-docker compose up -d
+El proyecto incluye agentes especializados de Claude Code para tareas comunes:
 
-# With local LLM (Ollama)
-docker compose --profile local-llm up -d
+| Agente | Descripcion |
+|--------|-------------|
+| `migration-manager` | Gestiona migraciones Django |
+| `database-optimizer` | Optimiza queries y sugiere indices |
+| `code-reviewer` | Revision de calidad y seguridad |
+| `security-auditor` | Auditoria de vulnerabilidades |
+| `test-generator` | Genera tests unitarios e integracion |
+| `api-documenter` | Genera documentacion OpenAPI |
+| `tauri-desktop-builder` | Builds de apps desktop con Tauri v2 |
+| `ui-ux-designer` | Diseno de interfaces y componentes |
 
-# With vector database (ChromaDB)
-docker compose --profile vector-db up -d
+## Documentacion
 
-# With cache (Redis)
-docker compose --profile cache up -d
-```
+- [Arquitectura del Sistema](docs/architecture/system-overview.md)
+- [Guia de Inicio](docs/guides/getting-started.md)
+- [Flujo de Trabajo con IA](docs/guides/ai-workflow.md)
+- [ADRs](docs/adr/)
+- [UI/UX y Prototipos](docs/ui-ux/)
 
-## Documentation
+## Contribuir
 
-- [Getting Started](docs/guides/getting-started.md)
-- [AI Workflow Guide](docs/guides/ai-workflow.md)
-- [System Architecture](docs/architecture/system-overview.md)
-- [API Reference](docs/api/)
-- [Architecture Decision Records](docs/adr/)
-- [Deployment Runbook](docs/runbooks/deployment.md)
-
-## Contributing
-
-1. Create a feature branch from `main`
-2. Write a PRD in `prd/` for significant features
-3. Follow the coding standards in `CLAUDE.md` / `AGENTS.md`
-4. Ensure `make test && make lint` passes
-5. Submit a pull request
+1. Crear rama desde `main`
+2. Escribir un PRD en `prd/features/` para features significativos
+3. Seguir las reglas en `.claude/rules/`
+4. Verificar que `make test && make lint` pasa
+5. Abrir un pull request

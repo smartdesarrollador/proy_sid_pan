@@ -114,3 +114,5 @@ logs/
 # reports/  # Uncomment if you don't want to track generated reports
 
 util/
+
+apps/
