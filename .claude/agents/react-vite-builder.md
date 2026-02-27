@@ -816,17 +816,49 @@ Al generar código, siempre incluye:
 9. **Tests** básicos (opcional, si se solicita)
 10. **Comentarios** en lógica compleja
 
+## Skills Disponibles
+
+Usa los siguientes skills invocando el Skill tool en los momentos indicados:
+
+| Skill | Cuándo usarlo |
+|-------|--------------|
+| `react-typescript-foundations` | Al definir types, interfaces, generics, utility types (Partial, Pick, Omit), o configurar TypeScript strict mode y patrones de tipado |
+| `react-hooks-patterns` | Al implementar useState, useEffect, useCallback, useMemo, useRef, useReducer o al crear custom hooks reutilizables |
+| `react-context-state` | Al configurar Context API, providers globales (AuthContext, ThemeContext), patrones con useReducer para estado global |
+| `react-tailwind-components` | Al crear o refactorizar componentes UI base (Button, Input, Card, Modal, Badge, Select) con Tailwind utility-first |
+| `react-tailwind-animations` | Al agregar transiciones, hover effects, animaciones con Framer Motion, keyframes o micro-interacciones |
+| `react-forms-validation` | Al implementar formularios con react-hook-form, validación con Zod/Yup, manejo de errores de campo y submit |
+| `react-tanstack-query` | Al implementar data fetching, mutations, cache invalidation, optimistic updates, infinite scroll o prefetching con TanStack Query v5 |
+| `react-router-patterns` | Al configurar React Router v6.4+, nested routes, dynamic routes, protected routes, loaders/actions o code splitting por ruta |
+| `react-api-authentication` | Al implementar JWT, login/logout flow, refresh tokens, axios interceptors, rutas protegidas o persistencia de sesión |
+| `react-error-handling` | Al implementar Error Boundaries, manejo de errores async, fallback UI, logging de errores o toast de error global |
+| `react-performance-optimization` | Al optimizar re-renders, aplicar lazy loading, code splitting, memoización, virtualización de listas o analizar bundle |
+| `react-suspense-streaming` | Al usar React.lazy, Suspense boundaries, concurrent features, streaming o skeleton loaders con Suspense |
+| `react-project-structure` | Al planificar arquitectura de carpetas, Feature-Sliced Design, organización de módulos o escalar la estructura del proyecto |
+| `react-accessibility` | Al implementar ARIA attributes, HTML semántico, keyboard navigation, focus management o validar WCAG 2.1 AA |
+| `react-internationalization` | Al configurar react-i18next, archivos de traducción, cambio de idioma, formateo de fechas/números o namespaces |
+| `react-data-visualization` | Al implementar charts (LineChart, BarChart, PieChart) con Recharts/Visx, dashboards con datos o tooltips personalizados |
+| `react-testing-library` | Al escribir unit tests o integration tests de componentes, hooks y utils con Testing Library + Vitest/Jest |
+| `react-e2e-testing` | Al escribir tests E2E con Playwright para flujos críticos (login, CRUD, checkout) o configurar CI/CD de testing |
+
+> **Regla**: Antes de generar código en cualquiera de estas áreas, invoca el skill correspondiente para aplicar los patrones y mejores prácticas actualizadas del proyecto.
+
 ## Workflow de Desarrollo
 
 1. **Leer requisitos** y PRD del proyecto
-2. **Definir types** primero (domain models, DTOs)
-3. **Crear API client** con endpoints tipados
-4. **Implementar hooks** con TanStack Query
-5. **Generar componentes** UI con Tailwind
-6. **Agregar validación** con react-hook-form + Zod
-7. **Implementar tests** básicos
-8. **Verificar accesibilidad** con axe DevTools
-9. **Optimizar performance** con React DevTools
+2. **Planificar estructura** — invocar `react-project-structure` para arquitectura de carpetas
+3. **Definir types** primero (domain models, DTOs) — invocar `react-typescript-foundations`
+4. **Crear API client** con endpoints tipados
+5. **Implementar hooks** con TanStack Query — invocar `react-tanstack-query`
+6. **Configurar estado global** si es necesario — invocar `react-context-state`
+7. **Configurar routing** — invocar `react-router-patterns`
+8. **Generar componentes** UI con Tailwind — invocar `react-tailwind-components`
+9. **Agregar validación** con react-hook-form + Zod — invocar `react-forms-validation`
+10. **Implementar autenticación** — invocar `react-api-authentication`
+11. **Agregar animaciones** si aplica — invocar `react-tailwind-animations`
+12. **Verificar accesibilidad** — invocar `react-accessibility`
+13. **Optimizar performance** con React DevTools — invocar `react-performance-optimization`
+14. **Implementar tests** — invocar `react-testing-library` (unit) y/o `react-e2e-testing` (E2E)
 
 ---
 

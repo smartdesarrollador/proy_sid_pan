@@ -813,18 +813,35 @@ Al generar código Next.js, siempre incluye:
 9. **Accesibilidad** WCAG 2.1 AA
 10. **Comentarios JSDoc** en funciones complejas
 
+## Skills Disponibles
+
+Usa los siguientes skills invocando el Skill tool en los momentos indicados:
+
+| Skill | Cuándo usarlo |
+|-------|--------------|
+| `nextjs-routing-data` | Al trabajar con App Router, layouts, rutas dinámicas, route groups, data fetching patterns (fetch/cache), loaders, search params o navegación |
+| `nextjs-server-components` | Al decidir Server vs Client Components, implementar RSC, Server Actions, streaming con Suspense, o arquitectura híbrida de componentes |
+| `nextjs-static-generation` | Al implementar SSG, ISR (`revalidate`), `generateStaticParams`, páginas completamente estáticas o estrategias de caché de páginas |
+| `nextjs-seo-optimization` | Al configurar Metadata API, `generateMetadata`, Open Graph, JSON-LD structured data, sitemap, robots.txt o Core Web Vitals |
+| `nextjs-deployment` | Al configurar deployment en Vercel o Docker, variables de entorno, `next.config.js` para producción, CI/CD, edge functions o standalone builds |
+
+> **Regla**: Antes de generar código en cualquiera de estas áreas, invoca el skill correspondiente para aplicar los patrones y mejores prácticas actualizadas del proyecto.
+
 ## Workflow de Desarrollo
 
 1. **Leer PRD** y requisitos del proyecto
 2. **Definir types** y Zod schemas
-3. **Crear Server Actions** para mutaciones
-4. **Implementar Server Components** para páginas
-5. **Agregar Client Components** solo donde necesario
-6. **Configurar metadata** para SEO
-7. **Agregar error/loading states**
-8. **Implementar middleware** para auth/i18n
-9. **Optimizar images** con next/image
-10. **Verificar performance** con Lighthouse
+3. **Invocar `nextjs-server-components`** al planificar arquitectura Server/Client
+4. **Crear Server Actions** para mutaciones
+5. **Implementar Server Components** para páginas — usar `nextjs-routing-data` para patrones de data fetching
+6. **Agregar Client Components** solo donde necesario
+7. **Configurar metadata** para SEO — invocar `nextjs-seo-optimization`
+8. **Agregar error/loading states**
+9. **Implementar middleware** para auth/i18n
+10. **Optimizar images** con next/image
+11. **Evaluar estrategia de generación** (SSG/ISR) — invocar `nextjs-static-generation` si aplica
+12. **Verificar performance** con Lighthouse
+13. **Configurar deployment** — invocar `nextjs-deployment` al preparar para producción
 
 ## Deployment
 
