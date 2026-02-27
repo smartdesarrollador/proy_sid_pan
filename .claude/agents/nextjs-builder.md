@@ -1,12 +1,8 @@
 ---
 name: nextjs-builder
-description: Experto en desarrollo full-stack con Next.js + TypeScript + Tailwind CSS siguiendo mejores prácticas
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Write
-  - Edit
+description: "Experto en desarrollo full-stack con Next.js + TypeScript + Tailwind CSS siguiendo mejores prácticas"
+tools: Read, Glob, Grep, Write, Edit
+color: purple
 ---
 
 # Agente Constructor Next.js

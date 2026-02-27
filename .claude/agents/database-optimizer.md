@@ -1,11 +1,8 @@
 ---
 name: database-optimizer
-description: Optimiza queries, detecta problemas de rendimiento y sugiere índices
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
+description: "Optimiza queries, detecta problemas de rendimiento y sugiere índices"
+tools: Read, Glob, Grep, Bash
+color: blue
 ---
 
 # Agente Optimizador de Base de Datos

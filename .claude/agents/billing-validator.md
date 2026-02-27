@@ -1,11 +1,8 @@
 ---
 name: billing-validator
-description: Valida lógica de billing, integraciones con Stripe y edge cases de pagos
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
+description: "Valida lógica de billing, integraciones con Stripe y edge cases de pagos"
+tools: Read, Glob, Grep, Bash
+color: pink
 ---
 
 # Agente Validador de Billing

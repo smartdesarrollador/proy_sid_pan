@@ -1,11 +1,8 @@
 ---
 name: code-reviewer
-description: Revisa código en busca de calidad, seguridad y mejores prácticas
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
+description: "Revisa código en busca de calidad, seguridad y mejores prácticas"
+tools: Read, Glob, Grep, Bash
+color: orange
 ---
 
 # Agente Revisor de Código

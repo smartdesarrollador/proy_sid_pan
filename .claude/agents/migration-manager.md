@@ -1,12 +1,8 @@
 ---
 name: migration-manager
-description: Gestiona migrations de Django, detecta conflictos y valida seguridad
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
-  - Write
+description: "Gestiona migrations de Django, detecta conflictos y valida seguridad"
+tools: Read, Glob, Grep, Bash, Write
+color: cyan
 ---
 
 # Agente Gestor de Migrations

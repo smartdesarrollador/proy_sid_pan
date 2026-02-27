@@ -1,13 +1,8 @@
 ---
 name: test-generator
-description: Genera tests unitarios, de integración y valida cobertura de código
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Write
-  - Edit
-  - Bash
+description: "Genera tests unitarios, de integración y valida cobertura de código"
+tools: Read, Glob, Grep, Write, Edit, Bash
+color: red
 ---
 
 # Agente Generador de Tests

@@ -1,11 +1,8 @@
 ---
 name: security-auditor
-description: Audita seguridad, valida aislamiento multi-tenant y detecta vulnerabilidades
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
+description: "Audita seguridad, valida aislamiento multi-tenant y detecta vulnerabilidades"
+tools: Read, Glob, Grep, Bash
+color: red
 ---
 
 # Agente Auditor de Seguridad

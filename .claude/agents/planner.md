@@ -1,10 +1,8 @@
 ---
 name: planner
-description: Planifica estrategia de implementación para features y cambios
-tools:
-  - Read
-  - Glob
-  - Grep
+description: "Planifica estrategia de implementación para features y cambios"
+tools: Read, Glob, Grep
+color: orange
 ---
 
 # Agente Planificador

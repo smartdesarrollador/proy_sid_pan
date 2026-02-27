@@ -1,12 +1,8 @@
 ---
 name: react-vite-builder
-description: Experto en desarrollo frontend con React + Vite + TypeScript + Tailwind CSS siguiendo mejores prácticas
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Write
-  - Edit
+description: "Experto en desarrollo frontend con React + Vite + TypeScript + Tailwind CSS siguiendo mejores prácticas"
+tools: Read, Glob, Grep, Write, Edit
+color: cyan
 ---
 
 # Agente Constructor React + Vite

@@ -1,11 +1,8 @@
 ---
 name: compliance-checker
-description: Valida cumplimiento de GDPR, SOC2 y estándares de seguridad
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
+description: "Valida cumplimiento de GDPR, SOC2 y estándares de seguridad"
+tools: Read, Glob, Grep, Bash
+color: yellow
 ---
 
 # Agente Verificador de Compliance

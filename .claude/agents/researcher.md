@@ -1,12 +1,8 @@
 ---
 name: researcher
-description: Investiga preguntas sobre el código, encuentra patrones y recopila contexto
-tools:
-  - Read
-  - Glob
-  - Grep
-  - WebSearch
-  - WebFetch
+description: "Investiga preguntas sobre el código, encuentra patrones y recopila contexto"
+tools: Read, Glob, Grep, WebSearch, WebFetch
+color: orange
 ---
 
 # Agente Investigador

@@ -1,12 +1,8 @@
 ---
 name: api-documenter
-description: Genera y valida documentación OpenAPI/Swagger para APIs REST
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Write
-  - Edit
+description: "Genera y valida documentación OpenAPI/Swagger para APIs REST"
+tools: Read, Glob, Grep, Write, Edit
+color: purple
 ---
 
 # Agente Documentador de API
