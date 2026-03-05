@@ -9,10 +9,15 @@ import ServiceCatalog from './components/dashboard/ServiceCatalog'
 import SubscriptionView from './components/subscription/SubscriptionView'
 import SupportView from './components/support/SupportView'
 import ProfileView from './components/profile/ProfileView'
+import PaymentMethodsView from './components/billing/PaymentMethodsView'
+import NotificationsView from './components/notifications/NotificationsView'
+import TeamView from './components/team/TeamView'
+import RegisterView from './components/register/RegisterView'
+import ReferralsView from './components/referrals/ReferralsView'
 
-// views: 'landing' | 'login' | 'dashboard' | 'services' | 'subscription' | 'support' | 'profile'
+// views: 'landing' | 'login' | 'register' | 'dashboard' | 'services' | 'subscription' | 'support' | 'profile' | 'billing' | 'notifications' | 'team' | 'referrals'
 
-const AUTHENTICATED_VIEWS = ['dashboard', 'services', 'subscription', 'support', 'profile']
+const AUTHENTICATED_VIEWS = ['dashboard', 'services', 'subscription', 'support', 'profile', 'billing', 'notifications', 'team', 'referrals']
 
 export default function App() {
   const { isAuthenticated } = useAuth()
@@ -26,7 +31,10 @@ export default function App() {
     if (currentView === 'login') {
       return <Login onGoToLanding={() => navigate('landing')} />
     }
-    return <LandingPage onLogin={() => navigate('login')} />
+    if (currentView === 'register') {
+      return <RegisterView onGoToLanding={() => navigate('landing')} />
+    }
+    return <LandingPage onLogin={() => navigate('login')} onRegister={() => navigate('register')} />
   }
 
   // When user logs in while on 'landing' or 'login', treat as dashboard
@@ -49,11 +57,19 @@ export default function App() {
           </div>
         )
       case 'subscription':
-        return <SubscriptionView />
+        return <SubscriptionView onNavigate={navigate} />
       case 'support':
         return <SupportView />
       case 'profile':
         return <ProfileView />
+      case 'billing':
+        return <PaymentMethodsView />
+      case 'notifications':
+        return <NotificationsView />
+      case 'team':
+        return <TeamView />
+      case 'referrals':
+        return <ReferralsView />
       case 'dashboard':
       default:
         return <HubDashboard onNavigate={navigate} />

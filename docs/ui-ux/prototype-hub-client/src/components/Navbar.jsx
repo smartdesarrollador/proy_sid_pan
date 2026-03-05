@@ -15,6 +15,7 @@ import {
   Moon,
   Sun,
   Globe,
+  Users,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -31,6 +32,7 @@ export default function Navbar({ currentView, onNavigate }) {
     { id: 'dashboard', label: t('navbar.dashboard'), icon: LayoutDashboard },
     { id: 'services', label: t('navbar.services'), icon: Layers },
     { id: 'subscription', label: t('navbar.subscription'), icon: CreditCard },
+    { id: 'team', label: t('navbar.team'), icon: Users },
     { id: 'support', label: t('navbar.support'), icon: HeadphonesIcon },
     { id: 'profile', label: t('navbar.profile'), icon: UserCircle },
   ]
@@ -118,7 +120,7 @@ export default function Navbar({ currentView, onNavigate }) {
 
           {/* Notification bell */}
           <button
-            onClick={() => handleNavigate('support')}
+            onClick={() => handleNavigate('notifications')}
             aria-label={`${notificationCount} ${t('navbar.tickets')}`}
             className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
           >

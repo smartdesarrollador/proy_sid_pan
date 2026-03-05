@@ -1,7 +1,7 @@
 import { Check, ArrowRight, Zap, Globe, Layout, Monitor } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 
-export default function LandingPage({ onLogin }) {
+export default function LandingPage({ onLogin, onRegister }) {
   const { t } = useTranslation()
 
   const FEATURE_HIGHLIGHTS = [
@@ -44,6 +44,7 @@ export default function LandingPage({ onLogin }) {
       cta: t('landing.freeCta'),
       ctaStyle: 'btn-secondary',
       popular: false,
+      isRegister: true,
     },
     {
       name: 'Starter',
@@ -63,6 +64,7 @@ export default function LandingPage({ onLogin }) {
       cta: t('landing.starterCta'),
       ctaStyle: 'btn-primary',
       popular: false,
+      isRegister: true,
     },
     {
       name: 'Professional',
@@ -82,6 +84,7 @@ export default function LandingPage({ onLogin }) {
       cta: t('landing.proCta'),
       ctaStyle: 'btn-primary',
       popular: true,
+      isRegister: true,
     },
   ]
 
@@ -245,7 +248,7 @@ export default function LandingPage({ onLogin }) {
                   </ul>
 
                   <button
-                    onClick={onLogin}
+                    onClick={plan.isRegister ? onRegister : onLogin}
                     className={plan.ctaStyle + ' w-full justify-center'}
                   >
                     {plan.cta}

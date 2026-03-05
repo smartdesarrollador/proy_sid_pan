@@ -22,24 +22,30 @@
 │   ├── register
 │   ├── refresh-token
 │   ├── verify-email
-│   └── reset-password
+│   ├── reset-password
+│   ├── sso/token/      # Hub → Servicio (genera SSO token)
+│   └── sso/validate/   # Servicio → Backend (valida SSO token)
 │
-├── admin/              # Admin frontend endpoints
-│   ├── tenants/
-│   ├── users/
+├── admin/              # Admin Panel + Hub (billing/users)
+│   ├── users/          # Reutilizado por Hub (Team view)
 │   ├── roles/
 │   ├── permissions/
-│   ├── subscriptions/
-│   └── audit-logs/
+│   ├── subscriptions/  # Reutilizado por Hub
+│   ├── billing/        # Reutilizado por Hub (invoices, payment-methods)
+│   ├── notifications/  # Admin Panel (categorías admin)
+│   ├── audit-logs/
+│   ├── clients/
+│   └── promotions/
 │
-└── app/                # Cliente frontend endpoints
+└── app/                # Workspace + Hub Client Portal
     ├── calendar/
     ├── tasks/
-    ├── notifications/
-    ├── files/
     ├── projects/
-    ├── dashboard/
-    └── shares/
+    ├── shares/
+    ├── services/        # Hub: catálogo de servicios + activos
+    ├── notifications/   # Hub: notificaciones (categorías hub)
+    ├── referrals/       # Hub: programa de referidos
+    └── digital-services/
 ```
 
 ---
@@ -58,7 +64,8 @@ Content-Type: application/json
   "name": "John Doe",
   "email": "john@example.com",
   "password": "SecurePass123!",
-  "organization_name": "Acme Corp"
+  "organization_name": "Acme Corp",
+  "plan": "starter"    // Opcional — default: "free". Enviado desde el stepper de registro del Hub.
 }
 
 Response 201:
@@ -72,7 +79,7 @@ Response 201:
     "id": "uuid",
     "name": "Acme Corp",
     "slug": "acme-corp",
-    "subdomain": "acme-corp.plataforma.com"
+    "subdomain": "acme-corp"    // Solo el prefijo. El frontend construye: {subdomain}.rbacplatform.com
   },
   "message": "Verification email sent"
 }
@@ -1013,6 +1020,179 @@ X-RateLimit-Reset: 1675174800
 
 ---
 
+---
+
+## Hub Client Portal Endpoints
+
+Endpoints específicos del Hub (nuevos o aclaraciones de reutilización). Ver `prd/features/hub-client-portal.md` Sección 9 para la tabla completa con leyenda 🔄/⭐.
+
+### POST /api/v1/auth/sso/token/
+
+**Genera token SSO para acceder a un servicio**
+
+```http
+POST /api/v1/auth/sso/token/
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "service": "workspace"    // 'workspace' | 'vista' | 'desktop'
+}
+
+Response 200:
+{
+  "sso_token": "abc123xyz...",   // 64 chars, aleatorio
+  "expires_in": 60,
+  "redirect_url": "https://workspace.rbacplatform.com/?sso_token=abc123xyz..."
+}
+
+Response 403:
+{
+  "error": "service_not_acquired",
+  "message": "Your tenant has not acquired this service"
+}
+```
+
+---
+
+### POST /api/v1/auth/sso/validate/
+
+**Valida token SSO — consumido por el servicio destino**
+
+```http
+POST /api/v1/auth/sso/validate/
+Content-Type: application/json
+
+{
+  "sso_token": "abc123xyz..."
+}
+
+Response 200:
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "user": {
+    "id": "uuid",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "roles": ["owner"],
+    "permissions": [...]
+  }
+}
+
+Response 400:
+{
+  "error": "invalid_sso_token",
+  "message": "Token is expired, already used, or does not exist"
+}
+```
+
+**Seguridad:** El token se invalida tras el primer uso (`used_at = now()`). TTL: 60 segundos.
+
+---
+
+### GET /api/v1/app/services/
+
+**Catálogo de servicios disponibles para el tenant**
+
+```http
+GET /api/v1/app/services/
+Authorization: Bearer {access_token}
+
+Response 200:
+{
+  "services": [
+    {
+      "id": "uuid",
+      "slug": "workspace",
+      "name": "Workspace",
+      "description": "Tareas, notas, proyectos y más",
+      "icon": "Layout",
+      "status": "active",        // 'active' | 'suspended' | 'locked' | 'coming_soon'
+      "min_plan": "starter",
+      "last_accessed": "2026-03-03T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/v1/app/services/active/
+
+**Servicios activos (adquiridos) del tenant**
+
+```http
+GET /api/v1/app/services/active/
+Authorization: Bearer {access_token}
+
+Response 200:
+{
+  "services": [/* igual que arriba, solo status='active' */]
+}
+```
+
+---
+
+### GET /api/v1/app/notifications/
+
+**Notificaciones del Hub (vista filtrada)**
+
+```http
+GET /api/v1/app/notifications/
+Authorization: Bearer {access_token}
+
+Response 200:
+{
+  "notifications": [
+    {
+      "id": "uuid",
+      "category": "billing",    // 'billing' | 'security' | 'services' | 'system'
+      "title": "Factura generada",
+      "message": "INV-2026-003 por $29.00 disponible",
+      "read": false,
+      "created_at": "2026-03-04T08:00:00Z"
+    }
+  ],
+  "unread_count": 2
+}
+```
+
+> Diferencia con `/admin/notifications/`: filtra categorías hub (`billing`, `security`, `services`, `system`). La categoría `services` debe agregarse al `choices` del modelo `Notification`.
+
+---
+
+### GET /api/v1/app/referrals/
+
+**Stats + código + historial de referidos**
+
+```http
+GET /api/v1/app/referrals/
+Authorization: Bearer {access_token}
+
+Response 200:
+{
+  "code": "EMPRESA-XYZ-2025",
+  "link": "https://hub.rbacplatform.com/r/EMPRESA-XYZ-2025",
+  "stats": {
+    "referred": 3,
+    "credits_earned": 87.00,
+    "credit_balance": 29.00
+  },
+  "history": [
+    {
+      "email": "cli***@example.com",
+      "plan": "starter",
+      "status": "active",
+      "credit": 29.00,
+      "date": "2025-11-01"
+    }
+  ]
+}
+```
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -1021,6 +1201,6 @@ X-RateLimit-Reset: 1675174800
 
 ---
 
-**Última actualización**: 2026-02-12
+**Última actualización**: 2026-03-04
 
 **Nota**: Para documentación completa de todos los endpoints, consultar el archivo original completo en `/prd/rbac-subscription-system.md` sección 6.4.

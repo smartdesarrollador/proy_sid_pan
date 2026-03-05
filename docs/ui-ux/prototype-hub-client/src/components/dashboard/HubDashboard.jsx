@@ -1,7 +1,7 @@
-import { CreditCard, Receipt, Headphones, Plus, ArrowRight } from 'lucide-react'
+import { CreditCard, Receipt, Headphones, Plus, ArrowRight, Gift } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { MOCK_SERVICES } from '../../data/mockServices'
+import { MOCK_SERVICES, MOCK_REFERRALS } from '../../data/mockServices'
 import ServiceCard from './ServiceCard'
 
 function SummaryCard({ icon: Icon, iconBg, label, value, sub, action, onAction }) {
@@ -73,7 +73,7 @@ export default function HubDashboard({ onNavigate }) {
         <h2 id="summary-heading" className="sr-only">
           {t('dashboard.accountSummary')}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <SummaryCard
             icon={CreditCard}
             iconBg="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
@@ -104,6 +104,15 @@ export default function HubDashboard({ onNavigate }) {
             sub={openTickets ? t('dashboard.supportAttention') : t('dashboard.supportOk')}
             action={t('dashboard.supportAction')}
             onAction={() => onNavigate?.('support')}
+          />
+          <SummaryCard
+            icon={Gift}
+            iconBg="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400"
+            label={t('referrals.title')}
+            value={`${MOCK_REFERRALS.stats.referred} ${t('referrals.referred')}`}
+            sub={`$${MOCK_REFERRALS.stats.creditBalance} ${t('referrals.balance')}`}
+            action={t('referrals.yourCode')}
+            onAction={() => onNavigate?.('referrals')}
           />
         </div>
       </section>

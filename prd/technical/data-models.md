@@ -346,15 +346,17 @@ class Subscription(models.Model):
 
 ### Invoice
 
+> **Nota:** El campo de monto es `amount_cents = PositiveIntegerField()` (entero en centavos), NO `amount = DecimalField()`. La API expone `amount_cents: number` y una propiedad calculada `amount_display: str` (ej. `"$29.00"`). El Admin Panel TypeScript usa ambos campos.
+
 ```python
 class Invoice(models.Model):
     """Factura generada"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE)
-    
+
     stripe_invoice_id = models.CharField(max_length=255, blank=True)
-    
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    amount_cents = models.PositiveIntegerField()  # en centavos (ej. 2900 = $29.00)
     currency = models.CharField(max_length=3, default='USD')
     status = models.CharField(
         max_length=20,
@@ -860,6 +862,168 @@ class ServiceAnalytics(models.Model):
 
 ---
 
+---
+
+## Hub Client Portal Models
+
+Modelos nuevos requeridos por el Hub Client Portal (no existen aún en el backend).
+
+### PaymentMethod
+
+```python
+class PaymentMethod(models.Model):
+    """Método de pago del tenant"""
+    TYPE_CHOICES = [
+        ('card', 'Card'),
+        ('bank_account', 'Bank Account'),
+        ('wallet', 'Digital Wallet'),
+        ('local_payment', 'Local Payment'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, related_name='payment_methods')
+
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    is_default = models.BooleanField(default=False)
+
+    # Stripe card fields
+    stripe_payment_method_id = models.CharField(max_length=255, blank=True)
+    brand = models.CharField(max_length=20, blank=True)   # 'visa', 'mastercard'
+    last4 = models.CharField(max_length=4, blank=True)
+    exp_month = models.PositiveSmallIntegerField(null=True, blank=True)
+    exp_year = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    # LATAM wallet fields (extensión para Hub)
+    external_type = models.CharField(
+        max_length=20, blank=True,
+        choices=[
+            ('paypal', 'PayPal'),
+            ('mercadopago', 'MercadoPago'),
+            ('yape', 'Yape'),
+            ('plin', 'Plin'),
+            ('nequi', 'Nequi'),
+            ('daviplata', 'Daviplata'),
+        ]
+    )
+    external_email = models.EmailField(blank=True)
+    external_phone = models.CharField(max_length=20, blank=True)
+    external_account_id = models.CharField(max_length=255, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payment_methods'
+        indexes = [
+            models.Index(fields=['tenant', 'is_default']),
+        ]
+```
+
+---
+
+### SSOToken
+
+```python
+class SSOToken(models.Model):
+    """Token de corta duración para SSO entre Hub y servicios"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE)
+    service = models.CharField(max_length=50)  # 'workspace' | 'vista' | 'desktop'
+    token = models.CharField(max_length=64, unique=True)
+    used_at = models.DateTimeField(null=True, blank=True)  # None = no usado (single-use)
+    expires_at = models.DateTimeField()                     # created_at + 60s
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'sso_tokens'
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['expires_at']),
+        ]
+```
+
+**Validez:** `used_at is None AND expires_at > now()`
+
+---
+
+### Service + TenantService
+
+```python
+class Service(models.Model):
+    """Catálogo de servicios disponibles en la plataforma"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    slug = models.SlugField(unique=True)           # 'workspace', 'vista', 'desktop'
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=50)         # ícono Lucide
+    url_template = models.CharField(max_length=255)  # 'https://{subdomain}.workspace.app'
+    min_plan = models.CharField(max_length=20, default='free')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'services'
+
+
+class TenantService(models.Model):
+    """Servicios adquiridos por un tenant"""
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('suspended', 'Suspended'),
+        ('locked', 'Locked'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, related_name='tenant_services')
+    service = models.ForeignKey('Service', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    acquired_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tenant_services'
+        unique_together = [['tenant', 'service']]
+```
+
+---
+
+### ReferralCode + Referral
+
+```python
+class ReferralCode(models.Model):
+    """Código de referido único por tenant"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    tenant = models.OneToOneField('Tenant', on_delete=models.CASCADE, related_name='referral_code')
+    code = models.CharField(max_length=50, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'referral_codes'
+
+
+class Referral(models.Model):
+    """Registro de referido referrer → referred"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),   # registrado, aún no activo
+        ('active', 'Active'),     # suscriptor activo, crédito aplicado
+        ('expired', 'Expired'),   # nunca activó suscripción
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    referrer = models.ForeignKey('Tenant', on_delete=models.CASCADE, related_name='referrals_given')
+    referred = models.ForeignKey('Tenant', on_delete=models.CASCADE, related_name='referral_received')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    credit_amount = models.DecimalField(max_digits=8, decimal_places=2, default=29.00)
+    activated_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'referrals'
+        unique_together = [['referrer', 'referred']]
+```
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -868,6 +1032,6 @@ class ServiceAnalytics(models.Model):
 
 ---
 
-**Última actualización**: 2026-02-12
+**Última actualización**: 2026-03-04
 
 **Nota**: Para modelos completos con todos los campos y relaciones, consultar el archivo original en `/prd/rbac-subscription-system.md` sección 6.1.

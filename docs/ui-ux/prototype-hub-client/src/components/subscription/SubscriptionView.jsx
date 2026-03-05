@@ -1,4 +1,4 @@
-import { Check, X, Download, Star, Zap, TrendingUp } from 'lucide-react'
+import { Check, X, Download, Star, Zap, TrendingUp, CreditCard } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTranslation } from '../../contexts/LanguageContext'
@@ -65,7 +65,7 @@ function InvoiceRow({ invoice }) {
   )
 }
 
-export default function SubscriptionView() {
+export default function SubscriptionView({ onNavigate }) {
   const { user } = useAuth()
   const { t, lang } = useTranslation()
   const [billingCycle, setBillingCycle] = useState('monthly')
@@ -104,7 +104,18 @@ export default function SubscriptionView() {
           </div>
 
           <div className="p-6 space-y-5">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('subscription.planUsage')}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t('subscription.planUsage')}</h3>
+              {onNavigate && (
+                <button
+                  onClick={() => onNavigate('billing')}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 focus:outline-none focus:underline"
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  {t('billing.title')}
+                </button>
+              )}
+            </div>
             <UsageMeter label={t('subscription.users')} current={1} total={5} />
             <UsageMeter label={t('subscription.storage')} current={2.1} total={10} unit=" GB" />
             <UsageMeter label={t('subscription.activeServices')} current={2} total={3} />
