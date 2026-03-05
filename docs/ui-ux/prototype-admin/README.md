@@ -8,33 +8,36 @@ Este prototipo simula el **frontend de administración** del sistema, permitiend
 
 ## 🏗️ Arquitectura
 
-En producción, este frontend administrativo será **uno de dos frontends** que consumen la misma API/base de datos:
+En producción, este frontend administrativo es uno de los tres frontends del ecosistema:
 
 ```
 ┌─────────────────────────────────────┐
 │     API / Base de Datos (Django)    │
 │   (Usuarios, Roles, Permisos, etc)  │
 └─────────────────────────────────────┘
-         ↑                    ↑
-         │                    │
-  ┌──────┴─────┐       ┌──────┴─────┐
-  │  Frontend  │       │  Frontend  │
-  │   ADMIN    │       │  CLIENTE   │
-  │ (este)     │       │ (otro)     │
-  └────────────┘       └────────────┘
+      ↑              ↑            ↑
+      │              │            │
+┌─────┴─────┐  ┌─────┴────┐ ┌───┴──────┐
+│  ADMIN    │  │   HUB    │ │WORKSPACE │
+│ (este)    │  │ :3003    │ │  :3001   │
+│ :3000     │  └────┬─────┘ └──────────┘
+└───────────┘       │              ↑
+                    └────[SSO]─────┘
 ```
 
-**Nota importante**: Los datos mock en ambos prototipos son idénticos para simular que ambos están conectados a la misma base de datos.
+**Nota importante**: Los datos mock en los prototipos son idénticos para simular que todos están conectados a la misma base de datos.
 
 ## 📋 Features Implementadas
 
 ### Dashboard Administrativo
+
 - Vista general con métricas clave (usuarios, roles, storage, API calls)
 - Alertas de límites de plan
 - Actividad reciente (usuarios y audit logs)
 - Progress bars de uso de recursos
 
 ### Gestión de Usuarios
+
 - Tabla completa de usuarios con búsqueda y filtros
 - Estados: Activo / Pendiente
 - Indicadores de MFA habilitado/deshabilitado
@@ -42,6 +45,7 @@ En producción, este frontend administrativo será **uno de dos frontends** que 
 - Asignación de roles múltiples por usuario
 
 ### Gestión de Roles
+
 - Grid de roles predefinidos y personalizados
 - Indicadores visuales de roles del sistema vs custom
 - Contador de usuarios y permisos por rol
@@ -50,6 +54,7 @@ En producción, este frontend administrativo será **uno de dos frontends** que 
 - Modal de detalles de rol con lista de permisos
 
 ### Gestión de Permisos
+
 - Catálogo completo de permisos organizados por categoría
 - Búsqueda y filtrado por categoría
 - Visualización de scope (all, own, department)
@@ -57,6 +62,7 @@ En producción, este frontend administrativo será **uno de dos frontends** que 
 - Color-coding por tipo de permiso
 
 ### Suscripciones y Facturación
+
 - Comparación de planes (Free, Starter, Professional, Enterprise)
 - Toggle mensual/anual con descuento
 - Indicador de plan actual
@@ -65,6 +71,7 @@ En producción, este frontend administrativo será **uno de dos frontends** que 
 - Progress bars de límites (usuarios, storage, API calls)
 
 ### Auditoría
+
 - Timeline de eventos con filtros
 - Estado success/failed con iconos
 - Detalles técnicos expandibles (IP, timestamp, user agent)
@@ -141,7 +148,7 @@ Los datos simulados en `src/data/mockData.js` incluyen:
 - **6 Tareas**: Para el sistema de tareas (compartidas con cliente)
 - **4 Eventos**: Para el calendario (compartidos con cliente)
 
-**Importante**: Estos datos mock son idénticos en `prototype-admin` y `prototype-cliente` para simular que ambos frontends consumen la misma base de datos.
+**Importante**: Estos datos mock son idénticos en `prototype-admin` y `prototype-workspace` para simular que ambos frontends consumen la misma base de datos.
 
 ## 🔧 Comandos Disponibles
 
@@ -159,24 +166,28 @@ npm run preview
 ## 🎯 Casos de Uso a Validar
 
 ### 1. Flujo de Invitación de Usuario
+
 - Admin navega a "Usuarios"
 - Click en "Invitar Usuario"
 - Completa email y selecciona rol
 - Envía invitación
 
 ### 2. Flujo de Creación de Rol Personalizado
+
 - Admin navega a "Roles"
 - Click en "Crear Rol"
 - Define nombre, descripción, rol padre, color
 - Guarda rol
 
 ### 3. Flujo de Upgrade de Plan
+
 - Admin navega a "Suscripción"
 - Compara planes
 - Selecciona plan superior
 - Confirma upgrade
 
 ### 4. Flujo de Auditoría
+
 - Admin navega a "Auditoría"
 - Filtra por acción específica
 - Expande detalles técnicos
@@ -194,16 +205,26 @@ npm run preview
 - Envío real de emails
 
 **Funcionalidad simulada:**
+
 - Modales se muestran pero no ejecutan acciones
 - Botones de acción muestran feedback visual
 - Los datos se cargan de `mockData.js`
 
-## 🔗 Prototipo Relacionado
+## 🔗 Prototipos Relacionados
 
-**Prototipo Cliente**: `docs/ui-ux/prototype-cliente/`
-- Interfaz de usuario final para servicios (tareas, calendario, dashboard)
+**Prototype Hub** (portal central del cliente): `docs/ui-ux/prototype-hub-client/`
+
+- Portal de entrada donde los clientes se registran, suscriben y acceden a sus servicios
+- El admin gestiona el catálogo de servicios y planes que aparecen en el hub
+- Puerto 3003
+
+> **Nota**: El admin configura qué servicios están disponibles y en qué planes. El hub es la vitrina que ve el cliente.
+
+**Prototype Workspace** (app de productividad): `docs/ui-ux/prototype-workspace/`
+
+- Aplicación de productividad independiente (tareas, calendario, dashboard) accesible desde el hub
 - Usa los mismos datos mock para simular la misma base de datos
-- Puede ejecutarse simultáneamente en puerto 3001
+- Puerto 3001
 
 ## 📚 Recursos Relacionados
 

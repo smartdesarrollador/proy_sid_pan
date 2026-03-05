@@ -29,10 +29,11 @@ Proyecto de desarrollo de software con soporte avanzado para agentes de IA (Clau
 │   │   └── project-structure.md
 │   ├── runbooks/                  #   Runbooks operacionales
 │   └── ui-ux/                    #   Diseno UI/UX y prototipos
-│       ├── prototype-admin/
-│       ├── prototype-cliente/
-│       ├── prototype-desktop/
-│       └── prototype-vista/
+│       ├── prototype-admin/      #     Panel administrativo (roles, usuarios, billing) :3000
+│       ├── prototype-hub-client/        #     Portal central del cliente (registro, suscripción, SSO) :3003
+│       ├── prototype-workspace/  #     App de productividad independiente (acceso via SSO) :3001
+│       ├── prototype-desktop/    #     App de escritorio (Tauri v2)
+│       └── prototype-vista/      #     Servicios digitales publicos (Next.js)
 │
 ├── prd/                           # Product Requirements Documents
 │   ├── features/                  #   PRDs por feature
@@ -115,16 +116,16 @@ make docker-down   # Detener servicios Docker
 
 El proyecto incluye agentes especializados de Claude Code para tareas comunes:
 
-| Agente | Descripcion |
-|--------|-------------|
-| `migration-manager` | Gestiona migraciones Django |
-| `database-optimizer` | Optimiza queries y sugiere indices |
-| `code-reviewer` | Revision de calidad y seguridad |
-| `security-auditor` | Auditoria de vulnerabilidades |
-| `test-generator` | Genera tests unitarios e integracion |
-| `api-documenter` | Genera documentacion OpenAPI |
-| `tauri-desktop-builder` | Builds de apps desktop con Tauri v2 |
-| `ui-ux-designer` | Diseno de interfaces y componentes |
+| Agente                  | Descripcion                          |
+| ----------------------- | ------------------------------------ |
+| `migration-manager`     | Gestiona migraciones Django          |
+| `database-optimizer`    | Optimiza queries y sugiere indices   |
+| `code-reviewer`         | Revision de calidad y seguridad      |
+| `security-auditor`      | Auditoria de vulnerabilidades        |
+| `test-generator`        | Genera tests unitarios e integracion |
+| `api-documenter`        | Genera documentacion OpenAPI         |
+| `tauri-desktop-builder` | Builds de apps desktop con Tauri v2  |
+| `ui-ux-designer`        | Diseno de interfaces y componentes   |
 
 ## Documentacion
 

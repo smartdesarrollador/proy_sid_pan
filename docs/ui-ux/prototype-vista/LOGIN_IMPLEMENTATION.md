@@ -9,7 +9,7 @@
 ## 🎯 Overview
 
 Successfully implemented a **login simulation system** for prototype-vista that:
-- Supports 5 mock users (consistent with prototype-cliente)
+- Supports 5 mock users (consistent with prototype-workspace)
 - Provides user-specific data for all digital services
 - Implements session persistence with localStorage
 - Respects plan-based feature gates
@@ -321,7 +321,7 @@ npm run preview
 
 ## ✅ Success Criteria (All Met)
 
-- [x] 5 users from prototype-cliente work in prototype-vista
+- [x] 5 users from prototype-workspace work in prototype-vista
 - [x] Passwordless login with user selection
 - [x] Session persists across page reloads
 - [x] Logout clears session and returns to landing

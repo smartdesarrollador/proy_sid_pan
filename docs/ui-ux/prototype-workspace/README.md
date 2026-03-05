@@ -1,34 +1,51 @@
-# Prototipo Cliente - Portal de Servicios
+# Prototype Workspace - Aplicación de Productividad
 
-Prototipo de **interfaz de cliente** para servicios de productividad: dashboard personal, gestión de tareas y calendario. Construido con **React 18** + **Vite** + **Tailwind CSS**.
+Prototipo de **aplicación independiente de productividad** (estilo Notion/Linear): dashboard personal, gestión de tareas, calendario y herramientas de trabajo. Construido con **React 18** + **Vite** + **Tailwind CSS**.
 
 ## 🎯 Propósito
 
-Este prototipo simula el **frontend de cliente** del sistema, permitiendo a los usuarios finales acceder a sus servicios de productividad. Está diseñado para validar flujos de usuario antes de la implementación backend.
+Este prototipo simula una **aplicación de productividad independiente** — uno de los servicios ofrecidos dentro del ecosistema de la plataforma. Es la interfaz donde los usuarios trabajan con sus datos (tareas, calendario, notas, etc.) una vez que ya han accedido a la plataforma.
+
+> **Importante**: Este prototipo **NO** es el panel de entrada del cliente. El punto de acceso central es `prototype-hub-client`, que actúa como portal unificado. Los usuarios llegan aquí desde el hub mediante SSO, no directamente.
+
+## 📌 Rol en el Ecosistema
+
+```
+prototype-hub-client          →   [SSO]   →   prototype-workspace
+(portal central,                        (servicio de productividad,
+ suscripción, catálogo                   app independiente donde
+ de servicios)                           el usuario trabaja)
+```
+
+- **`prototype-hub-client`** (puerto 3003): Portal de entrada. Gestiona registro, suscripción, catálogo de servicios adquiridos y acceso SSO a cada servicio.
+- **`prototype-workspace`** (puerto 3001): Aplicación de productividad. El usuario llega aquí con un token SSO desde el hub y trabaja directamente con tareas, calendario, etc.
 
 ## 🏗️ Arquitectura
 
-En producción, este frontend de cliente será **uno de dos frontends** que consumen la misma API/base de datos:
+En producción, este servicio es consumido por usuarios que han sido autenticados mediante SSO desde el hub central:
 
 ```
 ┌─────────────────────────────────────┐
 │     API / Base de Datos (Django)    │
 │   (Usuarios, Roles, Tareas, etc)    │
 └─────────────────────────────────────┘
-         ↑                    ↑
-         │                    │
-  ┌──────┴─────┐       ┌──────┴─────┐
-  │  Frontend  │       │  Frontend  │
-  │   ADMIN    │       │  CLIENTE   │
-  │ (otro)     │       │  (este)    │
-  └────────────┘       └────────────┘
+    ↑              ↑              ↑
+    │              │              │
+┌───┴────┐   ┌────┴────┐   ┌────┴──────┐
+│ ADMIN  │   │   HUB   │   │ WORKSPACE │
+│ panel  │   │ (portal)│   │ (este)    │
+│ :3000  │   │  :3003  │   │  :3001    │
+└────────┘   └────────┘   └───────────┘
+                  │              ↑
+                  └────[SSO]─────┘
 ```
 
-**Nota importante**: Los datos mock en ambos prototipos son idénticos para simular que ambos están conectados a la misma base de datos.
+**Nota importante**: Los datos mock en los prototipos son compartidos para simular que todos están conectados a la misma base de datos.
 
 ## 📋 Features Implementadas
 
 ### Dashboard de Usuario
+
 - Vista general personalizada con métricas del usuario
 - Resumen de tareas pendientes y completadas
 - Próximos eventos del calendario
@@ -36,6 +53,7 @@ En producción, este frontend de cliente será **uno de dos frontends** que cons
 - Widgets interactivos
 
 ### Gestión de Tareas (Task Board)
+
 - Vista Kanban con columnas: To Do, In Progress, In Review, Done
 - Creación y edición de tareas
 - Asignación de prioridad (alta, media, baja)
@@ -45,6 +63,7 @@ En producción, este frontend de cliente será **uno de dos frontends** que cons
 - Búsqueda de tareas
 
 ### Calendario
+
 - Vista mensual de eventos
 - Creación de eventos con fecha, hora y ubicación
 - Categorías de eventos con colores
@@ -53,6 +72,7 @@ En producción, este frontend de cliente será **uno de dos frontends** que cons
 - Recordatorios (email, notificación)
 
 ### Componentes Compartidos
+
 - Empty states para vistas sin datos
 - Badges de prioridad y estado
 - Date picker para selección de fechas
@@ -70,7 +90,7 @@ En producción, este frontend de cliente será **uno de dos frontends** que cons
 
 ```bash
 # 1. Navegar al directorio del prototipo
-cd docs/ui-ux/prototype-cliente
+cd docs/ui-ux/prototype-workspace
 
 # 2. Instalar dependencias
 npm install
@@ -87,7 +107,7 @@ npm run dev
 ## 🗂️ Estructura del Proyecto
 
 ```
-prototype-cliente/
+prototype-workspace/
 ├── src/
 │   ├── components/
 │   │   ├── Navbar.jsx              # Barra de navegación superior
@@ -161,6 +181,7 @@ npm run preview
 ## 🎯 Casos de Uso a Validar
 
 ### 1. Flujo de Creación de Tarea
+
 - Usuario navega a "Tareas"
 - Click en "Nueva Tarea"
 - Completa título, descripción, prioridad, fecha
@@ -168,12 +189,14 @@ npm run preview
 - Tarea aparece en columna "To Do"
 
 ### 2. Flujo de Gestión de Tareas (Kanban)
+
 - Usuario arrastra tarea de "To Do" a "In Progress"
 - Edita tarea para agregar detalles
 - Mueve tarea a "Done" al completar
 - Filtra tareas por prioridad
 
 ### 3. Flujo de Creación de Evento
+
 - Usuario navega a "Calendario"
 - Click en fecha para crear evento
 - Completa título, descripción, hora, ubicación
@@ -182,6 +205,7 @@ npm run preview
 - Guarda evento
 
 ### 4. Flujo de Dashboard Personal
+
 - Usuario accede a su dashboard
 - Ve resumen de tareas pendientes
 - Ve próximos eventos
@@ -199,17 +223,25 @@ npm run preview
 - Sincronización en tiempo real
 
 **Funcionalidad simulada:**
+
 - Modales se muestran pero no guardan permanentemente
 - Botones de acción muestran feedback visual
 - Los datos se cargan de `mockData.js`
 - El drag & drop solo muestra efectos visuales
 
-## 🔗 Prototipo Relacionado
+## 🔗 Prototipos Relacionados
 
-**Prototipo Admin**: `docs/ui-ux/prototype-admin/`
-- Interfaz administrativa para gestionar plataforma
+**Prototype Hub** (portal central): `docs/ui-ux/prototype-hub-client/`
+
+- Portal de entrada del cliente: registro, suscripción y catálogo de servicios
+- Gestiona el acceso SSO a este workspace y otros servicios
+- Puerto 3003
+
+**Prototype Admin**: `docs/ui-ux/prototype-admin/`
+
+- Interfaz administrativa para gestionar la plataforma (usuarios, roles, billing, auditoría)
 - Usa los mismos datos mock para simular la misma base de datos
-- Puede ejecutarse simultáneamente en puerto 3000
+- Puerto 3000
 
 ## 🎨 Personalización
 

@@ -44,7 +44,7 @@ Proveer una aplicacion de escritorio que funcione como **sidebar anclada al bord
 
 > **NO requiere nuevas tablas ni migraciones de base de datos.**
 >
-> La app desktop consume los **mismos endpoints API REST** que el frontend cliente web (`prototype-cliente`). Todos los modelos Django, permisos y feature gates existentes aplican sin modificaciones.
+> La app desktop consume los **mismos endpoints API REST** que el frontend cliente web (`prototype-workspace`). Todos los modelos Django, permisos y feature gates existentes aplican sin modificaciones.
 
 ---
 

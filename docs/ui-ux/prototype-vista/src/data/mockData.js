@@ -1,7 +1,7 @@
 // Mock data for Digital Services prototype - Multi-user support
 
 // ============================================================================
-// USERS (Same as prototype-cliente for consistency)
+// USERS (Same as prototype-workspace for consistency)
 // ============================================================================
 
 export const users = [

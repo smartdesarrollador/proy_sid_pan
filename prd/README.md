@@ -28,6 +28,7 @@ Este PRD está organizado en módulos para facilitar la navegación y mantenimie
 - **[DevOps Services](features/devops-services.md)** - Variables de Entorno (cifradas), Claves SSH, Certificados SSL, Snippets
 - **[Admin Services](features/admin-services.md)** - Formularios, Log de Auditoría (immutable), Reportes del Sistema
 - **[Desktop App](features/desktop-app.md)** - Aplicacion de escritorio (Tauri) con sidebar para acceso rapido a servicios
+- **[Hub - Portal del Cliente](features/hub-client-portal.md)** - Portal central del cliente: registro, suscripción, catálogo de servicios y acceso SSO
 
 ### 🔧 Technical (Documentación Técnica)
 - **[Architecture](technical/architecture.md)** - Arquitectura general del sistema, multi-tenancy, seguridad
@@ -45,7 +46,7 @@ Este PRD está organizado en módulos para facilitar la navegación y mantenimie
 
 Construir una plataforma SaaS empresarial que permita a organizaciones gestionar usuarios, roles, permisos y suscripciones con aislamiento completo de datos (multi-tenant), escalabilidad horizontal, y cumplimiento de estándares de seguridad modernos. El sistema ofrecerá:
 
-1. **Panel Administrativo (RBAC)**: Modelo RBAC (Role-Based Access Control) avanzado con permisos granulares, jerarquía de roles, delegación temporal, y auditoría completa para administradores de organizaciones.
+1. **Panel Administrativo (RBAC)**: Modelo RBAC (Role-Based Access Control) avanzado con permisos granulares, jerarquía de roles, delegación temporal, y auditoría completa para administradores de organizaciones. El Panel Administrativo incluye formularios de autenticación propios: **Login** (con opción Google OAuth), **Registro** de organización + cuenta de administrador, y **Recuperación de contraseña** por email. Todos consumen el backend en `apps/backend_django/`.
 
 2. **Suite de Servicios para Clientes**: Herramientas productivas (Calendario, Tareas, Notificaciones, Archivos, Portafolio) disponibles para usuarios finales según su plan de suscripción.
 
@@ -165,6 +166,9 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 
 #### MVP (12 semanas) - Core Features
 - ✅ Autenticación JWT con refresh tokens
+- ✅ Login con email/contraseña y login con Google OAuth (OAuth2 social login)
+- ✅ Registro de nueva cuenta con creación de tenant
+- ✅ Recuperación y restablecimiento de contraseña por email
 - ✅ Registro multi-tenant con tenant isolation (RLS)
 - ✅ 5 roles predefinidos (SuperAdmin, OrgAdmin, Manager, Member, Guest)
 - ✅ Permisos granulares básicos (CRUD en recursos principales)
@@ -242,6 +246,36 @@ El sistema es una plataforma SaaS multi-tenant que combina cuatro pilares fundam
 - Mobile apps (iOS/Android)
 - Marketplace de integraciones
 - White-label solution para partners
+
+---
+
+## Frontend Admin — Integración y Tooling
+
+### Integración Backend
+El frontend Admin (`apps/frontend_admin/`) consume **exclusivamente** la API REST del backend
+Django (`apps/backend_django/`):
+
+| Frontend | Backend |
+|----------|---------|
+| `apps/frontend_admin/` | `apps/backend_django/api/v1/admin/*` |
+| Axios + TanStack Query | Django REST Framework (PASOes 1-20 ✅) |
+| JWT Bearer tokens | `POST /api/v1/auth/login/` + refresh |
+| Google OAuth (botón) | `GET /api/v1/auth/google/` → callback |
+
+### Google OAuth
+- El flujo OAuth se gestiona **server-side** en Django (django-allauth o dj-rest-auth + social)
+- El frontend solo redirige al endpoint `/api/v1/auth/google/` y recibe el JWT en el callback
+- Tanto el **login** como el **registro** ofrecen opción de Google OAuth
+
+### Agents y Skills
+Para el desarrollo del Admin Panel Frontend usar:
+- **Skills**: `react-api-authentication`, `react-forms-validation`, `react-tanstack-query`,
+  `react-tailwind-components`, `ui-base-components`, `ui-design-tokens`, `ui-layout-system`,
+  `vite-react-configuration`, `react-router-patterns`, `react-testing-library`, `react-hooks-patterns`
+- **Agentes**: `react-vite-builder` (scaffolding), `ui-ux-designer` (componentes visuales),
+  `test-generator` (tests Vitest), `security-auditor` (auth flow), `code-reviewer` (calidad)
+
+Ver roadmap completo: [ADMIN_PANEL_ROADMAP.md](ADMIN_PANEL_ROADMAP.md)
 
 ---
 

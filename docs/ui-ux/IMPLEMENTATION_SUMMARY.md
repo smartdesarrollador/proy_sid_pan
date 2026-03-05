@@ -28,7 +28,7 @@ docs/ui-ux/
 │   ├── vite.config.js (port 3000)
 │   └── README.md (actualizado)
 │
-└── prototype-cliente/        # Frontend de cliente (nuevo)
+└── prototype-workspace/        # Frontend de cliente (nuevo)
     ├── src/
     │   ├── components/
     │   │   ├── dashboard/
@@ -65,6 +65,7 @@ docs/ui-ux/
 ### 1. Prototipo Admin (prototype-admin/)
 
 **Modificaciones:**
+
 - ✅ Eliminada carpeta `src/components/customer/`
 - ✅ Actualizado `src/App.jsx`: removidas importaciones y rutas de componentes customer
 - ✅ Actualizado `src/components/Sidebar.jsx`: removidos items de menú de servicios cliente
@@ -72,6 +73,7 @@ docs/ui-ux/
 - ✅ Puerto configurado en 3000
 
 **Componentes conservados:**
+
 - Dashboard administrativo
 - UserManagement
 - RoleManagement
@@ -81,11 +83,12 @@ docs/ui-ux/
 - Login, Navbar, Sidebar (versión admin)
 - Componentes shared
 
-### 2. Prototipo Cliente (prototype-cliente/) - NUEVO
+### 2. Prototipo Cliente (prototype-workspace/) - NUEVO
 
 **Archivos creados:**
 
 **Configuración:**
+
 - ✅ `package.json` - dependencias y scripts
 - ✅ `vite.config.js` - configuración con puerto 3001
 - ✅ `tailwind.config.js` - estilos Tailwind
@@ -94,11 +97,13 @@ docs/ui-ux/
 - ✅ `.gitignore` - archivos a ignorar
 
 **Código fuente:**
+
 - ✅ `src/main.jsx` - punto de entrada
 - ✅ `src/App.jsx` - componente principal (nueva versión)
 - ✅ `src/index.css` - estilos globales
 
 **Componentes:**
+
 - ✅ `src/components/Login.jsx` - pantalla de login simplificada
 - ✅ `src/components/Navbar.jsx` - barra de navegación
 - ✅ `src/components/Sidebar.jsx` - menú lateral de servicios
@@ -108,14 +113,17 @@ docs/ui-ux/
 - ✅ `src/components/shared/` - componentes reutilizables
 
 **Contextos y Hooks:**
+
 - ✅ `src/contexts/AuthContext.jsx` - contexto de autenticación
 - ✅ `src/hooks/usePermissions.js` - hook de permisos
 - ✅ `src/hooks/useFeatureGate.js` - hook de feature gates
 
 **Datos:**
+
 - ✅ `src/data/mockData.js` - datos mock idénticos al admin
 
 **Documentación:**
+
 - ✅ `README.md` - guía completa del prototipo cliente
 
 ### 3. Correcciones de Imports
@@ -123,45 +131,57 @@ docs/ui-ux/
 Se corrigieron todos los imports en los componentes copiados:
 
 **En componentes `tasks/` y `calendar/`:**
+
 - ❌ Antes: `from '../../../data/mockData'`
 - ✅ Ahora: `from '../../data/mockData'`
 
 **En componentes `dashboard/widgets/`:**
+
 - ❌ Antes: `from '../../../../data/mockData'`
 - ✅ Ahora: `from '../../../data/mockData'`
 
 ## 🎯 Arquitectura Simulada
 
-Ambos prototipos simulan la arquitectura de producción:
+Los prototipos simulan la arquitectura de producción con tres capas:
+
+> **Separación clave**: `prototype-hub-client` es el **portal de entrada** del cliente (registro, suscripción, catálogo de servicios). `prototype-workspace` es una **aplicación de productividad independiente** a la que el usuario llega desde el hub mediante SSO, no directamente.
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    API / Base de Datos              │
-│  (Usuarios, Roles, Permisos, Tareas, Eventos, etc) │
-│          Simulado por: mockData.js                  │
-└─────────────────────────────────────────────────────┘
-           ↑                              ↑
-           │                              │
-           │                              │
-    ┌──────┴────────┐           ┌────────┴────────┐
-    │  Frontend 1   │           │   Frontend 2    │
-    │    ADMIN      │           │    CLIENTE      │
-    │  (port 3000)  │           │  (port 3001)    │
-    ├───────────────┤           ├─────────────────┤
-    │ - Dashboard   │           │ - Dashboard     │
-    │ - Users Mgmt  │           │ - Tareas        │
-    │ - Roles Mgmt  │           │ - Calendario    │
-    │ - Permisos    │           │ - Mi Perfil     │
-    │ - Billing     │           │                 │
-    │ - Auditoría   │           │                 │
-    └───────────────┘           └─────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                   API / Base de Datos                    │
+│   (Usuarios, Roles, Permisos, Tareas, Eventos, etc)     │
+│           Simulado por: mockData.js                      │
+└──────────────────────────────────────────────────────────┘
+       ↑                   ↑                    ↑
+       │                   │                    │
+┌──────┴──────┐    ┌───────┴──────┐   ┌────────┴────────┐
+│  Frontend   │    │   Frontend   │   │    Frontend     │
+│    ADMIN    │    │     HUB      │   │   WORKSPACE     │
+│  (port 3000)│    │  (port 3003) │   │  (port 3001)    │
+├─────────────┤    ├──────────────┤   ├─────────────────┤
+│ - Dashboard │    │ - Registro   │   │ - Dashboard     │
+│ - Users Mgmt│    │ - Suscripción│   │ - Tareas        │
+│ - Roles Mgmt│    │ - Catálogo   │   │ - Calendario    │
+│ - Permisos  │    │   servicios  │   │ - Mi Perfil     │
+│ - Billing   │    │ - SSO acceso │   │                 │
+│ - Auditoría │    │ - Facturación│   │                 │
+└─────────────┘    └──────┬───────┘   └─────────────────┘
+                          │                    ↑
+                          └────────[SSO]───────┘
 ```
+
+| Prototipo              | Puerto | Rol                                       | Acceso                       |
+| ---------------------- | ------ | ----------------------------------------- | ---------------------------- |
+| `prototype-admin`      | 3000   | Panel del administrador de la plataforma  | Directo (credenciales admin) |
+| `prototype-workspace`  | 3001   | App de productividad (Notion/Linear-like) | Via SSO desde hub            |
+| `prototype-hub-client` | 3003   | Portal central del cliente                | Directo (registro/login)     |
 
 **Datos Mock Compartidos:**
-- Los mismos usuarios existen en ambos prototipos
+
+- Los mismos usuarios existen en todos los prototipos
 - Las mismas tareas y eventos son visibles
 - El sistema de permisos es consistente
-- Simula que ambos están conectados a la misma base de datos
+- Simula que todos están conectados a la misma base de datos
 
 ## ✅ Verificación
 
@@ -177,22 +197,24 @@ npm run dev
 ```
 
 **Checklist:**
+
 - [ ] Solo muestra vistas administrativas
 - [ ] No hay referencias a componentes customer
 - [ ] Login funciona
 - [ ] Navegación entre vistas admin funciona
 - [ ] No hay errores de console
 
-### 2. Verificar prototype-cliente
+### 2. Verificar prototype-workspace
 
 ```bash
-cd docs/ui-ux/prototype-cliente
+cd docs/ui-ux/prototype-workspace
 npm install
 npm run dev
 # Abrir http://localhost:3001
 ```
 
 **Checklist:**
+
 - [ ] Solo muestra vistas de cliente
 - [ ] Dashboard de usuario carga
 - [ ] TaskBoard muestra tareas mock
@@ -206,7 +228,7 @@ npm run dev
 ```bash
 # Verificar que mockData.js es idéntico
 diff docs/ui-ux/prototype-admin/src/data/mockData.js \
-     docs/ui-ux/prototype-cliente/src/data/mockData.js
+     docs/ui-ux/prototype-workspace/src/data/mockData.js
 # No debe mostrar diferencias
 ```
 
@@ -217,10 +239,11 @@ diff docs/ui-ux/prototype-admin/src/data/mockData.js \
 cd docs/ui-ux/prototype-admin && npm run dev
 
 # Terminal 2
-cd docs/ui-ux/prototype-cliente && npm run dev
+cd docs/ui-ux/prototype-workspace && npm run dev
 ```
 
 **Verificar:**
+
 - [ ] Admin accesible en http://localhost:3000
 - [ ] Cliente accesible en http://localhost:3001
 - [ ] Mismo usuario puede loguearse en ambos
@@ -235,7 +258,7 @@ cd docs/ui-ux/prototype-cliente && npm run dev
    - Estructura del proyecto
    - Casos de uso
 
-2. **`prototype-cliente/README.md`**
+2. **`prototype-workspace/README.md`**
    - Propósito del frontend de cliente
    - Features implementadas
    - Instrucciones de instalación
@@ -250,9 +273,10 @@ cd docs/ui-ux/prototype-cliente && npm run dev
 ## 🔄 Próximos Pasos
 
 1. **Instalar dependencias en ambos prototipos**
+
    ```bash
    cd docs/ui-ux/prototype-admin && npm install
-   cd ../prototype-cliente && npm install
+   cd ../prototype-workspace && npm install
    ```
 
 2. **Ejecutar y probar ambos prototipos**
@@ -278,10 +302,10 @@ Si se modifican los datos mock en un prototipo, deben actualizarse en el otro pa
 ```bash
 # Copiar de admin a cliente
 cp docs/ui-ux/prototype-admin/src/data/mockData.js \
-   docs/ui-ux/prototype-cliente/src/data/mockData.js
+   docs/ui-ux/prototype-workspace/src/data/mockData.js
 
 # O viceversa
-cp docs/ui-ux/prototype-cliente/src/data/mockData.js \
+cp docs/ui-ux/prototype-workspace/src/data/mockData.js \
    docs/ui-ux/prototype-admin/src/data/mockData.js
 ```
 

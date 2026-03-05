@@ -4,7 +4,7 @@
 
 ### How to Change Language
 
-1. **Log into any prototype** (prototype-admin or prototype-cliente)
+1. **Log into any prototype** (prototype-admin or prototype-workspace)
 
 2. **Look at the top-right corner** of the navigation bar
 

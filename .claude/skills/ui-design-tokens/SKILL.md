@@ -6,7 +6,7 @@ description: "Tokens de diseño fundamentales extraídos de los prototipos del p
 # UI Design Tokens — Sistema de Diseño del Proyecto
 
 Referencia completa de todos los tokens de diseño extraídos y verificados directamente de los prototipos en
-`docs/ui-ux/prototype-admin`, `docs/ui-ux/prototype-cliente` y `docs/ui-ux/prototype-desktop`.
+`docs/ui-ux/prototype-admin`, `docs/ui-ux/prototype-workspace` y `docs/ui-ux/prototype-desktop`.
 
 ## 1. Configuración Tailwind
 

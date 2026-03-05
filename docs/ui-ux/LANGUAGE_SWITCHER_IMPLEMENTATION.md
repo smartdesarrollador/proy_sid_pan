@@ -2,7 +2,7 @@
 
 **Date**: February 12, 2026
 **Status**: ✅ **COMPLETED**
-**Prototypes**: prototype-admin, prototype-cliente
+**Prototypes**: prototype-admin, prototype-workspace
 
 ---
 
@@ -53,7 +53,7 @@ Successfully implemented a complete i18n (internationalization) system for both 
 
 **Total Strings (prototype-admin)**: ~170 translated strings
 
-#### prototype-cliente Translation Files
+#### prototype-workspace Translation Files
 
 **Spanish (es/)**:
 - ✅ `common.json` - Shared strings - 45+ keys
@@ -68,7 +68,7 @@ Successfully implemented a complete i18n (internationalization) system for both 
 
 **English (en/)**: Complete parallel translations for all above files
 
-**Total Strings (prototype-cliente)**: ~230 translated strings
+**Total Strings (prototype-workspace)**: ~230 translated strings
 
 **Grand Total**: ~400 translated strings across both prototypes
 
@@ -92,7 +92,7 @@ Successfully implemented a complete i18n (internationalization) system for both 
 - ✅ **Navbar.jsx** - User menu, plan badge, settings/logout buttons
 - ✅ **Sidebar.jsx** - All menu items (Dashboard, Users, Clients, Roles, etc.)
 
-#### prototype-cliente
+#### prototype-workspace
 - ✅ **Navbar.jsx** - User menu, portal subtitle, profile/settings/logout
 - ✅ **Sidebar.jsx** - All menu items (Dashboard, Tasks, Calendar, Projects, Shared With Me, Profile) + Help section
 
@@ -127,7 +127,7 @@ const { t: tCommon } = useTranslation('common');
 | Prototype | Build Status | Bundle Size | i18n Size |
 |-----------|--------------|-------------|-----------|
 | **prototype-admin** | ✅ Success | 316.62 kB | +8 packages |
-| **prototype-cliente** | ✅ Success | 1,106.96 kB | +8 packages |
+| **prototype-workspace** | ✅ Success | 1,106.96 kB | +8 packages |
 
 **No build errors or warnings related to i18n.**
 
@@ -190,7 +190,7 @@ cd docs/ui-ux/prototype-admin
 npm run dev
 
 # OR
-cd docs/ui-ux/prototype-cliente
+cd docs/ui-ux/prototype-workspace
 npm run dev
 
 # Visit http://localhost:5173
@@ -247,7 +247,7 @@ localStorage.getItem('preferredLanguage') // Returns 'es' or 'en'
 
 3. **No Pluralization**: Counts use simple strings (e.g., "5 tareas" not "5 tarea/tareas").
 
-4. **Landing Page**: Extensive marketing copy in prototype-cliente landing page NOT translated (would add ~200+ strings).
+4. **Landing Page**: Extensive marketing copy in prototype-workspace landing page NOT translated (would add ~200+ strings).
 
 5. **Date/Time Formatting**: Dates and times not localized (e.g., "MM/DD/YYYY" vs "DD/MM/YYYY").
 
@@ -258,7 +258,7 @@ localStorage.getItem('preferredLanguage') // Returns 'es' or 'en'
 ### Immediate Enhancements
 1. **Update Remaining Components**:
    - UserManagement, RoleManagement, ClientManagement (prototype-admin)
-   - TaskBoard, Calendar, ProjectsView (prototype-cliente)
+   - TaskBoard, Calendar, ProjectsView (prototype-workspace)
    - Forms, modals, dialogs
 
 2. **Add Pluralization**:
@@ -311,7 +311,7 @@ localStorage.getItem('preferredLanguage') // Returns 'es' or 'en'
 
 **Build Testing**:
 - [x] prototype-admin builds without errors
-- [x] prototype-cliente builds without errors
+- [x] prototype-workspace builds without errors
 - [x] No console errors in build output
 - [x] Bundle size acceptable
 
@@ -354,7 +354,7 @@ docs/ui-ux/prototype-admin/
 │   └── App.jsx                          # Wraps with LanguageProvider
 └── package.json                         # Added i18next dependencies
 
-docs/ui-ux/prototype-cliente/
+docs/ui-ux/prototype-workspace/
 ├── src/
 │   ├── i18n/
 │   │   ├── config.js                    # i18next initialization

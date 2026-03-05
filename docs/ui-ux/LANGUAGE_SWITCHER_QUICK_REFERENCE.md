@@ -226,7 +226,7 @@ cd docs/ui-ux/prototype-admin
 npm run dev
 
 # OR
-cd docs/ui-ux/prototype-cliente
+cd docs/ui-ux/prototype-workspace
 npm run dev
 
 # Build for production
