@@ -6,38 +6,55 @@
 
 ## Tabla de Contenidos
 
-1. [Los 4 Frontends](#los-4-frontends)
+1. [Los 5 Frontends](#los-5-frontends)
 2. [Gestión de Estado](#gestión-de-estado)
 3. [Internacionalización (i18n)](#internacionalización-i18n)
 4. [Dark Mode](#dark-mode)
 5. [Flujo SSR (Digital Services)](#flujo-ssr-digital-services)
+6. [Hub → Servicios: Acceso via SSO](#hub--servicios-acceso-via-sso)
 
 ---
 
-## Los 4 Frontends
+## Los 5 Frontends
 
 | Frontend | Framework | Propósito | URL Pattern | Notas |
 |----------|-----------|-----------|-------------|-------|
+| **Hub Client Portal** | React 18 + Vite + TS | Registro, onboarding, catálogo de servicios, SSO, billing, referidos | `hub.plataforma.com` | Punto de entrada unificado; no necesita SEO |
 | **Admin Panel** | React 18 + Vite + TS | RBAC, usuarios, billing, auditoría, analytics | `admin.plataforma.com` | SPA autenticado, no necesita SEO |
-| **Client Panel** | React 18 + Vite + TS | Servicios cliente: tareas, notas, proyectos, contactos | `app.plataforma.com` | SPA autenticado, no necesita SEO |
+| **Workspace** | React 18 + Vite + TS | Servicios cliente: tareas, notas, proyectos, contactos | `app.plataforma.com` | SPA autenticado, acceso via SSO desde Hub |
 | **Digital Services** | Next.js 14 App Router + TS | Perfiles públicos con SSR: tarjeta, landing, portafolio, CV | `{slug}.plataforma.com` | SSR para SEO, páginas públicas |
 | **Desktop App** | Tauri v2 + React 18 + TS | Sidebar AppBar nativa Windows | App nativa (.exe) | Rust backend, Win32 AppBar API |
 
-### Por qué 4 frontends distintos
+### Por qué 5 frontends distintos
 
-- **Admin y Client**: No necesitan SEO, Vite es más ligero y flexible que Next.js para SPAs internas
+- **Hub**: Punto de entrada unificado para clientes; gestiona registro, onboarding y acceso SSO a todos los servicios. Separado del Admin para que cada frontend tenga un propósito único y no mezcle contextos de uso
+- **Admin**: No necesita SEO; Vite es más ligero para SPA de administración interna
+- **Workspace**: Misma justificación que Admin; acceso exclusivo via SSO desde el Hub
 - **Digital Services**: Requiere SSR para indexación por buscadores; Next.js es el estándar para React + SSR
 - **Desktop**: Requiere integración con APIs nativas de Windows (AppBar Win32); Tauri permite acceso a Rust desde React
 
 ### Paquetes compartidos
 
-Los 4 frontends comparten convenciones de Tailwind CSS y componentes base (Design Tokens), pero no comparten código en tiempo de ejecución. Ver [`prd/technical/architecture.md`](../../prd/technical/architecture.md) para detalles de tech stack.
+Los 5 frontends comparten convenciones de Tailwind CSS y componentes base (Design Tokens), pero no comparten código en tiempo de ejecución. Ver [`prd/technical/architecture.md`](../../prd/technical/architecture.md) para detalles de tech stack.
 
 ---
 
 ## Gestión de Estado
 
-### Admin Panel y Client Panel (React + Vite)
+### Hub Client Portal (React + Vite)
+
+| Tipo de estado | Librería | Uso |
+|----------------|---------|-----|
+| **Server state** | TanStack Query v5 | Datos del API (servicios, suscripción, equipo, notificaciones) |
+| **Client state** | React Context | UI state: tema, idioma, autenticación (sin Zustand) |
+| **Form state** | React Hook Form + Zod | Formularios con validación |
+| **Auth state** | AuthContext (React Context) | Token JWT, usuario actual, tenant |
+| **Theme state** | ThemeContext | `'light' | 'dark'` con persistencia en localStorage |
+| **Language state** | LanguageContext | `'es' | 'en'` con función `t(key)` integrada |
+
+> El Hub no usa Zustand. Todo el estado cliente se gestiona con React Context nativo para mantener el bundle más ligero.
+
+### Admin Panel y Workspace (React + Vite)
 
 | Tipo de estado | Librería | Uso |
 |----------------|---------|-----|
@@ -59,7 +76,7 @@ Los 4 frontends comparten convenciones de Tailwind CSS y componentes base (Desig
 
 ### Desktop App (Tauri)
 
-- **TanStack Query**: Server state desde Django API (mismos endpoints que Client Panel)
+- **TanStack Query**: Server state desde Django API (mismos endpoints que Workspace)
 - **Estado local React**: `useState` para panel activo, ancho del panel
 - **Estado Rust**: `AppBarHandle` (HWND, width) en `Mutex` global de Tauri
 
@@ -67,7 +84,50 @@ Los 4 frontends comparten convenciones de Tailwind CSS y componentes base (Desig
 
 ## Internacionalización (i18n)
 
-### Admin Panel y Client Panel (react-i18next)
+### Hub Client Portal (LanguageContext nativo)
+
+```
+src/
+└── locales/
+    ├── es.js     # Objeto plano con todas las claves
+    └── en.js     # Misma estructura en inglés
+```
+
+- `LanguageContext` expone `{ lang, setLang, t }` a toda la app
+- `t('navbar.dashboard')` resuelve claves con notación de punto
+- Idioma persistido en `localStorage('hub-lang')`; valor por defecto: `'es'`
+- No requiere librerías externas de i18n
+
+```typescript
+// contexts/LanguageContext.tsx
+type Lang = 'es' | 'en';
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = useState<Lang>(() => {
+    return (localStorage.getItem('hub-lang') as Lang) || 'es';
+  });
+
+  const t = (key: string): string => {
+    const keys = key.split('.');
+    let value: any = lang === 'es' ? esTranslations : enTranslations;
+    for (const k of keys) value = value?.[k];
+    return value ?? key;
+  };
+
+  const setLang = (newLang: Lang) => {
+    localStorage.setItem('hub-lang', newLang);
+    setLangState(newLang);
+  };
+
+  return (
+    <LanguageContext.Provider value={{ lang, setLang, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+```
+
+### Admin Panel y Workspace (react-i18next)
 
 ```
 src/
@@ -136,34 +196,25 @@ La estrategia es `class` (manual toggle via clase `dark` en `<html>`), NO `media
 }
 ```
 
-### ThemeProvider (React + Vite)
+### Hub Client Portal (ThemeContext — solo `'light' | 'dark'`)
 
-El tema se persiste en `localStorage` y soporta 3 valores: `'light'`, `'dark'`, `'auto'` (sigue la preferencia del sistema).
+El Hub soporta solo dos valores: `'light'` y `'dark'`. No tiene modo `'auto'` (no sigue la preferencia del sistema). Valor por defecto: `'light'`.
 
 ```typescript
-// contexts/ThemeContext.tsx
-type Theme = 'light' | 'dark' | 'auto';
+// contexts/ThemeContext.tsx (Hub)
+type Theme = 'light' | 'dark';   // Sin 'auto'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    return (localStorage.getItem('theme') as Theme) || 'auto';
+    return (localStorage.getItem('hub-theme') as Theme) || 'light';
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-
-    if (theme === 'auto') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark' : 'light';
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {
-    localStorage.setItem('theme', newTheme);
+    localStorage.setItem('hub-theme', newTheme);
     setThemeState(newTheme);
   };
 
@@ -173,6 +224,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     </ThemeContext.Provider>
   );
 }
+```
+
+### Admin Panel y Workspace (ThemeProvider — `'light' | 'dark' | 'auto'`)
+
+Soporta 3 valores: `'light'`, `'dark'`, `'auto'` (sigue la preferencia del sistema operativo). Persistido en `localStorage('theme')`.
+
+```typescript
+// contexts/ThemeContext.tsx (Admin/Workspace)
+type Theme = 'light' | 'dark' | 'auto';
+
+// ... useEffect comprueba window.matchMedia si theme === 'auto'
 ```
 
 ### Digital Services (next-themes)
@@ -225,6 +287,32 @@ Ver detalles de caching en [data-architecture.md](data-architecture.md).
 
 ---
 
-**Fuente**: [`prd/technical/architecture.md`](../../prd/technical/architecture.md) + [`prd/features/desktop-app.md`](../../prd/features/desktop-app.md)
+## Hub → Servicios: Acceso via SSO
 
-**Última actualización**: 2026-02-26
+El Hub usa tokens SSO de corta duración para autenticar al usuario en los servicios sin necesidad de credenciales adicionales. El flujo completo está documentado en [sso-architecture.md](sso-architecture.md).
+
+**Resumen del flujo desde el frontend del Hub:**
+
+```typescript
+// Cuando el usuario hace clic en "Abrir" en un servicio
+async function openService(serviceSlug: string) {
+  // 1. Solicitar token SSO al backend
+  const { sso_token, redirect_url } = await api.post('/auth/sso/token/', {
+    service: serviceSlug
+  });
+
+  // 2. Redirigir al browser al servicio con el token
+  window.location.href = redirect_url;
+  // Ej: https://acme.workspace.app/?sso_token=a3f9b2c1...
+}
+```
+
+El servicio destino (ej. Workspace) recibe el token via query param, lo valida contra el backend (`POST /auth/sso/validate/`) y crea la sesión local del usuario.
+
+Ver flujo completo en [sso-architecture.md](sso-architecture.md).
+
+---
+
+**Fuente**: [`prd/technical/architecture.md`](../../prd/technical/architecture.md) + [`prd/features/hub-client-portal.md`](../../prd/features/hub-client-portal.md)
+
+**Última actualización**: 2026-03-06

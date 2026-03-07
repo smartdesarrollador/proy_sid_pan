@@ -38,14 +38,14 @@
                                │
               ┌────────────────┼──────────────────┐
               │                │                  │
-   ┌──────────▼──────┐ ┌───────▼───────┐ ┌───────▼──────────┐
-   │  Django API     │ │  Next.js SSR  │ │  Nginx (Static)  │
-   │  (N instancias) │ │  (M instancias│ │  Admin + Client  │
-   │  - /api/v1/     │ │  - /tarjeta/  │ │  React bundles   │
-   │  - Stateless    │ │  - /landing/  │ │                  │
-   │  - Celery       │ │  - /portafolio│ │                  │
-   │    workers      │ │  - /cv/       │ │                  │
-   └────────┬────────┘ └───────┬───────┘ └──────────────────┘
+   ┌──────────▼──────┐ ┌───────▼───────┐ ┌───────▼────────────────────────┐
+   │  Django API     │ │  Next.js SSR  │ │  Nginx (Static)                │
+   │  (N instancias) │ │  (M instancias│ │  Admin + Workspace + Hub       │
+   │  - /api/v1/     │ │  - /tarjeta/  │ │  React bundles                 │
+   │  - Stateless    │ │  - /landing/  │ │                                │
+   │  - Celery       │ │  - /portafolio│ │                                │
+   │    workers      │ │  - /cv/       │ │                                │
+   └────────┬────────┘ └───────┬───────┘ └────────────────────────────────┘
             │                  │
             └─────────┬────────┘
                       │
@@ -62,12 +62,14 @@
 
 ### Routing del Load Balancer
 
-| Path | Destino |
-|------|---------|
+| Path / Host | Destino |
+|-------------|---------|
 | `/api/*` | Django API (port 8000) |
 | `/tarjeta/*`, `/landing/*`, `/portafolio/*`, `/cv/*` | Next.js SSR (port 3000) |
-| `/admin/*` | Nginx sirviendo Admin Panel (React bundle) |
-| `/*` (default) | Nginx sirviendo Client Panel (React bundle) |
+| `hub.plataforma.com/*` | Nginx sirviendo Hub Client Portal (React bundle, port 3003) |
+| `admin.plataforma.com/*` | Nginx sirviendo Admin Panel (React bundle) |
+| `app.plataforma.com/*` | Nginx sirviendo Workspace (React bundle) |
+| `/*` (default) | Nginx sirviendo Workspace (React bundle) |
 
 ---
 
@@ -82,6 +84,12 @@ services:
   ollama:        # LLM local opcional (port 11434) [profile: local-llm]
   chromadb:      # Vector DB opcional (port 8001)  [profile: vector-db]
 ```
+
+> **Puertos de prototipos frontend (desarrollo local):**
+> - `prototype-admin` → port 3000
+> - `prototype-workspace` → port 3001
+> - `prototype-hub-client` → port 3003
+> - `digital-services` (Next.js) → port 3000 (producción, mismo que prototipo en dev se usa 3002)
 
 ### Comandos de desarrollo
 
@@ -99,6 +107,41 @@ docker-compose --profile cache --profile local-llm --profile vector-db up
 ### Variables de entorno
 
 Las credenciales se cargan desde `.env` (nunca committear). Ver `.env.example` en la raíz del proyecto.
+
+---
+
+## Pagos LATAM
+
+El Hub Client Portal soporta métodos de pago locales para Perú y Colombia, además de Stripe y PayPal.
+
+### Métodos soportados
+
+| Método | Tipo | Región | Integración |
+|--------|------|--------|-------------|
+| Visa / Mastercard | Tarjeta | Global | Stripe |
+| PayPal | Billetera digital | Global | PayPal SDK |
+| MercadoPago | Billetera digital | LATAM | MercadoPago API |
+| Yape | Pago local | Perú | API Yape (simulado en prototipo) |
+| Plin | Pago local | Perú | API Plin (simulado en prototipo) |
+| Nequi | Pago local | Colombia | API Nequi (simulado en prototipo) |
+| Daviplata | Pago local | Colombia | API Daviplata (simulado en prototipo) |
+
+### Variables de entorno requeridas
+
+```bash
+# Stripe (existente)
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# PayPal
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+
+# MercadoPago
+MERCADOPAGO_ACCESS_TOKEN=
+```
+
+> **Nota de implementación**: Las wallets locales (Yape, Plin, Nequi, Daviplata) están simuladas en el prototipo. La integración real requiere registro en los programas de desarrolladores de cada proveedor y puede tener restricciones geográficas en el servidor.
 
 ---
 
@@ -234,9 +277,11 @@ CREATE INDEX idx_audit_logs_tenant_ts ON audit_logs(tenant_id, timestamp DESC);
 | **Usuarios concurrentes** | 1,000 | 10,000+ | Horizontal scaling |
 | **Queries por request** | < 10 | < 10 | `select_related`, `prefetch_related` |
 | **Test Coverage** | > 80% | > 90% | pytest + CI gate |
+| **SSO Token generation** | < 100ms | < 100ms | DB write único, sin computación pesada |
+| **SSO Token validation** | < 50ms | < 50ms | Lookup por índice único en `token` field |
 
 ---
 
 **Fuente**: [`prd/technical/architecture.md`](../../prd/technical/architecture.md) — secciones Scalability + DevOps + Performance Targets
 
-**Última actualización**: 2026-02-26
+**Última actualización**: 2026-03-06

@@ -10,8 +10,9 @@
 2. [Subdomain-Based Tenant Identification](#subdomain-based-tenant-identification)
 3. [PostgreSQL Row-Level Security (RLS)](#postgresql-row-level-security-rls)
 4. [Django Middleware de Tenant](#django-middleware-de-tenant)
-5. [Custom Domains (Enterprise)](#custom-domains-enterprise)
-6. [Modelo de Datos](#modelo-de-datos)
+5. [Registro de Nuevo Tenant](#registro-de-nuevo-tenant)
+6. [Custom Domains (Enterprise)](#custom-domains-enterprise)
+7. [Modelo de Datos](#modelo-de-datos)
 
 ---
 
@@ -44,6 +45,8 @@ El doble aislamiento garantiza que un bug en la capa de aplicación no pueda fil
 1. Subdominio del host (`acme.plataforma.com`)
 2. Claim `tenant_id` dentro del JWT (para requests API directas)
 3. Error 404 si no se puede resolver el tenant
+
+> **Bypass para Hub**: `hub.plataforma.com` no tiene subdominio de tenant. El `TenantMiddleware` detecta este host y extrae el `tenant_id` exclusivamente del claim JWT (paso 2). No intenta resolver el tenant desde el subdominio.
 
 ---
 
@@ -134,6 +137,80 @@ MIDDLEWARE = [
 
 ---
 
+## Registro de Nuevo Tenant
+
+El registro de un nuevo tenant se realiza desde el Hub Client Portal (`POST /api/v1/auth/register/`) y es una operación **atómica** en el backend.
+
+### Request
+
+```json
+POST /api/v1/auth/register/
+{
+  "name": "Juan García",
+  "email": "juan@acme.com",
+  "password": "...",
+  "organization_name": "Acme Corp",
+  "plan": "starter"         // opcional, default: "free"
+}
+```
+
+### Response 201
+
+```json
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "user": {
+    "id": "uuid",
+    "name": "Juan García",
+    "email": "juan@acme.com"
+  },
+  "tenant": {
+    "id": "uuid",
+    "name": "Acme Corp",
+    "subdomain": "acme-corp",   // solo el prefijo
+    "plan": "free"
+  }
+}
+```
+
+> El campo `subdomain` en la respuesta contiene solo el **prefijo** (`acme-corp`), no la URL completa. El frontend construye la URL como `{subdomain}.rbacplatform.com`.
+
+### 6 pasos atómicos en backend (transaction.atomic)
+
+```python
+with transaction.atomic():
+    # 1. Crear Tenant
+    tenant = Tenant.objects.create(
+        name=organization_name,
+        subdomain=slugify(organization_name)
+    )
+    # 2. Crear User (owner)
+    user = User.objects.create_user(
+        tenant=tenant, email=email, name=name, password=password
+    )
+    # 3. Asignar rol Owner al usuario
+    owner_role = Role.objects.get(name='Owner', is_system_role=True)
+    UserRole.objects.create(user=user, role=owner_role, assigned_by=user)
+    # 4. Crear Subscription (trial 14 días)
+    Subscription.objects.create(
+        tenant=tenant, plan=plan or 'free',
+        status='trialing',
+        trial_end=now() + timedelta(days=14)
+    )
+    # 5. Crear ReferralCode único para el tenant
+    ReferralCode.objects.create(tenant=tenant, code=generate_code())
+    # 6. Generar tokens JWT y retornar respuesta
+    return generate_tokens(user)
+```
+
+**Notas:**
+- El trial de 14 días se activa automáticamente sin requerir tarjeta de crédito
+- Si cualquier paso falla, toda la transacción se revierte (rollback)
+- El usuario queda autenticado directamente tras el registro (sin paso de login separado)
+
+---
+
 ## Custom Domains (Enterprise)
 
 Los tenants del plan Enterprise pueden usar dominios propios via CNAME:
@@ -174,4 +251,4 @@ Todas las tablas con datos de negocio tienen `tenant_id` como FK a `Tenant`. Ver
 
 **Fuente**: [`prd/technical/architecture.md`](../../prd/technical/architecture.md) — sección Multi-Tenancy
 
-**Última actualización**: 2026-02-26
+**Última actualización**: 2026-03-06

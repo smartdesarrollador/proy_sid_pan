@@ -9,10 +9,11 @@
 1. [Resumen del Sistema](#resumen-del-sistema)
 2. [Los 10 Roles Organizacionales](#los-10-roles-organizacionales)
 3. [Herencia de Roles](#herencia-de-roles)
-4. [62 Permisos por Categoría](#62-permisos-por-categoría)
+4. [64 Permisos por Categoría](#64-permisos-por-categoría)
 5. [3 Tipos de Scope](#3-tipos-de-scope)
 6. [Resolución de Conflictos](#resolución-de-conflictos)
 7. [Middleware de Autorización en DRF](#middleware-de-autorización-en-drf)
+8. [Mapeo de Permisos por Frontend](#mapeo-de-permisos-por-frontend)
 
 ---
 
@@ -21,7 +22,7 @@
 | Aspecto | Valor |
 |---------|-------|
 | Roles predefinidos | 10 (organizacionales) |
-| Permisos granulares | 62 en 13 categorías |
+| Permisos granulares | 64 en 14 categorías |
 | Tipos de scope | 3 (organizational, project, share) |
 | Roles de proyecto | 4 (Owner, Admin, Editor, Viewer) |
 | Niveles de share | 4 (Viewer, Commenter, Editor, Admin) |
@@ -96,7 +97,7 @@ La herencia se define en el modelo `Role.inherits_from` (FK a sí mismo). Los pe
 
 ---
 
-## 62 Permisos por Categoría
+## 64 Permisos por Categoría
 
 | Categoría | Cantidad | Permisos clave |
 |-----------|----------|----------------|
@@ -113,9 +114,14 @@ La herencia se define en el modelo `Role.inherits_from` (FK a sí mismo). Los pe
 | **Settings** | 2 | `settings.read`, `settings.update` |
 | **Audit** | 2 | `audit.read`, `audit.export` |
 | **Dashboard** | 1 | `dashboard.read` |
-| **Total** | **62** | |
+| **Referrals** | 2 | `referrals.read`, `referrals.manage` |
+| **Total** | **64** | |
 
 Los permisos se expresan como `{resource}.{action}` (ej: `projects.create`). Ver catálogo completo en [`prd/technical/data-models.md`](../../prd/technical/data-models.md) — sección Catálogo de Permisos.
+
+**Permisos nuevos de Referrals** (categoría 14):
+- `referrals.read` — Ver programa de referidos, historial y créditos
+- `referrals.manage` — Gestionar códigos de referido
 
 ---
 
@@ -237,6 +243,68 @@ El modelo `RolePermission` soporta scope condicional para controlar si el permis
 
 ---
 
-**Fuente**: [`prd/technical/rbac-roles-permissions.md`](../../prd/technical/rbac-roles-permissions.md) + [`prd/technical/role-scoping.md`](../../prd/technical/role-scoping.md)
+## Mapeo de Permisos por Frontend
 
-**Última actualización**: 2026-02-26
+Los endpoints `/api/v1/admin/*` son accesibles por el **Owner del tenant** para gestionar su propio tenant — no son exclusivos de una plataforma de administración global. El prefijo `admin/` indica "operaciones de administración del tenant", no "platform superadmin".
+
+### Admin Panel (`admin.plataforma.com`)
+
+Permisos avanzados de gestión del tenant:
+
+| Vista | Permisos requeridos |
+|-------|---------------------|
+| Usuarios | `users.read`, `users.create`, `users.update`, `users.delete`, `users.invite` |
+| Roles | `roles.read`, `roles.create`, `roles.update`, `roles.delete`, `roles.assign` |
+| Permisos | `roles.read` |
+| Suscripción | `billing.read`, `billing.upgrade` |
+| Facturación | `billing.read`, `billing.manage` |
+| Clientes | `customers.read`, `customers.suspend`, `customers.analytics` |
+| Auditoría | `audit.read`, `audit.export` |
+| Analytics | `analytics.read`, `analytics.export` |
+| Promociones | `promotions.manage` |
+| Soporte | `IsAuthenticated` |
+| Dashboard | `dashboard.read` |
+
+### Hub Client Portal (`hub.plataforma.com`)
+
+Operaciones del cliente sobre su propio tenant:
+
+| Vista Hub | Permisos requeridos | Quién tiene acceso |
+|-----------|---------------------|--------------------|
+| Dashboard | `dashboard.read` | Todos |
+| Suscripción (ver) | `billing.read` | Owner + Admin |
+| Upgrade plan | `billing.upgrade` | Owner |
+| Métodos de pago | `billing.manage` | Owner |
+| Equipo (ver) | `users.read` | Owner + Admin |
+| Equipo (invitar) | `users.invite` | Owner + Admin |
+| Equipo (editar) | `users.update` | Owner + Admin |
+| Equipo (eliminar) | `users.delete` | Owner |
+| Equipo (roles) | `roles.assign` | Owner + Admin |
+| Referidos | `referrals.read` | Owner + Admin |
+| Soporte | Solo `IsAuthenticated` | Todos |
+| Notificaciones | Solo `IsAuthenticated` | Todos |
+| Servicios (SSO) | Solo `IsAuthenticated` + tenant activo | Todos |
+
+### Workspace (`app.plataforma.com`)
+
+Permisos de productividad para usuarios del tenant:
+
+| Área | Permisos requeridos |
+|------|---------------------|
+| Proyectos | `projects.create/read/update/delete` |
+| Credenciales | `credentials.manage`, `credentials.reveal` |
+| Tareas | `tasks.create/read/update/delete/assign`, `boards.admin` |
+| Calendario | `calendar.create/read/update/delete/share/sync` |
+| Digital Services | `digital_services.tarjeta/landing/cv/portfolio` |
+| Analytics de perfil | `public_profiles.analytics` |
+| Compartir | Requiere ser owner/admin del recurso |
+
+### Desktop App
+
+Mismos permisos que Workspace. Consume los mismos endpoints de `/api/v1/app/*`.
+
+---
+
+**Fuente**: [`prd/technical/rbac-roles-permissions.md`](../../prd/technical/rbac-roles-permissions.md) + [`prd/features/hub-client-portal.md`](../../prd/features/hub-client-portal.md) — sección 15
+
+**Última actualización**: 2026-03-06

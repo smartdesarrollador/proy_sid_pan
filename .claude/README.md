@@ -35,6 +35,13 @@ Skills are domain knowledge documents. Each skill has a `SKILL.md` with YAML fro
 
 Rules are modular instruction files that extend CLAUDE.md. Use them to separate concerns (code style, security, testing).
 
+| File | Purpose |
+|------|---------|
+| `code-style.md` | Type hints, formatting, import order, function length |
+| `security.md` | Secrets, input validation, logging, API timeouts |
+| `ai-development.md` | Prompt templates, LLM retries, token budgets, caching |
+| `agent-orchestration.md` | When/how to run agents: parallel groups, sequential chains, flow by task type |
+
 ## Hooks
 
 Hooks are shell scripts that run in response to Claude Code events (tool calls, messages). Configure them in `settings.json`.

@@ -7,11 +7,12 @@
 ## Tabla de Contenidos
 
 1. [Auth Flow: JWT + MFA](#auth-flow-jwt--mfa)
-2. [Encriptación](#encriptación)
-3. [RLS como Segunda Línea de Defensa](#rls-como-segunda-línea-de-defensa)
-4. [API Security](#api-security)
-5. [Datos Sensibles](#datos-sensibles)
-6. [Eventos de Seguridad Auditados](#eventos-de-seguridad-auditados)
+2. [Auth Flow: SSO (Hub → Servicios)](#auth-flow-sso-hub--servicios)
+3. [Encriptación](#encriptación)
+4. [RLS como Segunda Línea de Defensa](#rls-como-segunda-línea-de-defensa)
+5. [API Security](#api-security)
+6. [Datos Sensibles](#datos-sensibles)
+7. [Eventos de Seguridad Auditados](#eventos-de-seguridad-auditados)
 
 ---
 
@@ -87,6 +88,33 @@ Authorization: Bearer {access_token}
 
 ---
 
+## Auth Flow: SSO (Hub → Servicios)
+
+El Hub Client Portal usa tokens SSO de corta duración para autenticar usuarios en servicios destino sin credenciales adicionales. Ver diagrama completo en [sso-architecture.md](sso-architecture.md).
+
+### Propiedades de seguridad del token SSO
+
+| Propiedad | Valor |
+|-----------|-------|
+| **TTL** | 60 segundos (no renovable) |
+| **Uso** | Single-use — invalidado tras primera validación |
+| **Formato** | String opaco 64 chars — NO es JWT |
+| **Transporte** | HTTPS únicamente; token viaja en query param |
+| **Vinculación** | `user_id + tenant_id + service` |
+| **Validación** | `POST /api/v1/auth/sso/validate/` — server-to-server |
+
+### Eventos AuditLog para SSO
+
+| Evento | `action` |
+|--------|----------|
+| Token generado | `sso.token_created` |
+| Token validado (consumido) | `sso.token_validated` |
+| Token inválido / expirado / ya usado | `sso.token_invalid` |
+
+> El valor del token nunca se incluye en logs. Solo se registra el `id` del registro `SSOToken`.
+
+---
+
 ## Encriptación
 
 | Capa | Algoritmo | Implementación |
@@ -102,10 +130,11 @@ Authorization: Bearer {access_token}
 
 ```python
 # Campos que se cifran antes de persistir:
-User.mfa_secret               # Secreto TOTP
-ProjectItemField.value        # Cuando is_encrypted=True (ej: passwords de credentials)
-EnvVariable.value             # Variables de entorno (DevOps Services)
-SSHKey.private_key            # Claves SSH privadas
+User.mfa_secret                     # Secreto TOTP
+ProjectItemField.value              # Cuando is_encrypted=True (ej: passwords de credentials)
+EnvVariable.value                   # Variables de entorno (DevOps Services)
+SSHKey.private_key                  # Claves SSH privadas
+PaymentMethod.external_account_id   # Token de billetera LATAM (PayPal, MercadoPago, etc.)
 ```
 
 ---
@@ -148,8 +177,10 @@ Ver implementación detallada en [multi-tenancy.md](multi-tenancy.md).
 
 ```python
 CORS_ALLOWED_ORIGINS = [
+    "https://hub.plataforma.com",
     "https://admin.plataforma.com",
-    "https://app.plataforma.com",
+    "https://app.plataforma.com",       # Workspace
+    "https://workspace.plataforma.com",
 ]
 CORS_ALLOW_CREDENTIALS = True
 ```
@@ -191,6 +222,11 @@ STRIPE_SECRET_KEY=
 JWT_SECRET_KEY=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
+
+# Pagos LATAM
+MERCADOPAGO_ACCESS_TOKEN=
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
 ```
 
 ### Datos que NUNCA se loguean
@@ -198,7 +234,10 @@ AWS_SECRET_ACCESS_KEY=
 - API keys y secretos
 - Passwords (ni en forma hasheada)
 - MFA secrets
+- Tokens SSO (`sso_token` — solo se loguea el `id` del registro)
 - Números de tarjetas de crédito (Stripe gestiona esto)
+- Números de celular de wallets LATAM (Yape, Plin, Nequi, Daviplata)
+- `PaymentMethod.external_account_id` (token cifrado de billetera)
 - PII sensible (documentos de identidad)
 
 ### Retención de datos
@@ -229,9 +268,15 @@ El `AuditLog` registra automáticamente los siguientes eventos relevantes para s
 | Revelación de campo cifrado | `credential.reveal` (con IP y timestamp) |
 | Cambio de plan | `subscription.upgrade` / `subscription.downgrade` |
 | Export de datos | `data.export` |
+| Token SSO generado | `sso.token_created` |
+| Token SSO validado | `sso.token_validated` |
+| Token SSO inválido | `sso.token_invalid` |
+| Recurso compartido | `share.created` |
+| Compartición revocada | `share.revoked` |
+| Método de pago agregado | `billing.payment_method_added` |
 
 ---
 
 **Fuente**: [`prd/technical/architecture.md`](../../prd/technical/architecture.md) — secciones Security + Authentication
 
-**Última actualización**: 2026-02-26
+**Última actualización**: 2026-03-06
