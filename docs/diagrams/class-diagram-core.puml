@@ -73,6 +73,19 @@ package "RBAC" {
 }
 
 package "Subscriptions" {
+  class PaymentMethod {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +stripe_payment_method_id: CharField(255)
+    +brand: CharField(50)
+    +last4: CharField(4)
+    +exp_month: IntegerField
+    +exp_year: IntegerField
+    +is_default: BooleanField
+    +payment_type: CharField(20) {card|paypal|mercadopago|payu|oxxo|pix|efecty|nequi}
+    +created_at: DateTimeField
+  }
+
   class Subscription {
     +id: UUID <<PK>>
     +tenant_id: UUID <<FK>> <<OneToOne>>
@@ -120,6 +133,73 @@ package "Audit" {
   }
 }
 
+package "Hub Services" {
+  class Service {
+    +id: UUID <<PK>>
+    +slug: SlugField <<unique>>
+    +name: CharField(100)
+    +description: TextField
+    +icon: CharField(50)
+    +url_template: CharField(255)
+    +min_plan: CharField(20) {free|starter|professional|enterprise}
+    +is_active: BooleanField
+    +created_at: DateTimeField
+  }
+
+  class TenantService {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +service_id: UUID <<FK>>
+    +status: CharField(20) {active|suspended|locked}
+    +acquired_at: DateTimeField
+  }
+
+  class SSOToken {
+    +id: UUID <<PK>>
+    +user_id: UUID <<FK>>
+    +tenant_id: UUID <<FK>>
+    +service: CharField(50) {workspace|vista|desktop}
+    +token: CharField(64) <<unique>> {opaque hex, NO JWT}
+    +used_at: DateTimeField {nullable}
+    +expires_at: DateTimeField {created_at + 60s}
+    +created_at: DateTimeField
+  }
+
+  class Notification {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +user_id: UUID <<FK>> {nullable}
+    +category: CharField(20) {billing|security|services|system}
+    +title: CharField(255)
+    +message: TextField
+    +is_read: BooleanField
+    +created_at: DateTimeField
+  }
+}
+
+package "Referrals" {
+  class ReferralCode {
+    +id: UUID <<PK>>
+    +tenant_id: UUID <<FK>>
+    +code: CharField(20) <<unique>>
+    +max_uses: IntegerField {nullable}
+    +uses_count: IntegerField
+    +discount_type: CharField(20) {percentage|fixed|trial}
+    +discount_value: Decimal(10,2)
+    +is_active: BooleanField
+    +expires_at: DateTimeField {nullable}
+    +created_at: DateTimeField
+  }
+
+  class Referral {
+    +id: UUID <<PK>>
+    +referral_code_id: UUID <<FK>>
+    +referred_tenant_id: UUID <<FK Tenant>>
+    +status: CharField(20) {pending|completed|expired}
+    +created_at: DateTimeField
+  }
+}
+
 ' === Relationships ===
 
 Tenant "1" --> "0..*" User : has >
@@ -140,13 +220,39 @@ User "1" --> "0..*" AuditLog : performs >
 
 UserRole "0..*" --> "0..1" User : assigned_by
 
+Tenant "1" --> "0..*" PaymentMethod : payment methods >
+Tenant "1" --> "0..*" TenantService : acquires >
+Service "1" --> "0..*" TenantService : acquired via >
+Tenant "1" --> "0..*" SSOToken : generates >
+User "1" --> "0..*" SSOToken : authenticates via >
+Tenant "1" --> "0..*" Notification : receives >
+User "0..1" --> "0..*" Notification : targeted at >
+Tenant "1" --> "0..1" ReferralCode : owns >
+ReferralCode "1" --> "0..*" Referral : tracks >
+Tenant "1" --> "0..*" Referral : referred as >
+
+note right of SSOToken
+  TTL: 60 segundos, single-use.
+  Token = 64 chars hex opaco, NO JWT.
+  Invalidado tras primer uso.
+  Auditado: sso.token_created
+             sso.token_validated
+end note
+
+note bottom of TenantService
+  unique_together: [tenant, service]
+  GET /api/v1/app/services/        (catalogo)
+  GET /api/v1/app/services/active/ (adquiridos)
+end note
+
 note right of Permission
   62 permisos predefinidos
-  en 13 categorias:
+  en 15 categorias:
   Users, Roles, Tasks, Calendar,
   Landing, Projects, Digital Services,
   Billing, Customers, Analytics,
-  Settings, Audit, Dashboard
+  Settings, Audit, Dashboard,
+  Services, Support
 end note
 
 note right of Role

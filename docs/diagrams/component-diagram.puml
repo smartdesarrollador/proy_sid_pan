@@ -6,13 +6,15 @@ title Diagrama de Componentes - Arquitectura del Sistema\nPlataforma SaaS Multi-
 
 ' === Frontend Layer ===
 package "Frontend Layer" {
-  component [Admin Panel\n---\nReact + Vite + TS\nshadcn/ui + Tailwind\nTanStack Query + Zustand\nReact Router v6] as AdminPanel
+  component [Admin Panel\n---\nReact + Vite + TS\nshadcn/ui + Tailwind\nTanStack Query + Zustand\nReact Router v6\nadmin.plataforma.com] as AdminPanel
 
-  component [Client Panel\n---\nReact + Vite + TS\nTailwind CSS\nFullCalendar, dnd-kit\nRecharts] as ClientPanel
+  component [Hub Client Portal\n---\nReact + Vite + TS\nTailwind CSS\nTanStack Query\nReact Router v6\nhub.plataforma.com\nDark mode + i18n ES/EN] as HubPortal
 
-  component [Digital Services\n---\nNext.js 14+ (SSR)\nApp Router\nnext-intl\nISR + Streaming] as DigitalSSR
+  component [Workspace App\n---\nReact + Vite + TS\nTailwind CSS\nFullCalendar, dnd-kit\nRecharts\napp.plataforma.com\n◄─── SSO desde Hub] as WorkspaceApp
 
-  component [Desktop App\n---\nTauri (Rust + WebView)\nReact + Vite\nLocal sync + Offline] as DesktopApp
+  component [Digital Services\n---\nNext.js 14+ (SSR)\nApp Router\nnext-intl\nISR + Streaming\nplataforma.com/{svc}/{user}] as DigitalSSR
+
+  component [Desktop App\n---\nTauri v2 (Rust + WebView)\nReact + Vite\nLocal sync + Offline\n◄─── SSO desde Hub] as DesktopApp
 }
 
 ' === API Layer ===
@@ -32,13 +34,17 @@ package "Backend API (Django REST Framework)" {
 
   component [Admin Module\n---\n/api/v1/admin/\nTenants, Users\nRoles, Permissions\nAudit Logs] as AdminModule
 
-  component [App Module\n---\n/api/v1/app/\nProjects, Tasks\nCalendar, Files\nDashboard, Shares] as AppModule
+  component [App Module\n---\n/api/v1/app/\nProjects, Tasks\nCalendar, Notes\nContacts, Bookmarks\nSnippets, Shares\nTeam management] as AppModule
 
   component [Digital Services Module\n---\n/api/v1/digital-services/\nProfiles, Cards\nLandings, Portfolio\nCV, Analytics] as DigitalModule
 
   component [Billing Module\n---\n/api/v1/billing/\nSubscriptions\nInvoices, Payments\nPromos, Feature Gates] as BillingModule
 
   component [Analytics Module\n---\n/api/v1/analytics/\nDashboards, KPIs\nReports, Export] as AnalyticsModule
+
+  component [SSO Module\n---\n/api/v1/auth/sso/\nPOST sso/token/\nPOST sso/validate/\nTTL 60s, single-use\nAudit: sso.token_*] as SSOModule
+
+  component [Hub & Services Module\n---\n/api/v1/app/services/\nService catalog\nTenant services\nReferral program\nHub notifications\nPayment methods] as HubModule
 
   component [Celery Workers\n---\nEmail sending\nBilling webhooks\nCache invalidation\nScheduled tasks] as CeleryWorkers
 }
@@ -67,7 +73,8 @@ package "External Services" {
 
 ' === Connections: Frontend -> Gateway ===
 AdminPanel -down-> Gateway : HTTPS/REST
-ClientPanel -down-> Gateway : HTTPS/REST
+HubPortal -down-> Gateway : HTTPS/REST
+WorkspaceApp -down-> Gateway : HTTPS/REST
 DigitalSSR -down-> Gateway : HTTPS/REST\n(Server-side fetch)
 DesktopApp -down-> Gateway : HTTPS/REST
 
@@ -83,6 +90,8 @@ RateLimitMW -down-> AppModule
 RateLimitMW -down-> DigitalModule
 RateLimitMW -down-> BillingModule
 RateLimitMW -down-> AnalyticsModule
+RateLimitMW -down-> SSOModule
+RateLimitMW -down-> HubModule
 
 ' === Backend -> Data ===
 AuthModule -down-> PostgreSQL
@@ -97,6 +106,10 @@ RateLimitMW -down-> Redis
 AppModule -down-> S3
 DigitalModule -down-> S3
 
+SSOModule -down-> PostgreSQL
+SSOModule -down-> Redis
+HubModule -down-> PostgreSQL
+
 CeleryWorkers -down-> Redis : broker
 CeleryWorkers -down-> PostgreSQL
 
@@ -107,13 +120,28 @@ AppModule ..> GoogleCal
 AuthModule ..> OAuth2
 DigitalModule ..> LetsEncrypt
 
+' === SSO validate: server-to-server ===
+WorkspaceApp ..> SSOModule : server-to-server\nPOST sso/validate/
+DesktopApp ..> SSOModule : server-to-server\nPOST sso/validate/
+
 ' === SSR specific ===
 DigitalSSR -down-> Redis : ISR Cache
 
 note right of Gateway
   Subdomain-based routing:
-  {slug}.platform.com -> Admin/Client
-  platform.com/{service}/{username} -> SSR
+  hub.platform.com  -> Hub Client Portal
+  admin.platform.com -> Admin Panel
+  app.platform.com  -> Workspace App
+  platform.com/{svc}/{user} -> Digital SSR
+end note
+
+note right of SSOModule
+  SSO Flow:
+  1. Hub POST /auth/sso/token/
+  2. Hub redirects browser con sso_token
+  3. Workspace POST /auth/sso/validate/
+     (server-to-server, no CORS)
+  4. Token invalidado en primer uso
 end note
 
 note bottom of TenantMW

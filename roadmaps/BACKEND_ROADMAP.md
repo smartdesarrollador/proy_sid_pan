@@ -525,3 +525,386 @@ make test
 | 18 | Digital Services | digital_services | ⬜ | 6 |
 | 19 | Support Tickets | support | ⬜ | 6,11 |
 | 20 | Rate Limiting + Hardening | config | ⬜ | todos |
+| 21 | SSO: SSOToken + /sso/token/ + /sso/validate/ | auth_app | ⬜ | 2, 5, 22 |
+| 22 | Services: Service + TenantService + catálogo | services (nueva) | ⬜ | 2, 6 |
+| 23 | Referrals: ReferralCode + Referral + endpoint | referrals (nueva) | ⬜ | 2, 5, 22 |
+| 24 | PaymentMethod LATAM + CRUD completo | subscriptions | ⬜ | 7, 6 |
+| 25 | Hub Notifications: nueva categoría + endpoint | notifications | ⬜ | 2, apps existente |
+| 26 | Permisos Hub: fixtures 62→64, roles update | rbac | ⬜ | 3, 23 |
+| 27 | Register Hub: ReferralCode + TenantService auto | auth_app, tenants | ⬜ | 5, 22, 23 |
+| 28 | OpenAPI Hub + tests cobertura + seed update | config, todos | ⬜ | 21–27 |
+
+---
+
+## PASO 21 — SSO: SSOToken + Endpoints ⬜
+
+**Estado**: Pendiente
+**App**: `apps/auth_app/` (modelos) + `apps/auth_app/sso_views.py` + `apps/auth_app/sso_urls.py`
+**Dependencias**: PASO 2, PASO 5, PASO 22 (TenantService.status check)
+**Archivos de referencia**: `docs/diagrams/sequence-diagram-sso.puml` · `docs/architecture/sso-architecture.md`
+
+### Modelo — `SSOToken` en `apps/auth_app/models.py`
+
+```python
+class SSOToken(BaseModel):
+    user = FK(User, CASCADE)
+    tenant = FK(Tenant, CASCADE)
+    service = CharField(50)   # 'workspace' | 'vista' | 'desktop'
+    token = CharField(64, unique=True, db_index=True)  # secrets.token_hex(32), NO JWT
+    used_at = DateTimeField(null=True, blank=True)
+    expires_at = DateTimeField(db_index=True)          # created_at + 60s
+
+    class Meta:
+        db_table = 'sso_tokens'
+        indexes = [Index(fields=['token']), Index(fields=['expires_at'])]
+```
+
+### Endpoints
+
+**`POST /api/v1/auth/sso/token/`** (`IsAuthenticated`)
+- Valida: tenant activo, TenantService.status=='active', plan >= service.min_plan
+- Genera: `token = secrets.token_hex(32)` (64 chars), `expires_at = now() + timedelta(seconds=60)`
+- INSERT SSOToken, INSERT AuditLog (`sso.token_created`, sin loguear token value)
+- Response: `{ sso_token, expires_in: 60, redirect_url }`
+- Errors: 403 si sin acceso, 404 si servicio no existe
+
+**`POST /api/v1/auth/sso/validate/`** (sin auth — server-to-server)
+- `SELECT ... FOR UPDATE` para atomicidad
+- Verifica: `used_at IS NULL`, `expires_at > now()`
+- UPDATE `used_at = now()` (single-use)
+- Genera JWT access+refresh para el servicio destino
+- INSERT AuditLog (`sso.token_validated`)
+- Errors: 400 si used/expired, 404 si no existe; INSERT AuditLog (`sso.token_invalid`)
+
+### Celery Task
+
+`apps/auth_app/tasks.py` — `cleanup_expired_sso_tokens()` (periódica cada 5 min):
+- DELETE tokens expirados sin usar (`expires_at < now()`)
+- DELETE tokens usados con antigüedad > 1h (`used_at < now() - 1h`)
+
+### Tests
+`apps/auth_app/tests/test_sso.py`: happy path, token expirado, token ya usado, tenant suspendido, concurrency (doble validación simultánea)
+
+---
+
+## PASO 22 — Services & Catálogo ⬜
+
+**Estado**: Pendiente
+**App**: `apps/services/` (nueva)
+**Dependencias**: PASO 2 (Tenant), PASO 6 (RBAC)
+**Archivos de referencia**: `docs/diagrams/class-diagram-core.puml` (paquete Hub Services)
+
+### Modelos — `apps/services/models.py`
+
+```python
+class Service(BaseModel):
+    slug = SlugField(unique=True)            # 'workspace', 'vista', 'desktop'
+    name = CharField(100)
+    description = TextField(blank=True)
+    icon = CharField(50)                     # nombre Lucide
+    url_template = CharField(255)            # 'https://{subdomain}.workspace.app'
+    min_plan = CharField(20, default='free') # free|starter|professional|enterprise
+    is_active = BooleanField(default=True)
+
+class TenantService(BaseModel):
+    tenant = FK(Tenant, CASCADE)
+    service = FK(Service, CASCADE)
+    status = CharField(20, default='active')  # active|suspended|locked
+    acquired_at = DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = [['tenant', 'service']]
+```
+
+### Fixture — `apps/services/fixtures/services.json`
+3 servicios base: workspace (min_plan='free'), vista (min_plan='free'), desktop (min_plan='free')
+
+### Endpoints (`IsAuthenticated`)
+
+`GET /api/v1/app/services/` — Todos los servicios con campo `available` (plan check) y `status` si tiene TenantService
+`GET /api/v1/app/services/active/` — Solo TenantService.status=='active' del tenant
+
+### Signal
+`post_save` en Tenant → crear TenantService para todos los Service con `min_plan='free'` automáticamente
+
+### Tests
+`apps/services/tests/test_services.py`: catálogo, filtro por plan, acceso suspendido
+
+---
+
+## PASO 23 — Referrals ⬜
+
+**Estado**: Pendiente
+**App**: `apps/referrals/` (nueva)
+**Dependencias**: PASO 2 (Tenant), PASO 5 (register), PASO 22 (se activa desde signal)
+**Archivos de referencia**: `prd/features/hub-client-portal.md`
+
+### Modelos — `apps/referrals/models.py`
+
+```python
+class ReferralCode(BaseModel):
+    tenant = OneToOneField(Tenant, CASCADE)
+    code = CharField(50, unique=True, db_index=True)  # "REF-ACME-1A2B"
+
+class Referral(BaseModel):
+    referrer = FK(Tenant, CASCADE, related_name='given_referrals')
+    referred = FK(Tenant, CASCADE, related_name='received_referrals')
+    status = CharField(20, default='pending')  # pending|active|expired
+    credit_amount = DecimalField(10,2, default=Decimal('29.00'))
+    activated_at = DateTimeField(null=True)
+    class Meta:
+        unique_together = [['referrer', 'referred']]
+```
+
+### Lógica de generación de código
+`ReferralCode.generate_code(tenant)` → slugify(name)[:8].upper() + '-' + uuid[:4].upper()
+
+### Endpoint
+
+`GET /api/v1/app/referrals/` (`HasPermission('referrals.read')`)
+Response: `{ code, referral_url, stats: {referred, credits_earned, available_credits}, referrals: [...] }`
+
+### Integración con Register
+En `POST /api/v1/auth/register/`, aceptar parámetro opcional `ref_code`:
+- Buscar ReferralCode por código → crear Referral(referrer=..., referred=nuevo_tenant, status='pending')
+- Error silencioso si código inválido (no rompe el registro)
+
+### Celery Task
+`activate_pending_referrals()` (diaria):
+- Busca Referral status='pending' con referred.subscription.status='active' y antigüedad > 7d
+- Cambia a status='active', guarda activated_at
+- Aplica crédito a próxima factura del referrer (campo `credit_balance` en Subscription)
+
+### Tests
+Registro con ref code válido/inválido, activación tras 7 días activos
+
+---
+
+## PASO 24 — PaymentMethod LATAM + CRUD Completo ⬜
+
+**Estado**: Pendiente
+**App**: `apps/subscriptions/` (extend modelos de PASO 7)
+**Dependencias**: PASO 7, PASO 6
+**Archivos de referencia**: `prd/features/billing.md` · prototipo billing tab
+
+### Extensión del modelo `PaymentMethod` (PASO 7 añadió campos Stripe básicos)
+
+Nuevos campos:
+```python
+external_type = CharField(20, blank=True)   # paypal|mercadopago|yape|plin|nequi|daviplata
+external_email = EmailField(blank=True)     # PayPal, MercadoPago
+external_phone = CharField(20, blank=True)  # Yape, Plin, Nequi, Daviplata
+external_account_id = TextField(blank=True) # AES-256 cifrado (via utils/encryption.py)
+```
+
+### Endpoints (`/api/v1/admin/billing/payment-methods/`)
+
+| Método | Endpoint | Permisos |
+|--------|----------|----------|
+| GET | `/admin/billing/payment-methods/` | `billing.read` |
+| POST | `/admin/billing/payment-methods/` | `billing.manage` |
+| PATCH | `/admin/billing/payment-methods/{id}/` | `billing.manage` |
+| DELETE | `/admin/billing/payment-methods/{id}/` | `billing.manage` |
+
+Lógica POST:
+- Tipo `card` → Stripe API para tokenizar y guardar
+- Tipos LATAM → almacenar `external_account_id` cifrado con AES-256
+- Si `is_default=True` → UPDATE SET is_default=False para los demás del tenant
+- No permitir DELETE del único método si hay suscripción activa
+
+### Tests
+CRUD completo, set-default logic, cifrado de datos sensibles, error al eliminar único método activo
+
+---
+
+## PASO 25 — Hub Notifications ⬜
+
+**Estado**: Pendiente
+**App**: `apps/notifications/` (extend app existente)
+**Dependencias**: PASO 2 (Tenant), apps/notifications (existente del Admin Panel)
+**Archivos de referencia**: `docs/diagrams/class-diagram-core.puml` (Notification model)
+
+### Cambio en Modelo `Notification`
+Agregar choice `'services'` al campo `category`:
+```python
+CATEGORY_CHOICES = [
+    ('security', 'Seguridad'),
+    ('billing', 'Facturación'),
+    ('system', 'Sistema'),
+    ('users', 'Usuarios'),
+    ('roles', 'Roles'),
+    ('services', 'Servicios'),   # NUEVA — solo Hub
+]
+```
+Migración requerida.
+
+### Endpoint Hub (nuevo)
+
+`GET /api/v1/app/notifications/` (`IsAuthenticated`)
+- Filtra: `category__in=['billing','security','services','system']` (excluye `users`, `roles`)
+- Paginado: 20/página
+- Ordena: `-created_at`
+
+`POST /api/v1/app/notifications/{id}/read/` (`IsAuthenticated`)
+`POST /api/v1/app/notifications/read-all/` (`IsAuthenticated`)
+
+### Auto-notificaciones via Signals
+- Trial vence en 7 días → notificación category='billing'
+- Nueva factura disponible → notificación category='billing'
+- Servicio suspendido → notificación category='services'
+
+### Diferencias con endpoint Admin
+- `/api/v1/admin/notifications/` → categorías: security, users, billing, system, roles
+- `/api/v1/app/notifications/` → categorías: billing, security, services, system
+
+### Tests
+Filtros por categoría, marcar leídas, que usuarios no ven notificaciones de otros tenants (RLS)
+
+---
+
+## PASO 26 — Permisos Hub + Update Fixtures ⬜
+
+**Estado**: Pendiente
+**App**: `apps/rbac/` (actualizar fixtures PASO 3)
+**Dependencias**: PASO 3 (fixtures de permisos), PASO 23 (referrals app)
+
+### Nuevos permisos a agregar
+
+```json
+{ "codename": "referrals.read",   "name": "Ver Referidos",      "resource": "referrals", "action": "read" },
+{ "codename": "referrals.manage", "name": "Gestionar Referidos", "resource": "referrals", "action": "manage" }
+```
+
+Esto eleva el total de 62 → **64 permisos**, 13 → **15 categorías**.
+
+### Fixtures a actualizar
+
+`apps/rbac/fixtures/permissions.json` — Agregar 2 nuevos permisos
+`apps/rbac/fixtures/system_roles.json` — Asignar `referrals.read` + `referrals.manage` al rol Owner y Admin
+
+### Comando
+```bash
+make seed-permissions   # recarga fixtures con los 64 permisos
+```
+
+### Verificación de permisos en endpoints Hub
+
+Revisar que todos los endpoints del Hub tienen el decorador/clase de permiso correcto:
+- `/app/services/` → `IsAuthenticated`
+- `/auth/sso/token/` → `IsAuthenticated` + tenant check
+- `/auth/sso/validate/` → Sin auth (server-to-server)
+- `/app/referrals/` → `HasPermission('referrals.read')`
+- `/app/notifications/` → `IsAuthenticated`
+- `/admin/billing/payment-methods/` → `HasPermission('billing.manage')`
+
+---
+
+## PASO 27 — Integración Register Hub + Team Hub View ⬜
+
+**Estado**: Pendiente
+**App**: `apps/auth_app/` + `apps/tenants/`
+**Dependencias**: PASO 5 (register), PASO 22 (Service signal), PASO 23 (ReferralCode)
+**Archivos de referencia**: prototipo register/ (4 pasos) y team/
+
+### Actualización del flujo de registro
+
+`POST /api/v1/auth/register/` — Extender transacción atómica existente:
+
+```python
+# Pasos adicionales en la transacción:
+# 5. CREATE ReferralCode(tenant=tenant, code=generate_code(tenant))
+# 6. CREATE TenantService para cada Service con min_plan='free' (automático via signal)
+# 7. Si ref_code en request.data:
+#       code = ReferralCode.objects.get(code=ref_code)
+#       Referral.objects.create(referrer=code.tenant, referred=tenant, status='pending')
+
+# Parámetro nuevo en RegisterSerializer:
+ref_code = serializers.CharField(required=False, allow_blank=True)
+plan = serializers.CharField(required=False, default='free')  # ya planificado en PASO 5
+```
+
+### Endpoint Hub Team (vista limitada)
+
+`GET /api/v1/app/team/` (`HasPermission('users.read')`) — Alias para `/admin/users/` pero sin acceso a roles avanzados
+`POST /api/v1/app/team/invite/` (`HasPermission('users.invite')`) — Invitar con role basic (member/admin)
+`POST /api/v1/app/team/{id}/suspend/` (`HasPermission('users.update')`)
+
+*Nota*: Estos endpoints pueden ser reutilizaciones de `/admin/users/` con el mismo ViewSet — no código nuevo.
+
+### Tests Integration
+Test end-to-end del flujo Hub:
+1. Registro con ref_code → ReferralCode creado + Referral pending
+2. Login → JWT
+3. GET /app/services/ → servicios disponibles
+4. POST /auth/sso/token/ → token generado
+5. POST /auth/sso/validate/ → JWT para Workspace
+6. GET /app/referrals/ → stats
+
+---
+
+## PASO 28 — OpenAPI Hub + Tests de Cobertura Final ⬜
+
+**Estado**: Pendiente
+**App**: `config/` + todos los apps Hub
+**Dependencias**: PASO 21–27, PASO 17 (OpenAPI base)
+
+### OpenAPI / drf-spectacular
+
+Agregar `@extend_schema` en las vistas Hub:
+```python
+# sso_views.py
+@extend_schema(tags=['Hub - SSO'], summary='Genera token SSO de corta duración (TTL 60s)')
+class SSOTokenView(APIView): ...
+
+@extend_schema(tags=['Hub - SSO'], summary='Valida y consume token SSO (server-to-server)')
+class SSOValidateView(APIView): ...
+
+# services/views.py
+@extend_schema(tags=['Hub - Servicios'])
+
+# referrals/views.py
+@extend_schema(tags=['Hub - Referrals'])
+
+# notifications/hub_views.py
+@extend_schema(tags=['Hub - Notificaciones'])
+```
+
+Agregar tags en `SPECTACULAR_SETTINGS` (base.py):
+```python
+'Hub - SSO', 'Hub - Servicios', 'Hub - Referrals', 'Hub - Notificaciones'
+```
+
+### Suite de tests final Hub
+```bash
+make test                                # todos los tests
+# Objetivo: >80% coverage en apps Hub (services, referrals, sso, notifications hub)
+pytest apps/services/ apps/referrals/ --cov=. --cov-report=term-missing
+```
+
+### Seed data — actualizar `seed_dev_data.py`
+- Agregar `ReferralCode` para cada tenant seedeado
+- Agregar `TenantService` con workspace+vista para cada tenant
+- Agregar 3 `SSOToken` expirados + 1 válido para pruebas
+- Agregar 2 `Referral` (1 pending, 1 active) entre los tenants de prueba
+
+---
+
+## Verificación Final Hub — Pasos 21–28
+
+```bash
+cd apps/backend_django
+make migrate          # aplica migrations de services, referrals, sso_tokens, payment_method LATAM
+make seed-permissions # recarga 64 permisos
+make seed-data        # incluye ReferralCode + TenantService + SSOToken de prueba
+make test             # suite completa
+# Visitar: http://localhost:8000/api/docs/ → verificar tags Hub SSO, Servicios, Referrals, Notificaciones
+```
+
+### Orden de ejecución recomendado
+
+```
+PASO 22 (Services) → PASO 26 (Permisos) → PASO 21 (SSO)
+      ↓                                          ↓
+PASO 23 (Referrals) ← PASO 27 (Register) ← PASO 24 (Payments)
+      ↓
+PASO 25 (Notifications) → PASO 28 (OpenAPI + Tests)
+```

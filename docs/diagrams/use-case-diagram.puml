@@ -4,7 +4,7 @@ left to right direction
 skinparam actorStyle awesome
 skinparam packageStyle rectangle
 
-title Diagrama de Casos de Uso\nPlataforma SaaS Multi-Tenant
+title Diagrama de Casos de Uso\nPlataforma SaaS Multi-Tenant\n(incluye Hub Client Portal)
 
 ' === Actors ===
 actor "Owner / Admin" as Owner
@@ -12,6 +12,7 @@ actor "Member / User" as Member
 actor "Service Manager" as ServiceMgr
 actor "Public User\n(Anonymous)" as PublicUser
 actor "Stripe\n(Webhook)" as Stripe
+actor "Hub Client\n(Tenant Owner/User)" as HubClient
 
 ' === Use Case Groups ===
 
@@ -69,6 +70,20 @@ rectangle "Acceso Publico (SSR)" {
   usecase "Ver CV\ndigital publico" as UC_ViewCV
 }
 
+rectangle "Hub Portal (Acceso y Autoservicio)" {
+  usecase "Registro y onboarding\n(4 pasos)" as UC_HubOnboarding
+  usecase "Ver catalogo\nde servicios" as UC_ServiceCatalog
+  usecase "Abrir servicio\nvía SSO" as UC_SSO
+  usecase "Gestionar\nsuscripcion propia" as UC_HubBilling
+  usecase "Ver y pagar\nfacturas" as UC_HubInvoices
+  usecase "Gestionar metodos\nde pago (Stripe+LATAM)" as UC_PaymentMethods
+  usecase "Invitar / suspender\nmiembros del equipo" as UC_Team
+  usecase "Programa\nde referidos" as UC_Referrals
+  usecase "Centro de\nnotificaciones Hub" as UC_HubNotifications
+  usecase "Soporte propio\n(ver mis tickets)" as UC_HubSupport
+  usecase "Perfil y\nconfiguracion" as UC_HubProfile
+}
+
 ' === Actor Relationships ===
 
 ' Owner/Admin
@@ -119,6 +134,21 @@ PublicUser --> UC_ViewCV
 ' Stripe
 Stripe --> UC_Payments
 
+' Hub Client
+HubClient --> UC_HubOnboarding
+HubClient --> UC_Login
+HubClient --> UC_VerifyEmail
+HubClient --> UC_ServiceCatalog
+HubClient --> UC_SSO
+HubClient --> UC_HubBilling
+HubClient --> UC_HubInvoices
+HubClient --> UC_PaymentMethods
+HubClient --> UC_Team
+HubClient --> UC_Referrals
+HubClient --> UC_HubNotifications
+HubClient --> UC_HubSupport
+HubClient --> UC_HubProfile
+
 ' Enterprise feature
 UC_Domain .up.> UC_Landing : <<extends>>
 Member --> UC_Domain
@@ -127,6 +157,9 @@ Member --> UC_Domain
 UC_Share ..> UC_Inherit : <<include>>
 UC_Register ..> UC_VerifyEmail : <<include>>
 UC_Upgrade ..> UC_Payments : <<include>>
+UC_SSO ..> UC_ServiceCatalog : <<include>>
+UC_HubOnboarding ..> UC_VerifyEmail : <<include>>
+UC_HubOnboarding ..> UC_HubBilling : <<extends>>
 
 ' Notes
 note right of UC_Inherit
@@ -137,6 +170,19 @@ end note
 note right of UC_Domain
   Solo plan Enterprise.
   Verificacion DNS + SSL auto.
+end note
+
+note right of UC_SSO
+  TTL 60s, single-use token.
+  Hub -> POST /auth/sso/token/
+  Redirect -> workspace/?sso_token=...
+  Workspace -> POST /auth/sso/validate/
+end note
+
+note right of UC_PaymentMethods
+  LATAM soportado:
+  Stripe, MercadoPago, PayU,
+  OXXO, PIX, Efecty, Nequi
 end note
 
 @enduml

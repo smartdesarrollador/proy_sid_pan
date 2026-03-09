@@ -1,0 +1,120 @@
+@startuml sequence-diagram-sso
+!theme plain
+
+title Diagrama de Secuencia - Flujo SSO Completo\nHub Client Portal → Workspace / Desktop / Vista
+
+actor "Hub Client\n(Browser)" as HubUser
+participant "Hub Portal\n(React + Vite)" as HubFE
+participant "API Gateway\n(Nginx)" as Gateway
+participant "Django REST\nBackend" as API
+participant "JWT Auth\nMiddleware" as JWTAuth
+participant "Destination\nService\n(Workspace/Desktop)" as DestService
+database "PostgreSQL" as DB
+database "Redis\n(Cache)" as Redis
+
+== 1. Generación del SSO Token ==
+
+HubUser -> HubFE : Click "Abrir Workspace"
+HubFE -> Gateway : POST /api/v1/auth/sso/token/\n{service: "workspace"}\nAuthorization: Bearer {hub_access_token}
+Gateway -> JWTAuth : Forward request
+JWTAuth -> JWTAuth : Decode & validate JWT\n(firma, expiración, tenant_id)
+
+alt JWT inválido o expirado
+  JWTAuth --> HubUser : 401 Unauthorized\n{error: "Token expired, please login"}
+end
+
+JWTAuth -> API : request + user context
+
+API -> DB : SELECT TenantService\nWHERE tenant_id = ? AND service = 'workspace'\nAND status = 'active'
+
+alt Servicio no adquirido o suspendido
+  API --> HubUser : 403 Forbidden\n{error: "Service not available for your plan"}
+end
+
+alt Servicio no existe
+  API --> HubUser : 404 Not Found\n{error: "Service not found"}
+end
+
+API -> API : Generar token = secrets.token_hex(32)\n(64 chars, opaco, NO JWT)
+API -> DB : INSERT SSOToken {\n  user_id, tenant_id,\n  service: "workspace",\n  token: hex_token,\n  expires_at: now() + 60s,\n  used_at: NULL\n}
+API -> DB : INSERT AuditLog\n{action: "sso.token_created",\n resource_type: "SSOToken",\n ip_address, user_agent}
+
+note right of API
+  token NUNCA se loguea en texto plano.
+  Solo se audita su creación y uso.
+  TTL: 60 segundos estrictos.
+end note
+
+API --> HubFE : 200 OK {\n  sso_token: "a3f9...",\n  redirect_url: "https://acme.workspace.app/auth/sso",\n  expires_in: 60\n}
+
+HubFE -> HubUser : Redirect browser\nhttps://acme.workspace.app/auth/sso?sso_token=a3f9...
+
+== 2. Validación del SSO Token ==
+
+HubUser -> DestService : GET /auth/sso?sso_token=a3f9...\n(browser redirect)
+DestService -> Gateway : POST /api/v1/auth/sso/validate/\n{sso_token: "a3f9..."}\n(server-to-server, no CORS)
+Gateway -> API : Forward request (sin JWT de usuario)
+
+API -> DB : SELECT SSOToken\nWHERE token = ? FOR UPDATE
+
+alt Token no encontrado
+  API --> DestService : 404 Not Found\n{error: "Invalid SSO token"}
+  DestService --> HubUser : Error page: "Enlace inválido"
+end
+
+alt Token ya utilizado (used_at IS NOT NULL)
+  API --> DestService : 410 Gone\n{error: "SSO token already used"}
+  DestService --> HubUser : Error page: "Enlace ya utilizado.\nVuelve al Hub para obtener uno nuevo."
+end
+
+alt Token expirado (expires_at < now())
+  API -> DB : DELETE SSOToken (limpieza)
+  API --> DestService : 410 Gone\n{error: "SSO token expired"}
+  DestService --> HubUser : Error page: "Enlace expirado (>60s).\nVuelve al Hub e intenta de nuevo."
+end
+
+' Token válido — happy path
+API -> DB : UPDATE SSOToken\nSET used_at = now()\nWHERE token = ? AND used_at IS NULL\n(atomic — previene race condition)
+
+API -> DB : SELECT User, Tenant\nWHERE user_id = ssotoken.user_id
+
+API -> API : Generar JWT para el servicio destino\n(access_token 15min, refresh_token 7d)
+note right of API
+  Access Token payload:
+  {user_id, tenant_id,
+   roles, permissions,
+   service: "workspace"}
+
+  Refresh Token payload:
+  {jti, user_id, tenant_id,
+   service: "workspace"}
+end note
+
+API -> Redis : SET refresh:{jti} = user_id\nEX 604800
+API -> DB : UPDATE User SET last_login = now()
+API -> DB : INSERT AuditLog\n{action: "sso.token_validated",\n resource_type: "SSOToken",\n resource_id: token_id}
+
+API --> DestService : 200 OK {\n  access_token,\n  refresh_token,\n  user: {id, name, email, roles, permissions}\n}
+
+DestService -> DestService : Almacenar tokens\nen localStorage / cookie httpOnly
+DestService --> HubUser : 302 Redirect → /dashboard\n(autenticado en Workspace)
+
+== 3. Limpieza Periódica de Tokens Expirados ==
+
+participant "Celery Beat\n(Scheduler)" as CeleryBeat
+participant "Celery Worker" as CeleryWorker
+
+CeleryBeat -> CeleryWorker : Trigger: cleanup_expired_sso_tokens\n(cada 5 minutos)
+CeleryWorker -> DB : DELETE FROM sso_tokens\nWHERE expires_at < now()\nAND used_at IS NULL\n(tokens expirados sin usar)
+DB --> CeleryWorker : N rows deleted
+CeleryWorker -> DB : DELETE FROM sso_tokens\nWHERE used_at < now() - INTERVAL '1 hour'\n(tokens ya usados, antigüedad >1h)
+DB --> CeleryWorker : M rows deleted
+
+note right of CeleryWorker
+  Tokens usados se conservan 1h
+  para auditoría. Luego se purgan.
+  Tokens expirados sin usar se
+  eliminan inmediatamente.
+end note
+
+@enduml

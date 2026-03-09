@@ -1,7 +1,7 @@
 @startuml sequence-diagram-auth
 !theme plain
 
-title Diagrama de Secuencia - Autenticacion y Onboarding\nRegistro, Verificacion, Login con MFA y Request Autenticado
+title Diagrama de Secuencia - Autenticacion, Onboarding y SSO\nRegistro, Verificacion, Login con MFA, Request Autenticado y SSO Hub→Servicio
 
 actor "User\n(Browser)" as User
 participant "API Gateway\n(Nginx)" as Gateway
@@ -125,5 +125,36 @@ alt Token valido
 else Token invalido/expirado
   API --> User : 401 Unauthorized\n{error: "Token expired, please login"}
 end
+
+== 6. SSO: Hub → Servicio ==
+
+actor "Hub Client\n(Browser)" as HubUser
+
+HubUser -> Gateway : Click "Abrir Workspace"\nPOST /api/v1/auth/sso/token/\n{service: "workspace"}\nAuthorization: Bearer {hub_token}
+Gateway -> API : Forward request
+API -> DB : Verificar TenantService activo
+API -> DB : INSERT SSOToken\n(token=hex(32), expires_at=+60s)
+API -> DB : INSERT AuditLog (sso.token_created)
+API --> HubUser : 200 OK {sso_token, redirect_url}
+
+HubUser -> HubUser : Redirect browser\nhttps://acme.workspace.app/?sso_token=...
+
+note right of API
+  Server-to-server: Workspace llama
+  al backend directamente.
+  sso_token NUNCA se loguea.
+end note
+
+API -> DB : UPDATE SSOToken SET used_at=now() (single-use)
+API -> API : Generar JWT tokens para Workspace
+API -> Redis : SET refresh:{jti}
+API -> DB : INSERT AuditLog (sso.token_validated)
+API --> HubUser : {access_token, refresh_token, user}
+
+note right of HubUser
+  Ver sequence-diagram-sso.puml
+  para el flujo detallado con
+  todos los edge cases.
+end note
 
 @enduml
