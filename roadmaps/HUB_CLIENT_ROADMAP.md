@@ -85,7 +85,7 @@
 
 ---
 
-## PASO 1 — Scaffold del Proyecto ⬜
+## PASO 1 — Scaffold del Proyecto ✅
 
 **Archivos de referencia**: `docs/ui-ux/prototype-hub-client/` · `apps/frontend_admin/package.json` · `apps/frontend_admin/vite.config.ts`
 **Dependencias**: ninguna
@@ -193,6 +193,41 @@ export default {
 }
 ```
 
+### Docker ✅
+
+La imagen usa **multi-stage build** con 4 etapas:
+
+| Stage | Base | Propósito |
+|-------|------|-----------|
+| `base` | `node:20-alpine` | Instala dependencias (`npm ci`) |
+| `dev` | `base` | Vite dev server con HMR — expone puerto **5175** |
+| `builder` | `base` | Build de producción (acepta `ARG VITE_API_URL` / `VITE_APP_NAME`) |
+| `prod` | `nginx:1.25-alpine` | Sirve `/dist` estático, expone puerto **80** |
+
+**`docker-compose.yml`** — desarrollo:
+- Servicio `vite` → target `dev`, container `rbac_hub_client_vite`
+- Volume `node_modules` anónimo (preserva módulos del contenedor)
+- `env_file: .env` + variable `API_TARGET: http://rbac_django:8000` (usada por el proxy de `vite.config.ts`)
+- Puerto `5175:5175`
+- Redes: `default` + `global` (externa — conecta con el backend `rbac_django`)
+
+**`nginx/nginx.conf`** requerido en producción (stage `prod` copia desde `nginx/nginx.conf`).
+
+**`.dockerignore`**: excluye `node_modules`, `dist`, `.git`, `coverage`, `.env*`, `*.log`.
+
+```bash
+# Desarrollo con Docker
+docker compose up              # levanta Vite dev server en http://localhost:5175
+
+# Build de producción
+docker build --target prod \
+  --build-arg VITE_API_URL=https://api.tudominio.com/api/v1/ \
+  --build-arg VITE_APP_NAME="Hub de Servicios" \
+  -t rbac-hub-client:prod .
+```
+
+> **Nota de red**: La red `global` debe existir previamente (`docker network create global`) para conectar con el container del backend Django.
+
 ### Comandos a ejecutar
 
 ```bash
@@ -208,7 +243,7 @@ npm run dev   # http://localhost:5175
 
 ---
 
-## PASO 2 — Infraestructura Core ⬜
+## PASO 2 — Infraestructura Core ✅
 
 **Archivos de referencia**: `apps/frontend_admin/src/lib/` · `apps/frontend_admin/src/store/` · `apps/frontend_admin/src/i18n/` · `docs/ui-ux/prototype-hub-client/src/locales/`
 **Dependencias**: PASO 1
@@ -283,7 +318,7 @@ src/
 
 ---
 
-## PASO 3 — Autenticación + Landing + Registro Multi-Paso ⬜
+## PASO 3 — Autenticación + Landing + Registro Multi-Paso ✅
 
 **Archivos de referencia**: `docs/ui-ux/prototype-hub-client/src/components/Login.jsx` · `docs/ui-ux/prototype-hub-client/src/components/landing/LandingPage.jsx` · `docs/ui-ux/prototype-hub-client/src/components/register/RegisterView.jsx`
 **Dependencias**: PASO 2
@@ -409,7 +444,7 @@ src/
 
 ---
 
-## PASO 5 — Dashboard Principal ⬜
+## PASO 5 — Dashboard Principal ✅
 
 **Archivos de referencia**: `docs/ui-ux/prototype-hub-client/src/components/dashboard/HubDashboard.jsx` · `docs/ui-ux/prototype-hub-client/src/components/dashboard/ServiceCard.jsx`
 **Dependencias**: PASO 4
@@ -788,7 +823,7 @@ src/features/notifications/
 
 ---
 
-## PASO 12 — Centro de Soporte ⬜
+## PASO 12 — Centro de Soporte ✅
 
 **Archivos de referencia**: `docs/ui-ux/prototype-hub-client/src/components/support/SupportView.jsx` · `apps/frontend_admin/src/features/support/`
 **Dependencias**: PASO 4
@@ -969,9 +1004,9 @@ npm run preview         # verificar en http://localhost:4173
 
 | PASO | Descripción | Estado | Dependencias |
 |------|-------------|--------|-------------|
-| 1 | Scaffold del Proyecto | ⬜ | — |
-| 2 | Infraestructura Core (Axios, TQ, Zustand, i18n, Router) | ⬜ | PASO 1 |
-| 3 | Auth + Landing + Registro Multi-Paso | ⬜ | PASO 2 |
+| 1 | Scaffold del Proyecto + Docker | ✅ | — |
+| 2 | Infraestructura Core (Axios, TQ, Zustand, i18n, Router) | ✅ | PASO 1 |
+| 3 | Auth + Landing + Registro Multi-Paso | ✅ | PASO 2 |
 | 4 | Shell & Navegación (AppLayout, Navbar, dark/lang toggles) | ⬜ | PASO 3 |
 | 5 | Dashboard Principal (summary cards, servicios activos) | ⬜ | PASO 4 |
 | 6 | Catálogo de Servicios & Flujo SSO | ⬜ | PASO 5 |
