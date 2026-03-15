@@ -6,7 +6,7 @@
 - **Description**: Multi-tenant SaaS with role-based access control and subscription billing
 - **Language**: Python 3.11+
 - **Framework**: Django REST Framework + PostgreSQL
-- **Frontend**: React + Vite (Admin Panel, Hub Client Portal, Workspace), Next.js (Digital Services), Tauri v2 (Desktop)
+- **Frontend**: React + Vite (`frontend_admin`, `frontend_hub_client`, `frontend_workspace`), Next.js App Router (`frontend_next_vista`), Tauri v2 (`frontend_sidebar_desktop`)
 
 ## Backend Development — `apps/backend_django/`
 
@@ -106,7 +106,7 @@ apps/backend_django/
 
 # SSO endpoints (Hub → services)
 POST /api/v1/auth/sso/token/    → Generate short-lived SSO token (TTL 60s, single-use)
-POST /api/v1/auth/sso/validate/ → Validate SSO token (consumed by destination service)
+POST /api/v1/auth/sso/validate/ → Validate SSO token → { access_token, refresh_token, user, tenant }
 
 # Hub-specific endpoints
 GET  /api/v1/app/services/        → Service catalog available for tenant
@@ -142,11 +142,12 @@ GET  /api/v1/app/services/active/ → Active (acquired) services for tenant
 ## File Boundaries
 
 - Backend source: `apps/backend_django/`
-- Frontend Admin: `apps/admin_panel/` (React + Vite)
-- Frontend Client: `apps/client_panel/` (React + Vite)
-- Digital Services: `apps/digital_services/` (Next.js)
-- Desktop App: `apps/desktop/` (Tauri v2)
-- UI Prototypes: `docs/ui-ux/`
+- Frontend Admin: `apps/frontend_admin/` (React + Vite, puerto 5173)
+- Hub Client Portal: `apps/frontend_hub_client/` (React + Vite, puerto 5175)
+- Workspace: `apps/frontend_workspace/` (React + Vite)
+- Vista / Digital Services: `apps/frontend_next_vista/` (Next.js App Router)
+- Desktop App: `apps/frontend_sidebar_desktop/` (Tauri v2 + React)
+- UI Prototypes: `docs/ui-ux/` (prototypes con datos mock)
   - `docs/ui-ux/prototype-admin/`      → Admin Panel prototype (puerto 3000)
   - `docs/ui-ux/prototype-hub-client/` → Hub Client Portal prototype (puerto 3003)
   - `docs/ui-ux/prototype-workspace/`  → Workspace (productividad) prototype (puerto 3001)
@@ -163,7 +164,7 @@ El Hub es el punto de entrada unificado para todos los clientes (tenants). Gesti
 - Gestión propia de suscripción y billing
 - Notificaciones y soporte al cliente
 
-**Prototipo**: `docs/ui-ux/prototype-hub-client/` | **PRD**: `prd/features/hub-client-portal.md`
+**App real**: `apps/frontend_hub_client/` | **Prototipo**: `docs/ui-ux/prototype-hub-client/` | **PRD**: `prd/features/hub-client-portal.md`
 
 ### Relación Hub ↔ Admin Panel
 
@@ -175,18 +176,52 @@ El Hub es el punto de entrada unificado para todos los clientes (tenants). Gesti
 | Registro de nuevo tenant | ❌ | ✅ |
 | Ver y acceder a servicios adquiridos | ❌ | ✅ |
 | Gestionar propia suscripción | ❌ | ✅ |
-| SSO hacia Workspace / Digital Services | ❌ | ✅ |
+| SSO hacia Workspace / Vista | ❌ | ✅ |
 
 ### Flujo SSO Hub → Servicio
 
 ```
-1. POST /api/v1/auth/sso/token/  { "service": "workspace" }
+1. POST /api/v1/auth/sso/token/  { "service": "workspace" | "vista" }
    → { sso_token, expires_in: 60, redirect_url }
-2. Hub redirige: https://workspace.app/?sso_token=...
-3. Workspace: POST /api/v1/auth/sso/validate/  { sso_token }
-   → { access_token, refresh_token, user }
-4. Token invalidado tras primer uso (single-use, TTL 60s)
+   Hook: apps/frontend_hub_client/src/features/services/hooks/useSSO.ts
+   Botón: apps/frontend_hub_client/src/features/services/components/SSOLaunchButton.tsx
+
+2. Hub redirige: window.location.href = data.redirect_url
+
+3. Servicio valida token:
+   POST /api/v1/auth/sso/validate/  { sso_token }
+   → { access_token, refresh_token, user, tenant }
+   Token invalidado tras el primer uso (single-use, TTL 60s)
+
+4. Sesión local por servicio:
+   - Workspace (/sso/callback):  ws-refreshToken, ws-authUser, ws-authTenant en localStorage
+   - Vista (/[locale]/sso):      refreshToken en localStorage + accessToken en cookie (max-age 3600)
 ```
+
+**Backend SSO (ya implementado):**
+- `SSOTokenView` (`apps/backend_django/apps/auth_app/sso_views.py`): valida tenant activo + `TenantService.status == 'active'`, genera `secrets.token_hex(32)`, TTL 60s
+- `SSOValidateView`: `select_for_update()` + `atomic()`, marca `used_at`, audita en `AuditLog`
+- `SSOToken` model en `apps/auth_app/models.py`, migration `0004_ssotoken`
+
+## Arquitectura de Frontends
+
+| App | Ruta | Framework | Puerto dev | Auth storage |
+|-----|------|-----------|-----------|--------------|
+| Admin Panel | `apps/frontend_admin/` | React + Vite | 5173 | `authUser`, `authTenant` en localStorage |
+| Hub Client Portal | `apps/frontend_hub_client/` | React + Vite | 5175 | `authUser`, `authTenant` en localStorage |
+| Workspace | `apps/frontend_workspace/` | React + Vite | — | `ws-refreshToken`, `ws-authUser`, `ws-authTenant` (prefijo `ws-`) |
+| Vista | `apps/frontend_next_vista/` | Next.js App Router | — | `refreshToken` en localStorage + `accessToken` en cookie |
+| Desktop | `apps/frontend_sidebar_desktop/` | Tauri v2 + React | — | — |
+
+### Vista — Features del área autenticada (`frontend_next_vista`)
+
+- `tarjeta` — editor de tarjeta digital + vista pública `/tarjeta/[username]`
+- `portafolio` — grid de proyectos + vista pública `/portafolio/[username]`
+- `landing` — builder de landing page + vista pública `/landing/[username]`
+- `cv` — CV/resume con templates + vista pública `/cv/[username]`
+- i18n via `next-intl` con `[locale]` en App Router
+- Dashboard en `/(authenticated)/dashboard`
+- Session restore: `useSessionRestore` hook en authenticated layout
 
 ## Workflow Rules
 

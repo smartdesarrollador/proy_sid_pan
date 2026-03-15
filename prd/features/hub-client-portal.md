@@ -253,12 +253,12 @@ Accesible desde la card "Referidos" del Dashboard y desde Perfil (view `/referra
 El Hub actúa como **orquestador de acceso** al ecosistema de servicios:
 
 ```
-prototype-hub-client (portal)
+frontend_hub_client (portal)
   │
-  ├──[SSO]──→ prototype-workspace (productividad: tareas, calendario, notas)
-  ├──[SSO]──→ digital-services (Next.js: tarjeta digital, portafolio, landing)
-  ├──[descarga]──→ desktop-app (Tauri v2: app nativa de escritorio)
-  └──[futuro]──→ otros servicios (chat, archivos, CRM, etc.)
+  ├──[SSO /sso/callback]──────→ frontend_workspace (productividad: tareas, calendario, notas)
+  ├──[SSO /[locale]/sso]──────→ frontend_next_vista (Next.js: tarjeta digital, portafolio, landing, CV)
+  ├──[descarga]───────────────→ frontend_sidebar_desktop (Tauri v2: app nativa de escritorio)
+  └──[futuro]─────────────────→ otros servicios (chat, archivos, CRM, etc.)
 ```
 
 Cada servicio es una aplicación independiente. El Hub provee:
@@ -283,21 +283,36 @@ El SSO entre Hub y servicios usa tokens de corta duración:
 2. Hub redirige al navegador:
    GET https://workspace.app/?sso_token=eyJ...
 
-3. Workspace valida el token:
+3. Servicio valida el token:
    POST /api/v1/auth/sso/validate/
    Body: { "sso_token": "eyJ..." }
-   Response: { "access_token": "...", "refresh_token": "...", "user": {...} }
+   Response: { "access_token": "...", "refresh_token": "...", "user": {...}, "tenant": {...} }
 
-4. Workspace almacena los tokens y crea sesión local.
+4. Servicio almacena los tokens y crea sesión local.
    El sso_token es invalidado tras el primer uso.
 ```
+
+**URLs de callback por servicio:**
+
+| Servicio | URL de callback | App |
+|---|---|---|
+| Workspace | `/sso/callback?sso_token=...` | `apps/frontend_workspace/src/features/auth/SSOCallbackPage.tsx` |
+| Vista | `/[locale]/sso?sso_token=...` | `apps/frontend_next_vista/src/app/[locale]/(auth)/sso/page.tsx` |
+
+**Persistencia de sesión por servicio:**
+
+| Servicio | localStorage keys | Cookie | Hook de restore |
+|---|---|---|---|
+| Workspace | `ws-refreshToken`, `ws-authUser`, `ws-authTenant` | — | `AuthContext.tsx` (lee `ws-refreshToken` al montar) |
+| Vista | `refreshToken` | `accessToken` (path=/, max-age=3600) | `useSessionRestore` en authenticated layout |
 
 **Seguridad:**
 
 - Token TTL: 60 segundos
-- Uso único (invalidado tras validación)
-- Firmado con clave privada del backend
-- Vinculado al `user_id` + `tenant_id` + `service`
+- Uso único (invalidado tras validación con `select_for_update()` + `atomic()`)
+- Token generado con `secrets.token_hex(32)` (64 chars hex)
+- Vinculado al `user_id` + `tenant_id` + `service`; valida `TenantService.status == 'active'`
+- Audita ambas acciones (`sso_token_generated`, `sso_token_validated`) en `AuditLog`
 
 ---
 
@@ -329,7 +344,7 @@ El admin **configura** el catálogo (qué servicios existen, en qué planes, pre
 
 ## 9. Endpoints Backend Requeridos
 
-**Leyenda:** 🔄 Reutiliza endpoint existente | ⭐ Nuevo endpoint requerido
+**Leyenda:** ✅ Ya implementado | 🔄 Reutiliza endpoint existente | ⭐ Nuevo endpoint requerido
 
 ### Servicios y SSO
 
@@ -337,8 +352,8 @@ El admin **configura** el catálogo (qué servicios existen, en qué planes, pre
 | ------ | ------ | -------------------------------------- | ---------------------------------------------------- |
 | ⭐     | `GET`  | `/api/v1/app/services/`                | Catálogo de servicios disponibles para el tenant     |
 | ⭐     | `GET`  | `/api/v1/app/services/active/`         | Servicios activos del tenant (adquiridos)            |
-| ⭐     | `POST` | `/api/v1/auth/sso/token/`              | Genera token SSO para acceder a un servicio          |
-| ⭐     | `POST` | `/api/v1/auth/sso/validate/`           | Valida token SSO (consumido por el servicio destino) |
+| ✅     | `POST` | `/api/v1/auth/sso/token/`              | Genera token SSO para acceder a un servicio (TTL 60s, single-use) |
+| ✅     | `POST` | `/api/v1/auth/sso/validate/`           | Valida token SSO → `{ access_token, refresh_token, user, tenant }` |
 
 ### Registro y autenticación
 
@@ -488,10 +503,10 @@ El admin **configura** el catálogo (qué servicios existen, en qué planes, pre
 
 ## 11. Dependencias y Consideraciones
 
-- **No bloquea** el desarrollo del `prototype-workspace` — son aplicaciones independientes
-- El prototipo del Hub existe en `docs/ui-ux/prototype-hub-client/` con datos mock
-- La implementación backend del SSO es nueva (no existe actualmente)
-- El catálogo de servicios requiere un nuevo modelo en el backend (`Service`, `TenantService`)
+- **No bloquea** el desarrollo del `frontend_workspace` — son aplicaciones independientes
+- El prototipo del Hub existe en `docs/ui-ux/prototype-hub-client/` con datos mock; la app real en `apps/frontend_hub_client/`
+- ✅ **SSO backend ya implementado** en `apps/backend_django/apps/auth_app/sso_views.py` (`SSOTokenView` + `SSOValidateView`) con migration `0004_ssotoken`
+- El catálogo de servicios requiere un nuevo modelo en el backend (`Service`, `TenantService`) — pendiente
 - El Hub es responsabilidad del equipo de producto/cliente; el admin es del equipo de plataforma
 
 ---
@@ -610,9 +625,9 @@ La arquitectura permite añadir nuevos idiomas creando un archivo `src/locales/{
 
 ## 14. Modelos Backend Requeridos
 
-Estos modelos no existen actualmente en el backend y deben implementarse para soportar el Hub.
+Estos modelos deben implementarse para soportar el Hub. Los marcados con ✅ ya existen.
 
-### SSOToken (nueva app: `auth_app` o nueva app `sso`)
+### ✅ SSOToken — ya implementado en `apps/auth_app/models.py` (migration `0004_ssotoken`)
 
 ```python
 class SSOToken(models.Model):
