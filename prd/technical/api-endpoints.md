@@ -149,6 +149,226 @@ Response 200:
 
 ---
 
+### GET /api/v1/auth/profile
+
+**Perfil del usuario autenticado** — usado por session restore en Vista y tras SSO validate en todos los servicios.
+
+```http
+GET /api/v1/auth/profile
+Authorization: Bearer {access_token}
+
+Response 200:
+{
+  "id": "uuid",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "is_staff": false,
+  "mfa_enabled": true,
+  "tenant_plan": "professional",
+  "roles": ["Owner"],
+  "permissions": ["projects.create", "tasks.read", ...]
+}
+```
+
+---
+
+### POST /api/v1/auth/mfa/enable
+
+**Iniciar configuración TOTP** — genera QR code y secret.
+
+```http
+POST /api/v1/auth/mfa/enable
+Authorization: Bearer {access_token}
+
+Response 200:
+{
+  "qr_uri": "otpauth://totp/RBAC:john@example.com?secret=BASE32SECRET&issuer=RBAC",
+  "secret": "BASE32SECRET"
+}
+```
+
+---
+
+### POST /api/v1/auth/mfa/verify-setup
+
+**Verificar código TOTP para activar MFA** — confirma que el usuario ha escaneado correctamente.
+
+```http
+POST /api/v1/auth/mfa/verify-setup
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "totp_code": "123456"
+}
+
+Response 200:
+{
+  "message": "MFA enabled successfully",
+  "recovery_codes": ["XXXX-XXXX", "YYYY-YYYY", ...]  // One-time use backup codes
+}
+
+Response 400:
+{
+  "error": "invalid_code",
+  "message": "Invalid TOTP code"
+}
+```
+
+---
+
+### POST /api/v1/auth/mfa/validate
+
+**Validar código TOTP durante login** — segunda fase del login cuando `mfa_required: true`.
+
+```http
+POST /api/v1/auth/mfa/validate
+Content-Type: application/json
+
+{
+  "mfa_token": "temp-token-for-mfa",  // Del response del login inicial
+  "totp_code": "123456"
+}
+
+Response 200:
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "user": { ... },
+  "tenant": { ... }
+}
+
+Response 400:
+{
+  "error": "invalid_code",
+  "message": "Invalid or expired TOTP code"
+}
+```
+
+---
+
+### POST /api/v1/auth/mfa/disable
+
+**Desactivar MFA** — requiere código TOTP para confirmar.
+
+```http
+POST /api/v1/auth/mfa/disable
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "totp_code": "123456"
+}
+
+Response 200:
+{
+  "message": "MFA disabled successfully"
+}
+```
+
+---
+
+### POST /api/v1/auth/mfa/recovery
+
+**Usar código de recuperación** — alternativa a TOTP cuando se pierde el dispositivo.
+
+```http
+POST /api/v1/auth/mfa/recovery
+Content-Type: application/json
+
+{
+  "mfa_token": "temp-token-for-mfa",
+  "recovery_code": "XXXX-XXXX"
+}
+
+Response 200:
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "user": { ... },
+  "tenant": { ... }
+}
+
+Response 400:
+{
+  "error": "invalid_recovery_code",
+  "message": "Recovery code already used or invalid"
+}
+```
+
+---
+
+### POST /api/v1/auth/sso/token
+
+**Generar SSO token de corta duración** — llamado por el Hub antes de redirigir a un servicio.
+
+```http
+POST /api/v1/auth/sso/token/
+Authorization: Bearer {hub_access_token}
+Content-Type: application/json
+
+{
+  "service": "workspace"  // "workspace" | "vista"
+}
+
+Response 200:
+{
+  "sso_token": "a3f9c2...",    // 64 chars hex, TTL 60s, single-use
+  "redirect_url": "https://workspace.rbacplatform.com/sso/callback?sso_token=a3f9c2...",
+  "expires_in": 60
+}
+
+Response 403:
+{
+  "error": "tenant_inactive",
+  "message": "Tenant service is not active"
+}
+```
+
+---
+
+### POST /api/v1/auth/sso/validate
+
+**Validar SSO token y obtener tokens de sesión** — llamado por el servicio de destino.
+
+```http
+POST /api/v1/auth/sso/validate/
+Content-Type: application/json
+
+{
+  "sso_token": "a3f9c2..."
+}
+
+Response 200:
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "user": {
+    "id": "uuid",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "tenant_plan": "professional",
+    "roles": ["Owner"],
+    "permissions": [...]
+  },
+  "tenant": {
+    "id": "uuid",
+    "name": "Acme Corp",
+    "plan": "professional"
+  }
+}
+
+Response 410:
+{
+  "error": "token_expired_or_used",
+  "message": "SSO token has already been used or has expired"
+}
+```
+
+> **Implementación**: `select_for_update()` + `atomic()` para garantizar single-use. Registra `AuditLog` con acción `sso_login`. El token queda marcado con `used_at` timestamp.
+
+---
+
 ## Admin Endpoints
 
 ### GET /api/v1/admin/users

@@ -223,6 +223,169 @@ El Hub es el punto de entrada unificado para todos los clientes (tenants). Gesti
 - Dashboard en `/(authenticated)/dashboard`
 - Session restore: `useSessionRestore` hook en authenticated layout
 
+## Tipos de Usuario y Control de Acceso
+
+### Quién puede acceder a qué
+
+| Tipo de usuario | Condición en BD | Apps accesibles | Apps bloqueadas |
+|----------------|-----------------|-----------------|-----------------|
+| **Superadmin / Staff** | `user.is_staff = True` | Admin Panel (`frontend_admin`) | Hub, Workspace, Vista (no aplica, son para clientes) |
+| **Cliente / Tenant** | `user.is_staff = False`, tenant activo | Hub Client, Workspace, Vista, Desktop | Admin Panel |
+| **Anónimo** | Sin autenticación | Vistas públicas de Vista únicamente | Todo lo demás |
+
+**Restricción crítica**: Los clientes (`is_staff=False`) NO pueden acceder al Admin Panel en ningún caso. El `ProtectedRoute` de `frontend_admin` verifica `user.is_staff === true` y redirige a `/login` si no se cumple. Intentar loguear a un cliente en el Admin Panel resulta en un error de acceso.
+
+**Plan del tenant vs RBAC (conceptos separados)**:
+- `Tenant.plan` (free/starter/professional/enterprise) → controla **qué features de producto** puede usar el cliente (landing page, portfolio, MFA, etc.)
+- **Roles RBAC** (Owner, Editor, Viewer, roles custom) → controlan **qué acciones** puede hacer el usuario dentro del Workspace (crear proyectos, gestionar contactos, etc.)
+- El plan se lee de `user.tenant_plan` en el `UserSerializer` → propagado a `authStore.currentPlan` en todos los frontends de clientes
+
+### Vistas públicas (sin autenticación)
+
+Solo en `frontend_next_vista`:
+- `/[locale]/tarjeta/[username]` — Tarjeta digital pública
+- `/[locale]/landing/[username]` — Landing page pública
+- `/[locale]/portafolio/[username]` — Portfolio público
+- `/[locale]/portafolio/[username]/[slug]` — Detalle de proyecto
+- `/[locale]/cv/[username]` — CV público
+
+---
+
+## Arquitectura de Autenticación
+
+### Flujo 1: Login directo (Admin Panel + Hub)
+
+```
+POST /api/v1/auth/login { email, password }
+  → Si MFA desactivado: { access_token, refresh_token, user, tenant }
+  → Si MFA activado:    { mfa_required: true, mfa_token }
+
+POST /api/v1/auth/mfa/validate { mfa_token, totp_code }
+  → { access_token, refresh_token, user, tenant }
+
+Admin Panel verifica: user.is_staff === true → accede al dashboard
+Hub verifica: cualquier usuario autenticado con tenant activo
+```
+
+**Registro**: `POST /api/v1/auth/register` crea Tenant + User simultáneamente. Envía email de verificación. Usuario debe verificar email antes de poder loguear.
+
+**Invitación**: Admin invita usuario → email con link → `POST /api/v1/auth/accept-invite` activa cuenta y establece contraseña.
+
+### Flujo 2: SSO Hub → Workspace / Vista
+
+```
+1. Hub: POST /api/v1/auth/sso/token/ { service: "workspace" | "vista" }
+   → { sso_token, redirect_url, expires_in: 60 }
+   Genera: secrets.token_hex(32) → 64 chars opaco, TTL 60s, single-use
+
+2. Browser: window.location.href = redirect_url
+   Workspace: /sso/callback?sso_token=<token>
+   Vista:     /[locale]/sso?sso_token=<token>
+
+3. Destino: POST /api/v1/auth/sso/validate/ { sso_token }
+   → { access_token, refresh_token, user, tenant }
+   Validación: select_for_update() + atomic() → marca used_at → AuditLog
+
+4. Almacenamiento por servicio:
+   Workspace → ws-refreshToken, ws-authUser, ws-authTenant en localStorage
+   Vista     → refreshToken en localStorage + accessToken en cookie (max-age 3600)
+```
+
+**Validaciones del SSO token**: tenant activo, TenantService.status=='active', token no expirado, token no usado. Error 410 si expirado o ya usado.
+
+**Archivos clave**:
+- `apps/backend_django/apps/auth_app/sso_views.py` — SSOTokenView, SSOValidateView
+- `apps/frontend_hub_client/src/features/services/hooks/useSSO.ts`
+- `apps/frontend_hub_client/src/features/services/components/SSOLaunchButton.tsx`
+- `apps/frontend_workspace/src/features/auth/SSOCallbackPage.tsx`
+- `apps/frontend_next_vista/src/app/[locale]/(auth)/sso/page.tsx`
+
+### Flujo 3: Deep Link Desktop (rbacdesktop://)
+
+```
+1. Desktop genera nonce UUID → guarda en localStorage: "desktop-auth-state"
+2. Tauri: invoke('open_hub_login', { stateNonce }) → abre webview del Hub con
+   ?source=desktop&state=<nonce>
+
+3. Usuario se autentica en Hub (login normal)
+
+4. Hub detecta source=desktop en URL params → construye deep link:
+   rbacdesktop://auth?payload=<base64(JSON { access_token, refresh_token, user, tenant })>&state=<nonce>
+
+5. Desktop: pollea invoke('poll_deep_link_url') cada 500ms (timeout: 120s)
+   → Valida state nonce (anti-CSRF)
+   → Decodifica payload base64 → extrae tokens + user + tenant
+   → Almacena en Zustand + localStorage
+   → Navega al dashboard autenticado
+```
+
+**Archivos clave**:
+- `apps/frontend_sidebar_desktop/src/features/auth/useDesktopAuth.ts`
+- `apps/frontend_hub_client/src/features/auth/LoginPage.tsx` (buildDesktopRedirectUrl)
+
+### Session Restore (Vista / Next.js)
+
+El hook `useSessionRestore` se ejecuta en el layout autenticado (`/(authenticated)/layout.tsx`):
+
+```
+1. Si isAuthenticated en Zustand → no hace nada
+2. Si no hay refreshToken en localStorage → redirect a Hub: HUB_URL/login?next=vista
+3. POST /api/v1/auth/token/refresh/ { refresh_token }
+   → { access_token, refresh_token }
+4. GET /api/v1/auth/profile/ → { user, tenant }
+   Setea user en Zustand (incluye tenant_plan)
+5. Cookie: accessToken=<token>; path=/; max-age=3600 (para SSR en Next.js)
+```
+
+---
+
+## Planes y Feature Gates
+
+### Límites de recursos por plan (backend — `utils/plans.py`)
+
+| Recurso | Free | Starter | Professional | Enterprise |
+|---------|------|---------|--------------|------------|
+| max_users | 5 | 10 | 25 | ∞ |
+| max_projects | 2 | 10 | ∞ | ∞ |
+| max_contacts | 25 | 100 | ∞ | ∞ |
+| max_custom_roles | 0 | 3 | 10 | ∞ |
+| max_ssh_keys | 0 | 5 | ∞ | ∞ |
+| storage_gb | 1 | 5 | 20 | ∞ |
+| api_calls_per_month | 1,000 | 10,000 | 100,000 | ∞ |
+| audit_log_days | 7 | 30 | 365 | 2,555 |
+
+Features de backend por plan: `mfa` (professional+), `sso` (enterprise), `webhooks` (professional+), `custom_domain` (enterprise), `audit_logs` (professional+), `sharing` (starter+), `analytics` (starter+)
+
+### Features digitales por plan (frontend — `featureGates.ts` en Vista)
+
+| Feature | Free | Starter | Professional | Enterprise |
+|---------|------|---------|--------------|------------|
+| digitalCard | ✓ | ✓ | ✓ | ✓ |
+| digitalCardQR / VCard | ✗ | ✓ | ✓ | ✓ |
+| landingPage | ✗ | ✓ | ✓ | ✓ |
+| landingCustomCSS | ✗ | ✗ | ✓ | ✓ |
+| portfolio | ✗ | ✗ | ✓ | ✓ |
+| cv | ✓ | ✓ | ✓ | ✓ |
+| cvPDFExport | ✗ | ✓ | ✓ | ✓ |
+| customDomain | ✗ | ✗ | ✗ | ✓ |
+| whiteLabel | ✗ | ✗ | ✗ | ✓ |
+
+**Verificación frontend**: `useFeatureGate('portfolio').canAccess` → boolean basado en `authStore.currentPlan`
+**Verificación backend**: `check_plan_limit(user, 'feature_key', current_count)` → 402 si supera límite
+**`tenant_plan`** se propaga desde `UserSerializer.get_tenant_plan()` → `user.tenant.plan` → todos los auth responses
+
+### Almacenamiento de Auth por App
+
+| App | localStorage keys | Cookie | Acceso |
+|-----|------------------|--------|--------|
+| `frontend_admin` | `refreshToken`, `authUser`, `authTenant` | — | Solo `is_staff=True` |
+| `frontend_hub_client` | `hub-accessToken`, `hub-refreshToken`, `hub-authUser`, `hub-authTenant` | — | Cualquier tenant |
+| `frontend_workspace` | `ws-refreshToken`, `ws-authUser`, `ws-authTenant` | — | Via SSO o login directo |
+| `frontend_next_vista` | `refreshToken` | `accessToken` (max-age 3600) | Via SSO o session restore |
+| `frontend_sidebar_desktop` | localStorage via Tauri store | — | Via deep link del Hub |
+
+---
+
 ## Workflow Rules
 
 - Always run `make test` before committing

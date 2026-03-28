@@ -6,6 +6,8 @@
 
 ## Índice
 - [System Overview](#system-overview)
+- [User Types & Access Control](#user-types--access-control)
+- [Authentication Architecture](#authentication-architecture)
 - [Multi-Tenancy Architecture](#multi-tenancy-architecture)
 - [SSR Architecture for Digital Services](#ssr-architecture-for-digital-services)
 - [Security](#security)
@@ -19,50 +21,178 @@
 ### High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend Layer                        │
-├───────────────────────┬─────────────────────────────────┤
-│  Frontend Admin       │    Frontend Cliente             │
-│  (React + Vite + TS)  │    (React + Vite + TS)          │
-│  - RBAC Management    │    - Calendar, Tasks            │
-│  - User Management    │    - Notifications, Files       │
-│  - Billing            │    - Projects, Dashboard        │
-│  - Audit Logs         │    - User Profile               │
-└───────────────────────┴─────────────────────────────────┘
-                         │
-                         │ HTTPS/REST API
-                         │
-┌────────────────────────▼─────────────────────────────────┐
-│                   API Gateway / Load Balancer            │
-│                    (Nginx / AWS ALB)                     │
-└───────────────────────┬──────────────────────────────────┘
-                        │
-┌───────────────────────▼──────────────────────────────────┐
-│              Backend API (Django REST Framework)         │
-├──────────────────────────────────────────────────────────┤
-│  /api/v1/admin/        │  /api/v1/app/     │ /api/v1/auth/ │
-│  - Tenants             │  - Calendar       │ - Login       │
-│  - Users               │  - Tasks          │ - Register    │
-│  - Roles               │  - Notifications  │ - Refresh     │
-│  - Permissions         │  - Files          │ - MFA         │
-│  - Subscriptions       │  - Projects       │               │
-│  - Audit Logs          │  - Dashboard      │               │
-└───────────────────────┬──────────────────────────────────┘
-                        │
-        ┌───────────────┴──────────────┐
-        │                              │
-┌───────▼────────┐             ┌──────▼───────┐
-│   PostgreSQL   │             │    Redis     │
-│  (Primary DB)  │             │  (Cache +    │
-│  - Multi-tenant│             │   Sessions)  │
-│  - RLS enabled │             │              │
-└────────────────┘             └──────────────┘
-        │
-┌───────▼────────┐
-│  File Storage  │
-│  (S3 / MinIO)  │
-└────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              Frontend Layer                                   │
+├──────────────┬──────────────┬──────────────┬───────────────┬─────────────────┤
+│ Admin Panel  │  Hub Client  │  Workspace   │     Vista     │    Desktop      │
+│ React+Vite   │  React+Vite  │  React+Vite  │   Next.js 15  │   Tauri v2      │
+│ :5173        │  :5175       │              │  App Router   │   (AppBar)      │
+│ Staff only   │  Tenant entry│  SSO from Hub│  SSO from Hub │  Deep link Hub  │
+│ RBAC/Billing │  SSO+Services│  Productivity│  Digital svcs │  Offline sidebar│
+└──────┬───────┴──────┬───────┴──────┬───────┴───────┬───────┴────────┬────────┘
+       │              │              │               │                │
+       └──────────────┴──────────────┴───────────────┴────────────────┘
+                                     │ HTTPS/REST API
+┌────────────────────────────────────▼──────────────────────────────────────────┐
+│                         API Gateway / Load Balancer (Nginx / AWS ALB)         │
+└────────────────────────────────────┬──────────────────────────────────────────┘
+                                     │
+┌────────────────────────────────────▼──────────────────────────────────────────┐
+│                      Backend API (Django REST Framework)                       │
+├──────────────────────┬──────────────────────┬─────────────────────────────────┤
+│  /api/v1/auth/       │  /api/v1/admin/      │  /api/v1/app/                   │
+│  - login/register    │  - users, roles      │  - projects, tasks, calendar    │
+│  - refresh, profile  │  - permissions       │  - notes, contacts, bookmarks   │
+│  - mfa enable/verify │  - subscriptions     │  - snippets, env-vars, ssh-keys │
+│  - sso/token         │  - billing           │  - digital-services (tarjeta,   │
+│  - sso/validate      │  - audit-logs        │    landing, portfolio, cv)      │
+│  - google OAuth      │  - clients           │  - services/active (Hub catalog)│
+│                      │  - promotions        │  - notifications (Hub)          │
+└──────────────────────┴──────────────────────┴─────────────────────────────────┘
+                                     │
+                    ┌────────────────┴───────────────┐
+                    │                                │
+          ┌─────────▼──────────┐           ┌────────▼──────────┐
+          │    PostgreSQL      │           │      Redis        │
+          │  (Primary DB)      │           │  (Cache+Sessions) │
+          │  - Multi-tenant    │           │  - Analytics 5min │
+          │  - RLS isolation   │           │  - SSO tokens     │
+          └─────────┬──────────┘           └───────────────────┘
+                    │
+          ┌─────────▼──────────┐
+          │   File Storage     │
+          │   (S3 / MinIO)     │
+          └────────────────────┘
 ```
+
+---
+
+## User Types & Access Control
+
+| Tipo | Condición | Apps accesibles | Apps bloqueadas |
+|------|-----------|-----------------|-----------------|
+| **Superadmin / Staff** | `user.is_staff = True` | Admin Panel (`frontend_admin`) | Hub, Workspace, Vista, Desktop |
+| **Cliente / Tenant** | `user.is_staff = False` + tenant activo | Hub, Workspace, Vista, Desktop | Admin Panel |
+| **Anónimo** | Sin autenticación | Vistas públicas de Vista únicamente | Todo lo demás |
+
+**Restricción crítica**: El `ProtectedRoute` de `frontend_admin` verifica `user.is_staff === true`. Cualquier usuario con `is_staff=False` es redirigido a `/login`.
+
+**Plan vs RBAC — dos conceptos separados**:
+- `Tenant.plan` (free/starter/professional/enterprise) → controla qué features de producto están disponibles (landing, portfolio, MFA, SSO, custom domain)
+- RBAC roles (Owner, Editor, Viewer) → controlan qué acciones puede hacer el usuario dentro del Workspace
+
+### Vistas públicas (sin auth, solo en Vista/Next.js)
+
+| Ruta | Contenido |
+|------|-----------|
+| `/[locale]/tarjeta/[username]` | Tarjeta digital pública |
+| `/[locale]/landing/[username]` | Landing page pública |
+| `/[locale]/portafolio/[username]` | Portfolio grid público |
+| `/[locale]/portafolio/[username]/[slug]` | Detalle de proyecto |
+| `/[locale]/cv/[username]` | CV público |
+
+---
+
+## Authentication Architecture
+
+### Flujo 1 — Login directo (Admin Panel y Hub)
+
+```
+Cliente                          Backend
+  │                                 │
+  ├── POST /auth/login ────────────►│
+  │   { email, password }           │
+  │                                 │
+  │   [Sin MFA]                     │
+  │◄── { access_token,              │
+  │      refresh_token,             │
+  │      user { tenant_plan },      │
+  │      tenant } ─────────────────┤
+  │                                 │
+  │   [Con MFA]                     │
+  │◄── { mfa_required: true,        │
+  │      mfa_token } ──────────────┤
+  │                                 │
+  ├── POST /auth/mfa/validate ─────►│
+  │   { mfa_token, totp_code }      │
+  │◄── { access_token, ... } ──────┤
+
+Admin Panel: verifica user.is_staff === true → redirige a /login si false
+Hub: acepta cualquier usuario con tenant activo
+```
+
+### Flujo 2 — SSO Hub → Servicio (Workspace / Vista)
+
+```
+Hub                          Backend                   Workspace / Vista
+  │                              │                            │
+  ├─ POST /auth/sso/token/ ─────►│                            │
+  │  { service: "workspace" }    │ Genera token 64 chars      │
+  │◄── { sso_token,              │ TTL: 60s, single-use       │
+  │     redirect_url } ─────────┤ Requiere TenantService      │
+  │                              │ activo                     │
+  ├─ window.location.href ───────────────────────────────────►│
+  │  redirect_url?sso_token=X    │                            │
+  │                              │                            │
+  │                              │◄── POST /auth/sso/validate/┤
+  │                              │    { sso_token }           │
+  │                              │ select_for_update()        │
+  │                              │ atomic(), marca used_at    │
+  │                              │ AuditLog: sso_login        │
+  │                              ├──► { tokens, user,         │
+  │                              │     tenant } ─────────────►│
+  │                              │                            ├─ Almacena tokens
+  │                              │                            ├─ Workspace: ws-* keys
+  │                              │                            ├─ Vista: refreshToken +
+  │                              │                            │  accessToken cookie
+  │                              │                            └─ Navega a /dashboard
+```
+
+### Flujo 3 — Deep Link Desktop (rbacdesktop://)
+
+```
+Desktop App                  Hub Client Portal              OS Protocol Handler
+  │                              │                                │
+  ├─ Genera nonce UUID           │                               │
+  ├─ Guarda en localStorage      │                               │
+  ├─ Abre webview ─────────────►│                               │
+  │  ?source=desktop&state=nonce │                               │
+  │                              ├─ Usuario se autentica         │
+  │                              ├─ buildDesktopRedirectUrl()    │
+  │                              └─ rbacdesktop://auth?          │
+  │                                 payload=base64&state=nonce ─►│
+  │◄── poll_deep_link_url()                                      │
+  │    cada 500ms (timeout 120s)  │                              │
+  ├─ Recibe deep link             │                              │
+  ├─ Valida nonce (anti-CSRF)     │                              │
+  ├─ Decodifica payload (tokens + user + tenant)                 │
+  └─ Navega al dashboard         │                              │
+```
+
+### Flujo 4 — Session Restore (Vista / Next.js)
+
+`useSessionRestore` hook ejecutado en el authenticated layout en cada carga de página:
+
+```
+1. ¿isAuthenticated en Zustand? → continúa sin hacer nada
+2. ¿refreshToken en localStorage? → No → redirect a Hub (/login?next=vista)
+3. POST /auth/token/refresh/ { refresh_token }
+   → { access_token, refresh_token }
+4. GET /auth/profile/
+   → { user, tenant_plan, roles, permissions }
+5. Almacena en Zustand store
+6. Cookie: accessToken=...; max-age=3600 (para Server Components Next.js)
+```
+
+### Auth Storage por App
+
+| App | localStorage keys | Cookie | Notas |
+|-----|------------------|--------|-------|
+| `frontend_admin` | `refreshToken`, `authUser`, `authTenant` | — | Solo staff |
+| `frontend_hub_client` | `hub-accessToken`, `hub-refreshToken`, `hub-authUser`, `hub-authTenant` | — | Prefijo `hub-` |
+| `frontend_workspace` | `ws-refreshToken`, `ws-authUser`, `ws-authTenant` | — | Prefijo `ws-` |
+| `frontend_next_vista` | `refreshToken` | `accessToken` (max-age 3600) | Cookie para SSR Next.js |
+| `frontend_sidebar_desktop` | Tauri localStorage store | — | Recibe tokens del Hub via deep link |
 
 ---
 

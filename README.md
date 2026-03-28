@@ -1,144 +1,257 @@
-# proy_sidebar_panel
+# RBAC Subscription Platform
 
-Proyecto de desarrollo de software con soporte avanzado para agentes de IA (Claude Code), documentacion de producto y arquitectura multi-app.
+SaaS multi-tenant con control de acceso basado en roles (RBAC), billing por suscripción, y servicios digitales públicos (tarjeta digital, landing page, portfolio, CV). El sistema está compuesto por un backend Django REST y cinco frontends independientes, cada uno con un propósito específico y su propio flujo de autenticación.
+
+---
+
+## Apps del Sistema
+
+| App | Ruta | Tech | Puerto | Acceso |
+|-----|------|------|--------|--------|
+| **Backend API** | `apps/backend_django/` | Django + DRF + PostgreSQL + Redis | 8000 | — |
+| **Admin Panel** | `apps/frontend_admin/` | React + Vite + TypeScript + Tailwind | 5173 | Solo staff (`is_staff=True`) |
+| **Hub Client Portal** | `apps/frontend_hub_client/` | React + Vite + TypeScript + Tailwind | 5175 | Clientes (cualquier tenant) |
+| **Workspace** | `apps/frontend_workspace/` | React + Vite + TypeScript + Tailwind | — | Clientes vía SSO desde Hub |
+| **Vista (Digital Services)** | `apps/frontend_next_vista/` | Next.js 15 App Router + Tailwind | — | Clientes vía SSO + público sin auth |
+| **Desktop** | `apps/frontend_sidebar_desktop/` | Tauri v2 + React + TypeScript | — | Clientes vía deep link del Hub |
+
+---
+
+## Tipos de Usuario
+
+### Staff / Superadmin
+- `user.is_staff = True`
+- Accede **solo** al Admin Panel (`frontend_admin`)
+- Gestiona usuarios, roles, permisos, billing, auditoría, clientes, promociones
+
+### Cliente / Tenant
+- `user.is_staff = False`, tenant activo en BD
+- Accede a Hub, Workspace, Vista, Desktop
+- **NUNCA** puede acceder al Admin Panel
+- Su plan (`Tenant.plan`) controla qué features puede usar:
+  - `free` → tarjeta digital, CV básico
+  - `starter` → + landing page, analytics, QR/vCard
+  - `professional` → + portfolio, MFA, CSS personalizado, webhooks
+  - `enterprise` → + SSO/SAML, dominio personalizado, white-label, soporte 24/7
+
+### Anónimo
+- Sin autenticación
+- Solo puede ver las vistas públicas de Vista: tarjeta, landing, portfolio, CV
+
+---
+
+## Arquitectura de Autenticación
+
+### Flujo 1 — Login directo (Admin Panel y Hub)
+
+```
+POST /api/v1/auth/login { email, password }
+  └─ Sin MFA: { access_token, refresh_token, user, tenant }
+  └─ Con MFA: { mfa_required: true, mfa_token }
+              POST /api/v1/auth/mfa/validate → tokens
+
+Admin Panel: acepta solo si user.is_staff === true
+Hub: acepta cualquier usuario con tenant activo
+```
+
+### Flujo 2 — SSO Hub → Workspace / Vista
+
+```
+Hub                          Backend                        Workspace / Vista
+ │                              │                                │
+ ├─ POST /auth/sso/token/ ────► │ Genera token 64 chars         │
+ │  { service: "workspace" }    │ TTL: 60s, single-use          │
+ │ ◄── { sso_token, redirect } ─┤                               │
+ │                              │                               │
+ ├─ window.location.href ──────────────────────────────────────►│
+ │  redirect_url?sso_token=X    │                               │
+ │                              │                               │
+ │                              │ ◄── POST /auth/sso/validate/ ─┤
+ │                              │     { sso_token }             │
+ │                              │ ──► { tokens, user, tenant } ─┤
+ │                              │    (atomic, marca used_at)    │
+ │                              │                               ├─ Navega a /dashboard
+```
+
+### Flujo 3 — Deep Link Desktop (rbacdesktop://)
+
+```
+Desktop App                  Hub Client Portal              Sistema Operativo
+ │                              │                                │
+ ├─ Genera nonce UUID           │                               │
+ ├─ open_hub_login(nonce) ─────►│                               │
+ │  ?source=desktop&state=nonce │                               │
+ │                              ├─ Usuario se autentica         │
+ │                              ├─ buildDesktopRedirectUrl()    │
+ │                              └─ rbacdesktop://auth?          │
+ │                                 payload=base64&state=nonce ─►│
+ │ ◄── poll_deep_link_url()                                     │
+ │     cada 500ms (timeout 120s)                                │
+ ├─ Valida nonce anti-CSRF      │                               │
+ ├─ Decodifica payload (tokens + user + tenant)                 │
+ └─ Navega al dashboard         │                               │
+```
+
+### Flujo 4 — Session Restore (Vista / Next.js)
+
+El layout autenticado ejecuta `useSessionRestore` en cada carga:
+
+```
+1. ¿isAuthenticated en Zustand? → continúa
+2. ¿refreshToken en localStorage? No → redirect Hub/login?next=vista
+3. POST /auth/token/refresh/ → nuevos tokens
+4. GET /auth/profile/ → user (con tenant_plan para feature gates)
+5. Cookie: accessToken=...; max-age=3600 (para Server Components Next.js)
+```
+
+---
+
+## Backend — API Endpoints Principales
+
+```
+/api/v1/auth/
+  POST /login              → Autenticación JWT
+  POST /register           → Crear tenant + usuario
+  POST /refresh-token      → Renovar tokens
+  GET  /profile            → Perfil del usuario autenticado
+  POST /sso/token/         → Generar token SSO (requiere auth)
+  POST /sso/validate/      → Validar token SSO (server-to-server)
+  POST /mfa/enable         → Configurar TOTP
+  POST /mfa/validate       → Validar código TOTP en login
+  GET  /google/            → OAuth Google init
+
+/api/v1/admin/             → Solo staff (HasPermission requerido)
+  users/, roles/, permissions/, audit-logs/, billing/, clients/, promotions/
+
+/api/v1/app/               → Usuarios autenticados (clientes)
+  projects/, tasks/, calendar/, notes/, contacts/, snippets/
+  digital/tarjeta/, digital/portafolio/, digital/landing/, digital/cv/
+  services/, services/active/
+
+/api/v1/public/            → Sin autenticación
+  profiles/[username]/, portafolio/[username]/, landing/[username]/, cv/[username]/
+```
+
+---
+
+## Vista (frontend_next_vista) — Rutas
+
+### Área pública (sin auth)
+```
+/[locale]/tarjeta/[username]              → Tarjeta digital
+/[locale]/landing/[username]             → Landing page
+/[locale]/portafolio/[username]          → Portfolio grid
+/[locale]/portafolio/[username]/[slug]   → Detalle de proyecto
+/[locale]/cv/[username]                  → CV
+```
+
+### Área autenticada (requiere session restore)
+```
+/[locale]/dashboard                      → Panel principal
+/[locale]/tarjeta                        → Editor tarjeta digital
+/[locale]/landing                        → Builder landing page
+/[locale]/portafolio                     → Gestor portfolio
+/[locale]/cv                             → Editor CV
+```
+
+---
+
+## Workspace (frontend_workspace) — Rutas
+
+```
+Públicas:  /login, /forgot-password, /reset-password, /sso/callback
+Protegidas: /dashboard, /tasks, /calendar, /notes, /contacts, /bookmarks,
+            /snippets, /projects, /env-vars, /ssh-keys, /ssl-certs, /forms,
+            /shared, /audit, /reports, /notifications, /support, /settings
+```
+
+---
+
+## Comandos de Desarrollo
+
+### Backend (desde `apps/backend_django/`)
+```bash
+make dev             # Iniciar todos los contenedores (django+postgres+redis+celery)
+make down            # Detener contenedores
+make migrate         # Aplicar migraciones
+make makemigrations  # Crear nuevas migraciones
+make seed-permissions  # Cargar permisos y roles del sistema (ejecutar tras migrate)
+make seed-data       # Generar datos de ejemplo (tenants, usuarios)
+make test            # Ejecutar suite de tests (pytest)
+make lint            # Ruff linter
+make format          # Auto-formatear con ruff
+make typecheck       # mypy
+make shell           # Django shell_plus
+make superuser       # Crear superusuario
+```
+
+### Frontends (desde cada directorio)
+```bash
+npm run dev          # Servidor de desarrollo
+npm run build        # Build de producción
+npm run typecheck    # TypeScript typecheck
+npm test             # Tests (Vitest)
+```
+
+---
 
 ## Estructura del Proyecto
 
 ```
 .
 ├── apps/
-│   └── backend_django             # App backend Django (en preparacion)
+│   ├── backend_django/        # API Django REST
+│   │   ├── apps/              # auth_app, rbac, tenants, subscriptions, ...
+│   │   ├── config/            # Settings, URLs, Celery
+│   │   ├── core/              # BaseModel, AuditMixin, TenantMixin
+│   │   └── utils/             # plans.py, encryption.py, cache.py
+│   ├── frontend_admin/        # Admin Panel (React+Vite)
+│   ├── frontend_hub_client/   # Hub Portal (React+Vite)
+│   ├── frontend_workspace/    # Workspace (React+Vite)
+│   ├── frontend_next_vista/   # Vista Digital (Next.js 15)
+│   └── frontend_sidebar_desktop/ # Desktop (Tauri v2)
 │
-├── docs/                          # Documentacion tecnica
-│   ├── adr/                       #   Architecture Decision Records
-│   │   ├── 001-project-structure.md
-│   │   └── 002-auto-documentation-hook.md
-│   ├── api/                       #   Referencia de APIs
-│   ├── architecture/              #   Diseno del sistema
-│   │   ├── system-overview.md
-│   │   ├── frontend-architecture.md
-│   │   ├── data-architecture.md
-│   │   ├── infrastructure.md
-│   │   ├── multi-tenancy.md
-│   │   ├── rbac.md
-│   │   └── security.md
-│   ├── diagrams/                  #   Diagramas de arquitectura
-│   ├── guides/                    #   Guias de desarrollo
-│   │   ├── getting-started.md
-│   │   ├── ai-workflow.md
-│   │   └── project-structure.md
-│   ├── runbooks/                  #   Runbooks operacionales
-│   └── ui-ux/                    #   Diseno UI/UX y prototipos
-│       ├── prototype-admin/      #     Panel administrativo (roles, usuarios, billing) :3000
-│       ├── prototype-hub-client/        #     Portal central del cliente (registro, suscripción, SSO) :3003
-│       ├── prototype-workspace/  #     App de productividad independiente (acceso via SSO) :3001
-│       ├── prototype-desktop/    #     App de escritorio (Tauri v2)
-│       └── prototype-vista/      #     Servicios digitales publicos (Next.js)
+├── docs/
+│   ├── adr/                   # Architecture Decision Records
+│   ├── api/                   # Documentación de APIs
+│   ├── architecture/          # system-overview, rbac, security, multi-tenancy
+│   └── ui-ux/                 # Prototipos (admin:3000, hub:3003, workspace:3001)
 │
-├── prd/                           # Product Requirements Documents
-│   ├── features/                  #   PRDs por feature
-│   │   ├── billing.md
-│   │   ├── analytics.md
-│   │   ├── desktop-app.md
-│   │   ├── projects.md
-│   │   └── ...
-│   ├── requirements/              #   Requisitos del sistema
-│   │   ├── functional-requirements.md
-│   │   ├── use-cases.md
-│   │   └── user-stories.md
-│   └── technical/                 #   Decisiones tecnicas
-│       ├── architecture.md
-│       ├── data-models.md
-│       ├── api-endpoints.md
-│       ├── rbac-roles-permissions.md
-│       └── implementation-timeline.md
+├── prd/                       # Product Requirement Documents
+├── plans/                     # Planes de implementación temporales
+├── reports/                   # Reportes generados
 │
-├── plans/                         # Planes de implementacion
-├── reports/                       # Reportes generados
-├── util/
-│   └── capturas/                  # Capturas de pantalla
+├── .claude/
+│   ├── agents/                # 13 agentes especializados
+│   ├── commands/              # create-prd, generate-report, onboard, pr-review
+│   ├── hooks/                 # detect-doc-changes, sync-claude-md, task-alert
+│   ├── rules/                 # agent-orchestration, code-style, security, ai-development
+│   └── skills/                # 42 skills (django, drf, react, nextjs, tauri, ui)
 │
-├── .claude/                       # Configuracion Claude Code
-│   ├── agents/                    #   13 agentes especializados
-│   │   ├── api-documenter.md
-│   │   ├── code-reviewer.md
-│   │   ├── database-optimizer.md
-│   │   ├── migration-manager.md
-│   │   ├── security-auditor.md
-│   │   ├── tauri-desktop-builder.md
-│   │   ├── test-generator.md
-│   │   └── ...
-│   ├── commands/                  #   Comandos custom
-│   │   ├── create-prd
-│   │   ├── generate-report
-│   │   ├── onboard
-│   │   └── pr-review
-│   ├── hooks/                     #   Automatizacion de eventos
-│   │   ├── detect-doc-changes.sh
-│   │   ├── sync-claude-md.sh
-│   │   └── task-finished-alert.py
-│   ├── rules/                     #   Reglas de desarrollo
-│   │   ├── ai-development.md
-│   │   ├── code-style.md
-│   │   └── security.md
-│   └── skills/                    #   42 skills especializados
-│       ├── django-db-models/
-│       ├── drf-*/                 #   Django REST Framework
-│       ├── react-*/               #   React + TypeScript
-│       ├── nextjs-*/              #   Next.js
-│       ├── tauri-*/               #   Tauri desktop
-│       └── ui-*/                  #   UI/UX components
-│
-├── .github/workflows/             # CI/CD pipelines
-│
-├── CLAUDE.md                      # Configuracion principal del agente
-├── AGENTS.md                      # Estandar abierto de agentes
-├── pyproject.toml                 # Dependencias y configuracion de herramientas
-├── Makefile                       # Automatizacion de tareas
-├── Dockerfile                     # Definicion del contenedor
-└── docker-compose.yml             # Orquestacion de servicios
+├── CLAUDE.md                  # Instrucciones para Claude Code
+├── AGENTS.md                  # Configuración de agentes (open standard)
+└── README.md                  # Este archivo
 ```
 
-## Comandos de Desarrollo
+---
 
-```bash
-make help          # Ver todos los comandos disponibles
-make dev           # Iniciar servidor de desarrollo
-make test          # Ejecutar suite de tests
-make lint          # Ejecutar linters (ruff)
-make format        # Formatear codigo
-make typecheck     # Verificar tipos (mypy)
-make docker-up     # Iniciar servicios Docker
-make docker-down   # Detener servicios Docker
-```
-
-## Agentes Disponibles
-
-El proyecto incluye agentes especializados de Claude Code para tareas comunes:
-
-| Agente                  | Descripcion                          |
-| ----------------------- | ------------------------------------ |
-| `migration-manager`     | Gestiona migraciones Django          |
-| `database-optimizer`    | Optimiza queries y sugiere indices   |
-| `code-reviewer`         | Revision de calidad y seguridad      |
-| `security-auditor`      | Auditoria de vulnerabilidades        |
-| `test-generator`        | Genera tests unitarios e integracion |
-| `api-documenter`        | Genera documentacion OpenAPI         |
-| `tauri-desktop-builder` | Builds de apps desktop con Tauri v2  |
-| `ui-ux-designer`        | Diseno de interfaces y componentes   |
-
-## Documentacion
+## Documentación
 
 - [Arquitectura del Sistema](docs/architecture/system-overview.md)
-- [Guia de Inicio](docs/guides/getting-started.md)
-- [Flujo de Trabajo con IA](docs/guides/ai-workflow.md)
+- [RBAC — Roles y Permisos](docs/architecture/rbac.md)
+- [Seguridad](docs/architecture/security.md)
+- [Multi-tenancy](docs/architecture/multi-tenancy.md)
+- [Guía de Inicio](docs/guides/getting-started.md)
 - [ADRs](docs/adr/)
-- [UI/UX y Prototipos](docs/ui-ux/)
+- [PRDs](prd/features/)
+
+---
 
 ## Contribuir
 
 1. Crear rama desde `main`
-2. Escribir un PRD en `prd/features/` para features significativos
+2. Para features significativas: crear PRD en `prd/features/` primero
 3. Seguir las reglas en `.claude/rules/`
-4. Verificar que `make test && make lint` pasa
-5. Abrir un pull request
+4. Verificar que `make test && make lint` pasa antes del PR
+5. Documentar decisiones arquitectónicas en `docs/adr/`
+6. Nunca commitear secrets — usar `.env` (ver `.env.example`)

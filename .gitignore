@@ -116,3 +116,5 @@ logs/
 util/
 
 apps/
+
+.codex/

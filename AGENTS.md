@@ -4,97 +4,185 @@ This file follows the [AGENTS.md](https://agents.md/) open standard for guiding 
 
 ## Project Context
 
-- **Name**: proy_temp
-- **Description**: AI/ML Development Project
-- **Primary Language**: Python 3.11+
-- **Framework**: FastAPI + LLM integrations
+- **Name**: RBAC Subscription Platform
+- **Description**: SaaS multi-tenant con control de acceso basado en roles (RBAC), billing por suscripción y servicios digitales públicos (tarjeta, portfolio, landing, CV)
+- **Primary Language**: Python 3.11+ (backend), TypeScript (frontends)
+- **Backend Framework**: Django REST Framework + PostgreSQL + Redis + Celery
+- **Frontend Stack**: React + Vite (Admin, Hub, Workspace), Next.js 15 App Router (Vista), Tauri v2 (Desktop)
+
+---
+
+## Apps del Sistema
+
+| App | Ruta | Framework | Puerto dev | Propósito |
+|-----|------|-----------|-----------|-----------|
+| **Backend API** | `apps/backend_django/` | Django + DRF | 8000 | API REST central, autenticación, RBAC, billing |
+| **Admin Panel** | `apps/frontend_admin/` | React + Vite | 5173 | Gestión interna: usuarios, roles, billing, auditoría |
+| **Hub Client Portal** | `apps/frontend_hub_client/` | React + Vite | 5175 | Portal del cliente: servicios, suscripción, SSO |
+| **Workspace** | `apps/frontend_workspace/` | React + Vite | — | App de productividad: proyectos, tareas, notas, etc. |
+| **Vista (Digital Services)** | `apps/frontend_next_vista/` | Next.js 15 | — | Editor + vista pública: tarjeta, landing, portfolio, CV |
+| **Desktop** | `apps/frontend_sidebar_desktop/` | Tauri v2 + React | — | Sidebar de escritorio (Windows AppBar), acceso offline |
+
+---
+
+## Tipos de Usuario y Acceso
+
+### Dos tipos de usuario completamente separados
+
+| Tipo | Condición | Puede acceder a |
+|------|-----------|-----------------|
+| **Staff / Superadmin** | `user.is_staff = True` | Solo Admin Panel (`frontend_admin`) |
+| **Cliente / Tenant** | `user.is_staff = False` + tenant activo | Hub, Workspace, Vista, Desktop |
+| **Anónimo** | Sin auth | Vistas públicas de Vista únicamente |
+
+**Regla crítica**: Los clientes NUNCA pueden acceder al Admin Panel. El `ProtectedRoute` de `frontend_admin` bloquea a cualquier usuario con `is_staff=False`.
+
+**Dos conceptos separados**:
+- `Tenant.plan` (free/starter/professional/enterprise) → controla features de producto
+- RBAC roles (Owner, Editor, Viewer) → controlan acciones dentro del Workspace
+
+### Vistas públicas (sin auth, solo en Vista/Next.js)
+- `/[locale]/tarjeta/[username]` — Tarjeta digital
+- `/[locale]/landing/[username]` — Landing page
+- `/[locale]/portafolio/[username]` — Portfolio + detalle de proyecto
+- `/[locale]/cv/[username]` — CV
+
+---
+
+## Arquitectura de Autenticación
+
+### Flujo 1: Login directo
+```
+POST /api/v1/auth/login { email, password }
+  → { access_token, refresh_token, user { ..., tenant_plan }, tenant }
+  → Si MFA: { mfa_required: true, mfa_token } → POST /auth/mfa/validate
+
+Admin Panel: verifica user.is_staff === true
+Hub: acepta cualquier usuario autenticado con tenant activo
+```
+
+### Flujo 2: SSO Hub → Workspace / Vista
+```
+1. Hub: POST /api/v1/auth/sso/token/ { service: "workspace"|"vista" }
+   → { sso_token (64 chars, TTL 60s, single-use), redirect_url }
+
+2. Browser redirige al servicio: /sso/callback?sso_token=<token>
+
+3. Servicio: POST /api/v1/auth/sso/validate/ { sso_token }
+   → { access_token, refresh_token, user, tenant }
+   (atómico, single-use, registra AuditLog)
+
+4. Servicio almacena tokens y navega al dashboard
+   Workspace: ws-refreshToken/ws-authUser/ws-authTenant en localStorage
+   Vista:     refreshToken en localStorage + accessToken en cookie
+```
+
+### Flujo 3: Deep Link Desktop (rbacdesktop://)
+```
+1. Desktop genera nonce UUID → abre webview del Hub: ?source=desktop&state=<nonce>
+2. Usuario se autentica en Hub
+3. Hub construye: rbacdesktop://auth?payload=<base64(tokens+user+tenant)>&state=<nonce>
+4. Desktop pollea poll_deep_link_url cada 500ms (timeout 120s)
+   → Valida nonce → decodifica payload → almacena tokens → navega al dashboard
+```
+
+### Session Restore (Vista/Next.js)
+```
+useSessionRestore en authenticated layout:
+1. Si no hay token → redirect a Hub (/login?next=vista)
+2. POST /auth/token/refresh/ → nuevo access_token
+3. GET /auth/profile/ → user (con tenant_plan)
+4. Almacena en Zustand + cookie para SSR
+```
+
+---
+
+## Planes y Límites
+
+| Recurso | Free | Starter | Professional | Enterprise |
+|---------|------|---------|--------------|------------|
+| max_users | 5 | 10 | 25 | ∞ |
+| max_projects | 2 | 10 | ∞ | ∞ |
+| storage_gb | 1 | 5 | 20 | ∞ |
+| api_calls/mes | 1k | 10k | 100k | ∞ |
+| audit_log_days | 7 | 30 | 365 | 2,555 |
+| MFA | ✗ | ✗ | ✓ | ✓ |
+| SSO | ✗ | ✗ | ✗ | ✓ |
+| custom_domain | ✗ | ✗ | ✗ | ✓ |
+| portfolio | ✗ | ✗ | ✓ | ✓ |
+| landingPage | ✗ | ✓ | ✓ | ✓ |
+
+---
 
 ## Coding Standards
 
-- Use type hints for all function signatures
-- Prefer Pydantic models or dataclasses over raw dicts
-- Use async/await for I/O-bound operations
-- Keep functions under 50 lines
-- Prefer composition over inheritance
-- Define prompts in config files, not inline
+- Type hints en todas las firmas de función (Python y TypeScript)
+- Prefer Pydantic models / DRF Serializers sobre raw dicts
+- Use async/await para operaciones I/O
+- Funciones < 50 líneas; lógica de negocio en services/managers
+- Prefer composition sobre inheritance
+- `select_related`/`prefetch_related` para evitar N+1 queries
+- Secrets siempre en variables de entorno, nunca hardcodeados
+
+---
 
 ## Directory Structure
 
 ```
-├── CLAUDE.md              # Claude Code project memory
-├── AGENTS.md              # Open standard agent config (this file)
-├── README.md              # Project documentation
-├── pyproject.toml         # Dependencies and tool config
-├── Makefile               # Task automation
-├── Dockerfile             # Container definition
-├── docker-compose.yml     # Service orchestration
-├── .env.example           # Environment variable template
-├── .editorconfig          # Editor consistency
-├── .pre-commit-config.yaml # Git hooks for code quality
-├── .gitignore             # Git ignore rules
+├── AGENTS.md               # Open standard agent config (this file)
+├── CLAUDE.md               # Claude Code project instructions
+├── README.md               # Project documentation
+├── Makefile                # Task automation
 │
-├── src/                   # Source code
-│   ├── agents/            #   AI agent definitions
-│   ├── llm/               #   LLM provider clients
-│   ├── prompts/           #   Prompt engineering
-│   ├── tools/             #   Agent tools
-│   ├── pipelines/         #   Data/AI pipelines
-│   ├── api/               #   REST endpoints
-│   └── utils/             #   Shared utilities
+├── apps/
+│   ├── backend_django/     # Django API (puerto 8000)
+│   │   ├── apps/           # Django applications (auth, rbac, tenants, subscriptions, ...)
+│   │   ├── config/         # Settings (base/dev/prod), URLs, Celery
+│   │   ├── core/           # BaseModel, AuditMixin, TenantMixin
+│   │   └── utils/          # plans.py, encryption.py, cache.py
+│   ├── frontend_admin/     # React+Vite Admin Panel (puerto 5173)
+│   ├── frontend_hub_client/ # React+Vite Hub Portal (puerto 5175)
+│   ├── frontend_workspace/ # React+Vite Workspace
+│   ├── frontend_next_vista/ # Next.js 15 Vista Digital Services
+│   └── frontend_sidebar_desktop/ # Tauri v2 Desktop App
 │
-├── tests/                 # Test suite
-├── config/                # Configuration files
-│   ├── model_config.yaml  #   Model settings
-│   ├── prompt_templates.yaml # Prompt patterns
-│   └── logging_config.yaml   # Logging setup
+├── docs/
+│   ├── adr/                # Architecture Decision Records
+│   ├── api/                # API documentation
+│   ├── architecture/       # System design docs
+│   └── ui-ux/             # Prototypes (admin :3000, hub :3003, workspace :3001, vista)
 │
-├── data/                  # Data artifacts (gitignored)
-│   ├── raw/               #   Raw input data
-│   ├── processed/         #   Processed data
-│   ├── cache/             #   API response cache
-│   └── embeddings/        #   Vector embeddings
+├── prd/                    # Product Requirement Documents
+├── plans/                  # Implementation plans (temporary)
+├── reports/                # Generated reports
 │
-├── notebooks/             # Jupyter notebooks for experimentation
-├── schemas/               # JSON schemas and data models
-├── scripts/               # Automation scripts
-├── prd/                   # Product Requirement Documents
-├── reports/               # Generated reports
+├── .claude/
+│   ├── agents/             # Custom AI agents (13 agents)
+│   ├── commands/           # Slash commands (create-prd, generate-report, onboard, pr-review)
+│   ├── hooks/              # Automation hooks
+│   ├── rules/              # Modular instructions (agent-orchestration, code-style, security)
+│   └── skills/             # Domain knowledge (42 skills)
 │
-├── docs/                  # Documentation
-│   ├── architecture/      #   System design
-│   ├── guides/            #   How-to guides
-│   ├── api/               #   API documentation
-│   ├── adr/               #   Architecture Decision Records
-│   └── runbooks/          #   Operational runbooks
-│
-├── .claude/               # Claude Code configuration
-│   ├── agents/            #   Custom AI agents
-│   ├── commands/          #   Slash commands
-│   ├── skills/            #   Domain knowledge
-│   ├── rules/             #   Modular instructions
-│   └── hooks/             #   Automation hooks
-│
-├── .agent/                # Standardized agent context
-│   ├── spec/              #   Requirements and tasks
-│   ├── wiki/              #   Architecture docs
-│   └── links/             #   External resources
-│
-└── .github/
-    └── workflows/         # CI/CD pipelines
+└── .github/workflows/      # CI/CD pipelines
 ```
+
+---
 
 ## Task Execution Rules
 
-1. Read relevant files before making changes
-2. Run tests after modifications (`make test`)
-3. Follow conventional commits format
-4. Document non-obvious decisions
-5. Define prompts in config, not inline in code
-6. Never hardcode secrets - use environment variables
+1. Leer archivos relevantes antes de hacer cambios
+2. Ejecutar tests después de modificaciones (`make test` en `apps/backend_django/`)
+3. Seguir conventional commits format
+4. Nunca hardcodear secrets — usar variables de entorno
+5. Ejecutar `make makemigrations` + `make migrate` después de cambios en modelos
+6. Crear PRD en `prd/features/` antes de implementar features nuevas
+7. Documentar decisiones arquitectónicas en `docs/adr/`
+
+---
 
 ## Available Commands
 
-See `.claude/commands/` for available slash commands:
+Ver `.claude/commands/` para slash commands disponibles:
 - `/create-prd` — Crear un Product Requirement Document para una nueva feature
 - `/generate-report` — Generar un reporte de estado del proyecto
 - `/onboard` — Exploración profunda del proyecto para entender su estructura
@@ -115,9 +203,9 @@ Los agentes en `.claude/agents/` son subagentes especializados. Delega tareas a 
 ### Desarrollo Frontend
 | Agente | Cuándo usarlo |
 |--------|--------------|
-| `react-vite-builder` | Al desarrollar aplicaciones frontend con React + Vite + TypeScript + Tailwind CSS |
-| `nextjs-builder` | Al desarrollar aplicaciones full-stack con Next.js + TypeScript + Tailwind CSS (App Router) |
-| `tauri-desktop-builder` | Al desarrollar apps de escritorio con Tauri v2 + React + Vite + TypeScript + Tailwind CSS |
+| `react-vite-builder` | Al desarrollar en `frontend_admin`, `frontend_hub_client` o `frontend_workspace` (React + Vite + TypeScript + Tailwind) |
+| `nextjs-builder` | Al desarrollar en `frontend_next_vista` (Next.js 15 + TypeScript + Tailwind, App Router) |
+| `tauri-desktop-builder` | Al desarrollar en `frontend_sidebar_desktop` (Tauri v2 + React + Vite + TypeScript) |
 | `ui-ux-designer` | Al diseñar layouts, componentes UI/UX, sistemas de diseño, temas o cualquier tarea de interfaz visual |
 
 ### Desarrollo Backend
