@@ -10,7 +10,7 @@ SaaS multi-tenant con control de acceso basado en roles (RBAC), billing por susc
 |-----|------|------|--------|--------|
 | **Backend API** | `apps/backend_django/` | Django + DRF + PostgreSQL + Redis | 8000 | — |
 | **Admin Panel** | `apps/frontend_admin/` | React + Vite + TypeScript + Tailwind | 5173 | Solo staff (`is_staff=True`) |
-| **Hub Client Portal** | `apps/frontend_hub_client/` | React + Vite + TypeScript + Tailwind | 5175 | Clientes (cualquier tenant) |
+| **Hub Client Portal** | `apps/frontend_next_hub/` | Next.js 15 App Router + TypeScript + Tailwind | 4000 | Clientes (cualquier tenant) |
 | **Workspace** | `apps/frontend_workspace/` | React + Vite + TypeScript + Tailwind | — | Clientes vía SSO desde Hub |
 | **Vista (Digital Services)** | `apps/frontend_next_vista/` | Next.js 15 App Router + Tailwind | — | Clientes vía SSO + público sin auth |
 | **Desktop** | `apps/frontend_sidebar_desktop/` | Tauri v2 + React + TypeScript | — | Clientes vía deep link del Hub |
@@ -206,7 +206,7 @@ npm test             # Tests (Vitest)
 │   │   ├── core/              # BaseModel, AuditMixin, TenantMixin
 │   │   └── utils/             # plans.py, encryption.py, cache.py
 │   ├── frontend_admin/        # Admin Panel (React+Vite)
-│   ├── frontend_hub_client/   # Hub Portal (React+Vite)
+│   ├── frontend_next_hub/     # Hub Portal (Next.js 15)
 │   ├── frontend_workspace/    # Workspace (React+Vite)
 │   ├── frontend_next_vista/   # Vista Digital (Next.js 15)
 │   └── frontend_sidebar_desktop/ # Desktop (Tauri v2)

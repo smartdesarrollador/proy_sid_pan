@@ -6,7 +6,7 @@
 - **Description**: Multi-tenant SaaS with role-based access control and subscription billing
 - **Language**: Python 3.11+
 - **Framework**: Django REST Framework + PostgreSQL
-- **Frontend**: React + Vite (`frontend_admin`, `frontend_hub_client`, `frontend_workspace`), Next.js App Router (`frontend_next_vista`), Tauri v2 (`frontend_sidebar_desktop`)
+- **Frontend**: React + Vite (`frontend_admin`, `frontend_workspace`), Next.js 15 App Router (`frontend_next_hub`, `frontend_next_vista`), Tauri v2 (`frontend_sidebar_desktop`)
 
 ## Backend Development — `apps/backend_django/`
 
@@ -143,7 +143,7 @@ GET  /api/v1/app/services/active/ → Active (acquired) services for tenant
 
 - Backend source: `apps/backend_django/`
 - Frontend Admin: `apps/frontend_admin/` (React + Vite, puerto 5173)
-- Hub Client Portal: `apps/frontend_hub_client/` (React + Vite, puerto 5175)
+- Hub Client Portal: `apps/frontend_next_hub/` (Next.js 15 App Router, puerto 4000)
 - Workspace: `apps/frontend_workspace/` (React + Vite)
 - Vista / Digital Services: `apps/frontend_next_vista/` (Next.js App Router)
 - Desktop App: `apps/frontend_sidebar_desktop/` (Tauri v2 + React)
@@ -164,7 +164,7 @@ El Hub es el punto de entrada unificado para todos los clientes (tenants). Gesti
 - Gestión propia de suscripción y billing
 - Notificaciones y soporte al cliente
 
-**App real**: `apps/frontend_hub_client/` | **Prototipo**: `docs/ui-ux/prototype-hub-client/` | **PRD**: `prd/features/hub-client-portal.md`
+**App real**: `apps/frontend_next_hub/` | **Prototipo**: `docs/ui-ux/prototype-hub-client/` | **PRD**: `prd/features/hub-client-portal.md`
 
 ### Relación Hub ↔ Admin Panel
 
@@ -183,8 +183,8 @@ El Hub es el punto de entrada unificado para todos los clientes (tenants). Gesti
 ```
 1. POST /api/v1/auth/sso/token/  { "service": "workspace" | "vista" }
    → { sso_token, expires_in: 60, redirect_url }
-   Hook: apps/frontend_hub_client/src/features/services/hooks/useSSO.ts
-   Botón: apps/frontend_hub_client/src/features/services/components/SSOLaunchButton.tsx
+   Hook: apps/frontend_next_hub/src/features/services/hooks/useSSO.ts
+   Botón: apps/frontend_next_hub/src/features/services/components/SSOLaunchButton.tsx
 
 2. Hub redirige: window.location.href = data.redirect_url
 
@@ -208,7 +208,7 @@ El Hub es el punto de entrada unificado para todos los clientes (tenants). Gesti
 | App | Ruta | Framework | Puerto dev | Auth storage |
 |-----|------|-----------|-----------|--------------|
 | Admin Panel | `apps/frontend_admin/` | React + Vite | 5173 | `authUser`, `authTenant` en localStorage |
-| Hub Client Portal | `apps/frontend_hub_client/` | React + Vite | 5175 | `authUser`, `authTenant` en localStorage |
+| Hub Client Portal | `apps/frontend_next_hub/` | Next.js 15 App Router | 4000 | `hub-accessToken`, `hub-refreshToken`, `hub-authUser`, `hub-authTenant` en localStorage |
 | Workspace | `apps/frontend_workspace/` | React + Vite | — | `ws-refreshToken`, `ws-authUser`, `ws-authTenant` (prefijo `ws-`) |
 | Vista | `apps/frontend_next_vista/` | Next.js App Router | — | `refreshToken` en localStorage + `accessToken` en cookie |
 | Desktop | `apps/frontend_sidebar_desktop/` | Tauri v2 + React | — | — |
@@ -295,8 +295,8 @@ Hub verifica: cualquier usuario autenticado con tenant activo
 
 **Archivos clave**:
 - `apps/backend_django/apps/auth_app/sso_views.py` — SSOTokenView, SSOValidateView
-- `apps/frontend_hub_client/src/features/services/hooks/useSSO.ts`
-- `apps/frontend_hub_client/src/features/services/components/SSOLaunchButton.tsx`
+- `apps/frontend_next_hub/src/features/services/hooks/useSSO.ts`
+- `apps/frontend_next_hub/src/features/services/components/SSOLaunchButton.tsx`
 - `apps/frontend_workspace/src/features/auth/SSOCallbackPage.tsx`
 - `apps/frontend_next_vista/src/app/[locale]/(auth)/sso/page.tsx`
 
@@ -321,7 +321,7 @@ Hub verifica: cualquier usuario autenticado con tenant activo
 
 **Archivos clave**:
 - `apps/frontend_sidebar_desktop/src/features/auth/useDesktopAuth.ts`
-- `apps/frontend_hub_client/src/features/auth/LoginPage.tsx` (buildDesktopRedirectUrl)
+- `apps/frontend_next_hub/src/features/auth/LoginPage.tsx` (buildDesktopRedirectUrl)
 
 ### Session Restore (Vista / Next.js)
 
@@ -379,7 +379,7 @@ Features de backend por plan: `mfa` (professional+), `sso` (enterprise), `webhoo
 | App | localStorage keys | Cookie | Acceso |
 |-----|------------------|--------|--------|
 | `frontend_admin` | `refreshToken`, `authUser`, `authTenant` | — | Solo `is_staff=True` |
-| `frontend_hub_client` | `hub-accessToken`, `hub-refreshToken`, `hub-authUser`, `hub-authTenant` | — | Cualquier tenant |
+| `frontend_next_hub` | `hub-accessToken`, `hub-refreshToken`, `hub-authUser`, `hub-authTenant` | — | Cualquier tenant |
 | `frontend_workspace` | `ws-refreshToken`, `ws-authUser`, `ws-authTenant` | — | Via SSO o login directo |
 | `frontend_next_vista` | `refreshToken` | `accessToken` (max-age 3600) | Via SSO o session restore |
 | `frontend_sidebar_desktop` | localStorage via Tauri store | — | Via deep link del Hub |

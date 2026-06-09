@@ -253,7 +253,7 @@ Accesible desde la card "Referidos" del Dashboard y desde Perfil (view `/referra
 El Hub actúa como **orquestador de acceso** al ecosistema de servicios:
 
 ```
-frontend_hub_client (portal)
+frontend_next_hub (portal)
   │
   ├──[SSO /sso/callback]──────→ frontend_workspace (productividad: tareas, calendario, notas)
   ├──[SSO /[locale]/sso]──────→ frontend_next_vista (Next.js: tarjeta digital, portafolio, landing, CV)
@@ -504,7 +504,7 @@ El admin **configura** el catálogo (qué servicios existen, en qué planes, pre
 ## 11. Dependencias y Consideraciones
 
 - **No bloquea** el desarrollo del `frontend_workspace` — son aplicaciones independientes
-- El prototipo del Hub existe en `docs/ui-ux/prototype-hub-client/` con datos mock; la app real en `apps/frontend_hub_client/`
+- El prototipo del Hub existe en `docs/ui-ux/prototype-hub-client/` con datos mock; la app real en `apps/frontend_next_hub/`
 - ✅ **SSO backend ya implementado** en `apps/backend_django/apps/auth_app/sso_views.py` (`SSOTokenView` + `SSOValidateView`) con migration `0004_ssotoken`
 - El catálogo de servicios requiere un nuevo modelo en el backend (`Service`, `TenantService`) — pendiente
 - El Hub es responsabilidad del equipo de producto/cliente; el admin es del equipo de plataforma

@@ -8,7 +8,7 @@ This file follows the [AGENTS.md](https://agents.md/) open standard for guiding 
 - **Description**: SaaS multi-tenant con control de acceso basado en roles (RBAC), billing por suscripción y servicios digitales públicos (tarjeta, portfolio, landing, CV)
 - **Primary Language**: Python 3.11+ (backend), TypeScript (frontends)
 - **Backend Framework**: Django REST Framework + PostgreSQL + Redis + Celery
-- **Frontend Stack**: React + Vite (Admin, Hub, Workspace), Next.js 15 App Router (Vista), Tauri v2 (Desktop)
+- **Frontend Stack**: React + Vite (Admin, Workspace), Next.js 15 App Router (Hub, Vista), Tauri v2 (Desktop)
 
 ---
 
@@ -18,7 +18,7 @@ This file follows the [AGENTS.md](https://agents.md/) open standard for guiding 
 |-----|------|-----------|-----------|-----------|
 | **Backend API** | `apps/backend_django/` | Django + DRF | 8000 | API REST central, autenticación, RBAC, billing |
 | **Admin Panel** | `apps/frontend_admin/` | React + Vite | 5173 | Gestión interna: usuarios, roles, billing, auditoría |
-| **Hub Client Portal** | `apps/frontend_hub_client/` | React + Vite | 5175 | Portal del cliente: servicios, suscripción, SSO |
+| **Hub Client Portal** | `apps/frontend_next_hub/` | Next.js 15 App Router | 4000 | Portal del cliente: servicios, suscripción, SSO |
 | **Workspace** | `apps/frontend_workspace/` | React + Vite | — | App de productividad: proyectos, tareas, notas, etc. |
 | **Vista (Digital Services)** | `apps/frontend_next_vista/` | Next.js 15 | — | Editor + vista pública: tarjeta, landing, portfolio, CV |
 | **Desktop** | `apps/frontend_sidebar_desktop/` | Tauri v2 + React | — | Sidebar de escritorio (Windows AppBar), acceso offline |
@@ -141,7 +141,7 @@ useSessionRestore en authenticated layout:
 │   │   ├── core/           # BaseModel, AuditMixin, TenantMixin
 │   │   └── utils/          # plans.py, encryption.py, cache.py
 │   ├── frontend_admin/     # React+Vite Admin Panel (puerto 5173)
-│   ├── frontend_hub_client/ # React+Vite Hub Portal (puerto 5175)
+│   ├── frontend_next_hub/  # Next.js 15 Hub Portal (puerto 4000)
 │   ├── frontend_workspace/ # React+Vite Workspace
 │   ├── frontend_next_vista/ # Next.js 15 Vista Digital Services
 │   └── frontend_sidebar_desktop/ # Tauri v2 Desktop App
@@ -203,8 +203,8 @@ Los agentes en `.claude/agents/` son subagentes especializados. Delega tareas a 
 ### Desarrollo Frontend
 | Agente | Cuándo usarlo |
 |--------|--------------|
-| `react-vite-builder` | Al desarrollar en `frontend_admin`, `frontend_hub_client` o `frontend_workspace` (React + Vite + TypeScript + Tailwind) |
-| `nextjs-builder` | Al desarrollar en `frontend_next_vista` (Next.js 15 + TypeScript + Tailwind, App Router) |
+| `react-vite-builder` | Al desarrollar en `frontend_admin` o `frontend_workspace` (React + Vite + TypeScript + Tailwind) |
+| `nextjs-builder` | Al desarrollar en `frontend_next_hub` o `frontend_next_vista` (Next.js 15 + TypeScript + Tailwind, App Router) |
 | `tauri-desktop-builder` | Al desarrollar en `frontend_sidebar_desktop` (Tauri v2 + React + Vite + TypeScript) |
 | `ui-ux-designer` | Al diseñar layouts, componentes UI/UX, sistemas de diseño, temas o cualquier tarea de interfaz visual |
 

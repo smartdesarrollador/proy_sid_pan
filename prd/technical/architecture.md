@@ -25,8 +25,8 @@
 │                              Frontend Layer                                   │
 ├──────────────┬──────────────┬──────────────┬───────────────┬─────────────────┤
 │ Admin Panel  │  Hub Client  │  Workspace   │     Vista     │    Desktop      │
-│ React+Vite   │  React+Vite  │  React+Vite  │   Next.js 15  │   Tauri v2      │
-│ :5173        │  :5175       │              │  App Router   │   (AppBar)      │
+│ React+Vite   │  Next.js 15  │  React+Vite  │   Next.js 15  │   Tauri v2      │
+│ :5173        │  :4000       │              │  App Router   │   (AppBar)      │
 │ Staff only   │  Tenant entry│  SSO from Hub│  SSO from Hub │  Deep link Hub  │
 │ RBAC/Billing │  SSO+Services│  Productivity│  Digital svcs │  Offline sidebar│
 └──────┬───────┴──────┬───────┴──────┬───────┴───────┬───────┴────────┬────────┘
@@ -189,7 +189,7 @@ Desktop App                  Hub Client Portal              OS Protocol Handler
 | App | localStorage keys | Cookie | Notas |
 |-----|------------------|--------|-------|
 | `frontend_admin` | `refreshToken`, `authUser`, `authTenant` | — | Solo staff |
-| `frontend_hub_client` | `hub-accessToken`, `hub-refreshToken`, `hub-authUser`, `hub-authTenant` | — | Prefijo `hub-` |
+| `frontend_next_hub` | `hub-accessToken`, `hub-refreshToken`, `hub-authUser`, `hub-authTenant` | — | Prefijo `hub-` |
 | `frontend_workspace` | `ws-refreshToken`, `ws-authUser`, `ws-authTenant` | — | Prefijo `ws-` |
 | `frontend_next_vista` | `refreshToken` | `accessToken` (max-age 3600) | Cookie para SSR Next.js |
 | `frontend_sidebar_desktop` | Tauri localStorage store | — | Recibe tokens del Hub via deep link |
