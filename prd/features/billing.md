@@ -10,6 +10,7 @@
 - [Functional Requirements](#functional-requirements)
 - [Feature Gates](#feature-gates)
 - [Límites de Uso](#límites-de-uso)
+- [Pago Manual vía Yape (implementado)](#pago-manual-vía-yape-implementado)
 
 ---
 
@@ -409,6 +410,113 @@ Panel UI administrativo dedicado a la gestión y visualización del historial fi
 
 ---
 
+## Pago Manual vía Yape (implementado)
+
+### Descripción
+
+Mientras las US-013 a US-018 (Stripe, proration, facturación automática) representan
+la **visión a futuro** del módulo de billing, el método de pago **actualmente
+implementado y en producción** para planes pagados (Starter / Professional /
+Enterprise) es un flujo **manual vía Yape** (billetera digital peruana), con
+verificación asistida por IA y aprobación humana por Telegram — no Stripe.
+
+Decisión de arquitectura documentada en
+[ADR-004 — Pago Manual vía Yape con Verificación Asistida por IA + Telegram](../../docs/adr/004-pago-manual-yape.md).
+Incidente de seguridad y fixes de lógica de negocio documentados en
+[reports/2026-06-15-implementacion-pago-yape.md](../../reports/2026-06-15-implementacion-pago-yape.md).
+
+### Flujo
+
+```
+1. Registro con plan pagado → tenant.plan = 'free' (acceso inmediato)
+                              → subscription.plan = plan solicitado, status = 'pending_payment'
+2. Usuario paga por Yape y sube comprobante (screenshot) desde el Hub
+3. n8n: OpenAI Vision analiza el comprobante → Telegram recibe foto + análisis + botones
+4. Admin aprueba o rechaza desde Telegram (página de confirmación GET → acción POST)
+   ✅ Aprobado  → tenant.plan = plan solicitado, subscription.status = 'active'
+   ❌ Rechazado → tenant.plan permanece 'free', subscription.status = 'active'
+5. Email automático notifica al usuario el resultado
+```
+
+### User Stories
+
+#### US-118: Registro con Plan Pagado Sin Bloqueo de Acceso
+
+**Como** nuevo usuario que se registra con un plan pagado, quiero poder usar el
+producto de inmediato con el plan Free mientras se verifica mi pago, en lugar de
+quedar bloqueado esperando aprobación.
+
+**Criterios de Aceptación:**
+- [ ] Al registrarse con plan Starter/Professional/Enterprise, `tenant.plan` queda en `free`
+- [ ] `subscription.plan` guarda el plan solicitado con `status = 'pending_payment'`
+- [ ] El usuario puede iniciar sesión inmediatamente tras verificar su email
+- [ ] El Hub muestra instrucciones de pago Yape (número + titular desde `YapeConfig`)
+
+#### US-119: Subida y Verificación de Comprobante Yape
+
+**Como** usuario con un plan pagado pendiente de pago, quiero subir el comprobante
+de mi transferencia Yape y recibir una respuesta sobre el estado de mi pago.
+
+**Criterios de Aceptación:**
+- [ ] Endpoint `POST /api/v1/auth/yape-payment-proof` acepta `multipart/form-data`
+- [ ] Se crea un `YapePaymentProof` con `admin_token` único y `status='pending'`
+- [ ] Se dispara un webhook hacia n8n para iniciar el análisis con IA
+- [ ] El comprobante y el análisis llegan a un grupo de Telegram con botones de acción
+
+#### US-120: Aprobación/Rechazo Seguro por el Admin
+
+**Como** administrador, quiero aprobar o rechazar un comprobante desde Telegram con
+un solo clic, sin que un bot, crawler o vista previa de link active la cuenta por error.
+
+**Criterios de Aceptación:**
+- [ ] El link de Telegram lleva a una página de confirmación (`GET`) — no ejecuta ninguna acción
+- [ ] La acción real (aprobar/rechazar) solo se ejecuta mediante `POST` desde el botón de confirmación
+- [ ] Un comprobante ya procesado (`approved`/`rejected`) no puede volver a procesarse
+- [ ] Aprobar activa `tenant.plan` y `subscription.status='active'`, envía email de activación
+- [ ] Rechazar mantiene `tenant.plan='free'`, `subscription.status='active'`, envía email explicando que continúa en Free
+
+### Functional Requirements
+
+#### FR-141: Registro con Plan Pagado en Estado Pendiente
+- El sistema DEBE crear el tenant siempre con `plan='free'` al registrarse, independientemente del plan solicitado
+- El sistema DEBE guardar el plan solicitado en `Subscription.plan` con `status='pending_payment'`
+- El sistema NO DEBE bloquear el login del usuario mientras el pago está pendiente
+
+#### FR-142: Comprobante de Pago Yape
+- El sistema DEBE permitir subir un comprobante (imagen) asociado a la suscripción pendiente
+- El sistema DEBE generar un `admin_token` aleatorio de un solo uso por comprobante
+- El sistema DEBE notificar a un canal de Telegram con el comprobante y un análisis automático (OpenAI Vision)
+
+#### FR-143: Aprobación/Rechazo con Patrón GET-Confirmación / POST-Acción
+- Los endpoints de aprobación/rechazo DEBEN separar `GET` (página de confirmación, sin efectos secundarios) de `POST` (acción real)
+- El sistema DEBE rechazar cualquier intento de procesar un comprobante ya `approved` o `rejected`
+- El sistema DEBE registrar auditoría (`AuditLog`) de cada aprobación/rechazo
+
+#### FR-144: Estados Consistentes Tras Revisión
+- Tras aprobación: `tenant.plan` = plan solicitado, `subscription.status='active'`, email de activación
+- Tras rechazo: `tenant.plan` permanece `'free'`, `subscription.status='active'` (no `'canceled'`), email explicando que el usuario continúa con acceso Free
+
+### Relación con el modelo Stripe (US-013 a US-018)
+
+| Aspecto | Yape manual (implementado) | Stripe automatizado (visión a futuro, US-013–US-018) |
+|---------|----------------------------|--------------------------------------------------------|
+| Activación | Manual, vía aprobación humana en Telegram | Automática vía webhook de Stripe |
+| Mercado | Perú (medio de pago local preferido) | Internacional / tarjetas |
+| Proration / downgrade | No aplica aún | FR-016 (proration), FR-019 (cancelación) |
+| Facturación recurrente | No — pago único verificado manualmente | FR-017 (cronjob de renovación automática) |
+
+Ambos modelos pueden convivir: Yape para el segmento local sin tarjeta, Stripe como
+canal adicional si se decide implementar (ver "Alternativas consideradas" en
+ADR-004).
+
+### Deuda técnica / mejoras pendientes
+
+Ver `BACKLOG.md` — TTL de `admin_token`, alerta en Admin Panel para tenants
+`pending_payment` con revisión atrasada, autenticación adicional en los endpoints
+públicos de Yape.
+
+---
+
 ## Navegación
 
 - [⬅️ Volver al README](../README.md)
@@ -417,4 +525,4 @@ Panel UI administrativo dedicado a la gestión y visualización del historial fi
 
 ---
 
-**Última actualización**: 2026-02-22
+**Última actualización**: 2026-06-16

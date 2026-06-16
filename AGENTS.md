@@ -147,24 +147,32 @@ useSessionRestore en authenticated layout:
 │   └── frontend_sidebar_desktop/ # Tauri v2 Desktop App
 │
 ├── docs/
-│   ├── adr/                # Architecture Decision Records
+│   ├── adr/                # Architecture Decision Records (inmutables — ver Task Execution Rules)
 │   ├── api/                # API documentation
 │   ├── architecture/       # System design docs
+│   ├── guides/             # Guías de proceso (feature-development-workflow.md, ai-workflow.md, getting-started.md)
 │   └── ui-ux/             # Prototypes (admin :3000, hub :3003, workspace :3001, vista)
 │
+├── BACKLOG.md               # Pendientes cortos, deuda técnica e ideas — living doc, sin fecha
 ├── prd/                    # Product Requirement Documents
-├── plans/                  # Implementation plans (temporary)
-├── reports/                # Generated reports
+├── plans/                  # Planes de implementación de una sección reducida
+├── roadmaps/                # Mapeo de muchas secciones/páginas (guía varios plans/ a la vez)
+├── pending/                 # Pendientes que necesitan su propio archivo con pasos detallados
+├── reports/                # Reportes históricos con fecha (qué pasó y cómo se solucionó)
 │
 ├── .claude/
-│   ├── agents/             # Custom AI agents (13 agents)
+│   ├── agents/             # Custom AI agents (14 agents)
 │   ├── commands/           # Slash commands (create-prd, generate-report, onboard, pr-review)
 │   ├── hooks/              # Automation hooks
-│   ├── rules/              # Modular instructions (agent-orchestration, code-style, security)
+│   ├── rules/              # Modular instructions (agent-orchestration, ai-development, code-style, security)
 │   └── skills/             # Domain knowledge (42 skills)
 │
 └── .github/workflows/      # CI/CD pipelines
 ```
+
+> Ver [docs/guides/feature-development-workflow.md](docs/guides/feature-development-workflow.md)
+> para la dinámica recomendada al implementar una feature nueva (BACKLOG → PRD →
+> plan → código → reporte/ADR → BACKLOG se actualiza solo).
 
 ---
 
@@ -177,6 +185,22 @@ useSessionRestore en authenticated layout:
 5. Ejecutar `make makemigrations` + `make migrate` después de cambios en modelos
 6. Crear PRD en `prd/features/` antes de implementar features nuevas
 7. Documentar decisiones arquitectónicas en `docs/adr/`
+8. Los ADR son inmutables: si una decisión cambia, crear un ADR nuevo y marcar el
+   anterior como `Reemplazado por ADR-00X` — nunca editar el ADR original
+9. Al completar una funcionalidad o corregir un bug, actualizar `BACKLOG.md`:
+   mover pendientes resueltos y agregar nueva deuda técnica/ideas que hayan
+   surgido, citando el reporte/ADR de origen si existe
+
+---
+
+## Documentación
+
+- [Dinámica de desarrollo con Claude Code](docs/guides/feature-development-workflow.md)
+- [Configuración de Claude Code (agentes, comandos)](docs/guides/ai-workflow.md)
+- [Guía de Inicio](docs/guides/getting-started.md)
+- [ADRs](docs/adr/)
+- [PRDs](prd/features/)
+- [Backlog de pendientes](BACKLOG.md)
 
 ---
 

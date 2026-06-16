@@ -242,8 +242,11 @@ npm test             # Tests (Vitest)
 - [Seguridad](docs/architecture/security.md)
 - [Multi-tenancy](docs/architecture/multi-tenancy.md)
 - [Guía de Inicio](docs/guides/getting-started.md)
+- [Dinámica de desarrollo con Claude Code](docs/guides/feature-development-workflow.md)
+- [Configuración de Claude Code (agentes, comandos)](docs/guides/ai-workflow.md)
 - [ADRs](docs/adr/)
 - [PRDs](prd/features/)
+- [Backlog de pendientes](BACKLOG.md)
 
 ---
 

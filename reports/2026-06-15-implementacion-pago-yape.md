@@ -3,6 +3,7 @@
 **Componente**: `apps/backend_django/apps/subscriptions/`, `apps/backend_django/apps/auth_app/`, `apps/frontend_next_hub/`, `workflows/yape-payment-verification.json`
 **Severidad**: Alta — afectaba la integridad del modelo de suscripciones (clientes con plan pagado sin pagar)
 **Estado**: ✅ Resuelto y verificado en producción
+**Decisión de arquitectura**: [ADR-004 — Pago Manual vía Yape con Verificación Asistida por IA + Telegram](../docs/adr/004-pago-manual-yape.md)
 
 ---
 

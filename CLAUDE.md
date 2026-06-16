@@ -392,8 +392,15 @@ Features de backend por plan: `mfa` (professional+), `sso` (enterprise), `webhoo
 - Follow conventional commits format
 - Create PRD before implementing new features (see `prd/`)
 - Document architectural decisions in `docs/adr/`
+- Los ADR son inmutables: si una decisión cambia con el tiempo, no se edita el ADR
+  existente — se crea uno nuevo (ej. `005-...md`) y se actualiza el `Estado` del ADR
+  anterior a `Reemplazado por ADR-00X`
 - Never commit secrets — use `.env` (see `.env.example`)
 - Run `make makemigrations` + `make migrate` after any model change
+- Al completar una funcionalidad o corregir un bug, actualizar `BACKLOG.md`:
+  - Mover pendientes resueltos fuera de la lista
+  - Agregar nueva deuda técnica o ideas de feature que hayan surgido durante el trabajo,
+    citando el reporte de origen si existe
 
 ## Custom Tools & Skills
 
