@@ -22,6 +22,10 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       backend `utils/plans.py` + frontend `featureGates.ts`), sin overlaps ni huecos.
 - [ ] Verificar que las notificaciones por correo (activación, rechazo, etc.) lleguen
       al correo real del usuario en producción (no solo en entorno de pruebas).
+- [ ] Implementar los cambios de prioridad alta recomendados en el análisis de feature
+      gates: corregir inconsistencias backend/frontend, añadir gates faltantes y ajustar
+      límites de plan según lo detallado en cada sección del reporte.
+      _Origen: [reports/2026-06-17-feature-gates-analysis.md](reports/2026-06-17-feature-gates-analysis.md)_
 
 ---
 
@@ -55,6 +59,13 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Sería bueno tenerlo, sin compromiso de fecha.
 
+- [ ] Chat de atención al cliente con IA en la página de inicio del `frontend_next_hub`
+      (bot visible para visitantes no autenticados y usuarios logueados).
+- [ ] Quitar los botones de "actualizar plan" de `frontend_next_vista` y
+      `frontend_workspace` — la gestión de suscripción ya vive en `frontend_next_hub`,
+      centralizar evita duplicados y confusión.
+- [ ] Sección "Suspender cuenta" en `frontend_admin` para que los admins puedan
+      suspender tenants directamente desde el panel, sin necesidad de ir a la BD.
 - [ ] Panel en Admin para ver tenants en estado `pending_payment` con más de N días
       sin revisión (alerta visual de comprobantes Yape olvidados).
       _Origen: [reports/2026-06-15-implementacion-pago-yape.md](reports/2026-06-15-implementacion-pago-yape.md),
