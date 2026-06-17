@@ -1,6 +1,6 @@
 # Dinámica para implementar una funcionalidad nueva con Claude Code
 
-**Última actualización**: 2026-06-16
+**Última actualización**: 2026-06-17
 
 Guía de los pasos recomendados al construir una feature nueva (o corregir un bug
 significativo) en este proyecto, usando Claude Code y los artefactos de
@@ -45,6 +45,28 @@ Pedir a Claude el plan técnico antes de tocar código. Según el alcance:
 
 En este paso se revisa el approach junto con Claude (arquitectura, archivos a tocar,
 alternativas) antes de implementar.
+
+### 3.1 Tasks con criterios verificables (opcional — features medianas/grandes)
+
+Para planes que tocan varios archivos o componentes, conviene desglosar el plan en
+una checklist de tareas con **criterios de éxito verificables** (no subjetivos),
+antes de empezar a codear. En vez de "código bien estructurado", usar checks
+objetivos tipo:
+
+```
+- [ ] Migración aplicada — `make migrate` sin errores
+- [ ] Endpoint responde 200 — `curl .../api/x`
+- [ ] Tests pasan — `make test` 0 fallos nuevos
+```
+
+Esto ayuda a:
+- Detectar partes del plan ambiguas **antes** de implementar (si no se puede
+  escribir un criterio verificable, esa parte del plan no está bien definida)
+- Tener una definición objetiva de "terminado" en vez de un juicio subjetivo
+- Dar checkpoints claros en tareas largas con varios archivos
+
+Se omite en fixes puntuales o features chicas (1-2 archivos) — ahí se va directo
+de plan a código.
 
 ---
 
@@ -95,6 +117,7 @@ Como respaldo, el usuario puede recordarlo manualmente al final de una tarea lar
 Revisar BACKLOG.md (pedir a Claude que lo recuerde)
   → PRD (solo features grandes)            → prd/
   → Plan de implementación                  → plans/ (o roadmaps/ si son varias secciones)
+  → Tasks con criterios verificables (opcional, features medianas/grandes)
   → Código + corrección de errores          → make test
   → Reporte (si aplica)                     → reports/
   → ADR (solo si hubo decisión arquitectónica) → docs/adr/

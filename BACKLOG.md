@@ -20,8 +20,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 - [ ] Revisar que cada plan (Free/Starter/Professional/Enterprise) tenga exactamente
       las funcionalidades correspondientes habilitadas/bloqueadas (feature gates
       backend `utils/plans.py` + frontend `featureGates.ts`), sin overlaps ni huecos.
-- [ ] Revisar que el plan Free tenga, dentro del panel de `frontend_next_hub`, la
-      opción visible para actualizar/upgradear de plan cuando el usuario lo necesite.
 - [ ] Verificar que las notificaciones por correo (activación, rechazo, etc.) lleguen
       al correo real del usuario en producción (no solo en entorno de pruebas).
 
@@ -31,6 +29,10 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] El endpoint `POST /api/v1/admin/subscriptions/yape-upgrade` (upgrade autenticado
+      desde el Hub) duplica parte de la lógica de `YapePaymentProofView` del registro.
+      Candidato a extraer a un helper/service compartido si se añaden más puntos de
+      entrada de comprobantes Yape.
 - [ ] Agregar TTL/expiración a los `admin_token` de `YapePaymentProof` — los links de
       aprobación/rechazo de Telegram quedan vigentes indefinidamente.
       _Origen: [reports/2026-06-15-implementacion-pago-yape.md](reports/2026-06-15-implementacion-pago-yape.md),
