@@ -371,15 +371,51 @@ La tabla siguiente compara la configuración actual contra lo que hacen platafor
 
 ## 11. Resumen de Prioridades
 
-| Prioridad | Cambio recomendado | Impacto |
-|-----------|-------------------|---------|
-| 🔴 Alta | MFA disponible desde Starter (no solo Professional) | Seguridad de clientes |
-| 🔴 Alta | Revisar `mfa required=True` en Professional | UX en upgrade |
-| 🟡 Media | Portfolio básico en Starter | Conversión Starter |
-| 🟡 Media | Sharing entre miembros del mismo tenant en Free | Coherencia del producto |
-| 🟡 Media | Export de datos propios en todos los planes | GDPR / buena fe |
-| 🟢 Baja | Migrar featureGates.ts de Vista a server-driven | Mantenibilidad |
+| Prioridad | Cambio recomendado | Estado |
+|-----------|-------------------|--------|
+| 🔴 Alta | MFA disponible desde Starter (no solo Professional) | ✅ Implementado 2026-06-17 |
+| 🔴 Alta | Revisar `mfa required=True` en Professional → separar `mfa_enforce` | ✅ Implementado 2026-06-17 |
+| 🟡 Media | Portfolio básico en Starter | Pendiente |
+| 🟡 Media | Sharing entre miembros del mismo tenant en Free | Pendiente |
+| 🟡 Media | Export de datos propios en todos los planes | Pendiente |
+| 🟢 Baja | Migrar featureGates.ts de Vista a server-driven | Pendiente |
 
 ---
 
-*Generado el 2026-06-17. Basado en análisis estático de: `apps/backend_django/utils/plans.py`, `apps/frontend_next_vista/src/data/featureGates.ts`, `apps/frontend_workspace/src/layouts/components/Sidebar.tsx`, `apps/frontend_workspace/src/test/handlers/features.ts`, `apps/frontend_next_hub/features/subscription/plans-data.ts`, `apps/frontend_next_hub/hooks/useFeatureGate.ts`.*
+## 12. Implementación — Cambios de Alta Prioridad (2026-06-17)
+
+### Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `apps/backend_django/utils/plans.py` | `starter['mfa']`: `False` → `True`; añadido `mfa_enforce` (Enterprise: `True`, resto: `False`); PLAN_CATALOG actualizado |
+| `apps/backend_django/apps/auth_app/views.py` | `MFAEnableView`, `MFAVerifySetupView`, `MFADisableView`: añadido `HasFeature('mfa')` a `permission_classes` |
+| `apps/backend_django/apps/rbac/permissions.py` | `HasFeature`: ahora lanza `FeatureNotAvailable` (HTTP 402) en vez de devolver `False` (que DRF convertía en 403 incorrecto); añadido fallback a `request.user.tenant` para endpoints auth que bypass el middleware |
+| `apps/frontend_admin/src/features/subscriptions/plans-data.ts` | Starter: MFA `included: false` → `true`; Professional: "MFA obligatorio" → "MFA"; Enterprise: → "MFA (forzado)" |
+| 15+ archivos de test | Assertions de feature gates actualizadas de `HTTP_403` a `HTTP_402` |
+| `apps/backend_django/apps/auth_app/tests/test_mfa.py` | Añadida clase `MFAFeatureGateTest` (4 tests: Free recibe 402, Starter recibe 200) |
+
+### Bug de seguridad corregido
+
+**Problema descubierto:** los endpoints `MFAEnableView`, `MFAVerifySetupView` y `MFADisableView` no tenían `HasFeature('mfa')` en sus `permission_classes`. Cualquier usuario autenticado — independientemente del plan — podía habilitar MFA en el backend aunque el plan lo prohibiera. El feature flag en `utils/plans.py` era solo decorativo.
+
+**Causa raíz adicional:** `HasFeature` devolvía `False` cuando no había `request.tenant`, y el `TenantMiddleware` no procesa el prefijo `/api/v1/auth/`. Por eso los endpoints de MFA siempre pasaban la verificación. Fix: `HasFeature` ahora usa `request.user.tenant` como fallback cuando el usuario está autenticado pero el middleware no inyectó el tenant.
+
+**Corrección colateral:** `HasFeature` ahora retorna HTTP 402 (`Payment Required`) en vez de 403 (`Forbidden`) para todos los endpoints que usen este gate. El 402 es el código semánticamente correcto para "esta feature requiere un plan superior". Se actualizaron todos los tests afectados.
+
+### Verificación realizada
+
+- `make test` (442 tests): 9 fallos, todos pre-existentes (5 throttle, 2 analytics estructura, 2 support permisos). Cero regresiones introducidas.
+- Login manual con cuenta Starter (`cliente17@cliente.com`) en `hub.local.test`: exitoso tras activar `is_active=True` (cuenta estaba suspendida en BD de dev, sin relación con MFA).
+- `GET /api/v1/features/` para tenant Starter confirma: `mfa: true`, `mfa_enforce: false`.
+
+### Hallazgo durante prueba manual
+
+Al intentar login con `cliente17@cliente.com` el Hub devolvía "Credenciales inválidas" aunque la contraseña era correcta. La causa fue `user.is_active = False` — cuenta desactivada en BD de desarrollo. Django devuelve el mismo mensaje genérico para credenciales incorrectas y para cuentas inactivas (comportamiento de seguridad intencional: no revela si la cuenta existe).
+
+Se activó el usuario manualmente para la sesión de pruebas. **Deuda anotada en BACKLOG:** evaluar si mostrar un mensaje más descriptivo a admins cuando la cuenta está explícitamente suspendida.
+
+---
+
+*Análisis generado el 2026-06-17. Implementación de prioridad alta completada el 2026-06-17.*  
+*Archivos de referencia: `apps/backend_django/utils/plans.py`, `apps/frontend_next_vista/src/data/featureGates.ts`, `apps/frontend_workspace/src/layouts/components/Sidebar.tsx`, `apps/frontend_next_hub/features/subscription/plans-data.ts`.*

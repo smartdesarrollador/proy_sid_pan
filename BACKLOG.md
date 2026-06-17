@@ -17,14 +17,11 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
-- [ ] Revisar que cada plan (Free/Starter/Professional/Enterprise) tenga exactamente
-      las funcionalidades correspondientes habilitadas/bloqueadas (feature gates
-      backend `utils/plans.py` + frontend `featureGates.ts`), sin overlaps ni huecos.
 - [ ] Verificar que las notificaciones por correo (activación, rechazo, etc.) lleguen
       al correo real del usuario en producción (no solo en entorno de pruebas).
-- [ ] Implementar los cambios de prioridad alta recomendados en el análisis de feature
-      gates: corregir inconsistencias backend/frontend, añadir gates faltantes y ajustar
-      límites de plan según lo detallado en cada sección del reporte.
+- [ ] Implementar cambios de prioridad media del análisis de feature gates: portfolio
+      básico en Starter, sharing entre miembros del mismo tenant en Free, export de
+      datos propios en todos los planes.
       _Origen: [reports/2026-06-17-feature-gates-analysis.md](reports/2026-06-17-feature-gates-analysis.md)_
 
 ---
@@ -32,6 +29,19 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 ## Deuda técnica
 
 > No es urgente, pero si no se corrige puede morder después.
+
+- [ ] `featureGates.ts` de `frontend_next_vista` está hardcodeado (client-side). Migrar
+      a server-driven consumiendo `GET /api/v1/features/` igual que Hub y Workspace,
+      para eliminar la deuda de sincronización manual cuando cambian las definiciones de plan.
+      _Origen: [reports/2026-06-17-feature-gates-analysis.md](reports/2026-06-17-feature-gates-analysis.md)_
+- [ ] 4 tests pre-existentes fallando sin relación con feature gates: `test_summary_returns_metrics_keys`
+      + `test_usage_returns_resource_breakdown` (endpoint analytics cambió estructura de respuesta
+      pero los tests no se actualizaron); `test_client_sees_only_own_ticket` + `test_comment_role_client_for_regular_user`
+      (usuarios regulares sin rol `support.read` asignado reciben 403 en lugar de poder ver sus propios tickets).
+- [ ] Cuando un usuario tiene `is_active=False`, el login devuelve "Credenciales inválidas" en
+      lugar de "Cuenta suspendida". Comportamiento intencional por seguridad (no revelar si la
+      cuenta existe), pero considerar agregar un mensaje más descriptivo cuando el email SÍ existe
+      y la cuenta está explícitamente suspendida por un admin.
 
 - [ ] El endpoint `POST /api/v1/admin/subscriptions/yape-upgrade` (upgrade autenticado
       desde el Hub) duplica parte de la lógica de `YapePaymentProofView` del registro.
