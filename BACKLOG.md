@@ -13,6 +13,27 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 ---
 
+## 3 Últimas tareas realizadas
+
+> Referencia rápida — ver detalles completos en [`reports/`](reports/).
+
+- **2026-06-20 — Chat IA con RAG liviano** ✅
+  Widget flotante en toda la app Hub. RAG liviano con PostgreSQL + `gpt-4o-mini`.
+  Gestión de KB desde Admin Panel. 10 artículos de Digisider cargados en producción.
+  _→ [Reporte](reports/2026-06-20-implementacion-chat-ia.md) · [ADR-005](docs/adr/005-chat-ia-rag-liviano.md)_
+
+- **2026-06-17 — Análisis de Feature Gates** ✅
+  Auditoría de feature gates en Vista, Workspace y Hub. Identificados 3 cambios de
+  prioridad media (portfolio en Starter, sharing en Free, export en todos los planes).
+  _→ [Reporte](reports/2026-06-17-feature-gates-analysis.md)_
+
+- **2026-06-15 — Integración de Pago Yape** ✅
+  Flujo de comprobante manual vía Telegram bot. Upgrade desde Hub con `YapePaymentProofView`.
+  Aprobación/rechazo por admin activa suscripción automáticamente.
+  _→ [Reporte](reports/2026-06-15-implementacion-pago-yape.md) · [ADR-004](docs/adr/004-pago-manual-yape.md)_
+
+---
+
 ## Pendientes activos
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
@@ -69,12 +90,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Sería bueno tenerlo, sin compromiso de fecha.
 
-- [x] ~~Chat de atención al cliente con IA en la página de inicio del `frontend_next_hub`
-      (bot visible para visitantes no autenticados y usuarios logueados).~~
-      **Completado 2026-06-20 — verificado en producción**: Chat IA con RAG liviano implementado
-      en toda la app Hub. App `chat_assistant/` en backend, widget flotante en `frontend_next_hub`,
-      gestión de KB en `frontend_admin`. 10 artículos de Digisider cargados en producción.
-      _Ver: [reports/2026-06-20-implementacion-chat-ia.md](reports/2026-06-20-implementacion-chat-ia.md) · [ADR-005](docs/adr/005-chat-ia-rag-liviano.md)_
 - [ ] Fase 2 chat IA: migrar búsqueda de artículos a pgvector/embeddings cuando la KB
       supere ~50 artículos (actualmente usa full-text search con icontains).
 - [ ] Agregar analytics de chat al Admin Panel: mensajes por día, preguntas más frecuentes,
