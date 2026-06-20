@@ -69,8 +69,16 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Sería bueno tenerlo, sin compromiso de fecha.
 
-- [ ] Chat de atención al cliente con IA en la página de inicio del `frontend_next_hub`
-      (bot visible para visitantes no autenticados y usuarios logueados).
+- [x] ~~Chat de atención al cliente con IA en la página de inicio del `frontend_next_hub`
+      (bot visible para visitantes no autenticados y usuarios logueados).~~
+      **Completado 2026-06-20 — verificado en producción**: Chat IA con RAG liviano implementado
+      en toda la app Hub. App `chat_assistant/` en backend, widget flotante en `frontend_next_hub`,
+      gestión de KB en `frontend_admin`. 10 artículos de Digisider cargados en producción.
+      _Ver: [reports/2026-06-20-implementacion-chat-ia.md](reports/2026-06-20-implementacion-chat-ia.md) · [ADR-005](docs/adr/005-chat-ia-rag-liviano.md)_
+- [ ] Fase 2 chat IA: migrar búsqueda de artículos a pgvector/embeddings cuando la KB
+      supere ~50 artículos (actualmente usa full-text search con icontains).
+- [ ] Agregar analytics de chat al Admin Panel: mensajes por día, preguntas más frecuentes,
+      tasa de conversión (usuarios que chatearon y luego se registraron).
 - [ ] Quitar los botones de "actualizar plan" de `frontend_next_vista` y
       `frontend_workspace` — la gestión de suscripción ya vive en `frontend_next_hub`,
       centralizar evita duplicados y confusión.

@@ -1,7 +1,7 @@
 # PRD: Hub — Portal Central del Cliente
 
-**Versión:** 1.2.0
-**Fecha:** 2026-03-04
+**Versión:** 1.4.0
+**Fecha:** 2026-06-20
 **Estado:** Draft
 **Owner:** Product Team
 **Prototipo:** `docs/ui-ux/prototype-hub-client/` (puerto 3003)
@@ -218,6 +218,75 @@ Accesible desde la card "Referidos" del Dashboard y desde Perfil (view `/referra
 - **Soporte**: formulario de contacto y enlace al centro de ayuda
 - **Estado de servicios**: indicador de uptime/incidentes activos
 
+### 4.11 Chat IA con Base de Conocimiento ✅ Implementado
+
+Widget flotante de atención al cliente con inteligencia artificial visible en **toda la app Hub** (landing page + área autenticada), tanto para visitantes anónimos como para clientes registrados.
+
+#### Descripción
+
+El chat permite a los usuarios resolver dudas sobre planes, características y servicios de Digisider en tiempo real sin intervención humana. Las respuestas se generan con `gpt-4o-mini` (OpenAI) usando un enfoque RAG (Retrieval-Augmented Generation) liviano: el backend busca los artículos más relevantes de la base de conocimiento en PostgreSQL y los inyecta en el system prompt antes de llamar a la API.
+
+#### Comportamiento del widget
+
+- Botón circular fijo en esquina inferior derecha (`fixed bottom-6 right-6`)
+- Al hacer clic abre un panel de 340×480px con el historial de conversación
+- Mensaje de bienvenida automático al abrir
+- Respuestas en streaming (tokens letra a letra, no como bloque al final)
+- Botón de reset para iniciar nueva conversación
+- Se cierra con la tecla `Escape` o con el botón ✕
+- Persiste abierto/cerrado durante la navegación (no se resetea al cambiar de página)
+
+#### Gestión de sesión
+
+- Cada sesión de chat se identifica con un token de 64 caracteres almacenado en `sessionStorage` (`hub-chat-session`)
+- La sesión persiste durante la visita al Hub en la misma pestaña
+- Al cerrar la pestaña o usar el botón de reset, se inicia una nueva sesión
+- Límite: 30 mensajes por sesión (después muestra mensaje de límite alcanzado)
+- Rate limit: 30 mensajes/hora por IP
+
+#### Base de Conocimiento
+
+Los artículos que usa el asistente se gestionan desde el Admin Panel en `admin.digisider.com/knowledge-base`:
+
+- CRUD completo de artículos: crear, editar, activar/desactivar, eliminar
+- Cada artículo tiene: título, contenido (Markdown), categoría, palabras clave, orden
+- **Categorías disponibles:** General, Precios y Planes, Características, Primeros Pasos, Preguntas Frecuentes, Soporte
+- Solo los artículos **activos** son usados por el asistente
+- Artículos iniciales cargados: 10 artículos con información real de Digisider
+
+#### Flujo técnico
+
+```
+1. Al montar el widget:
+   POST /api/v1/public/chat/session/ { session_token? }
+   → { session_token } (crea o recupera sesión en BD)
+
+2. Al enviar mensaje:
+   POST /api/v1/public/chat/message/ { session_token, message }
+   → StreamingHttpResponse (SSE)
+
+   Backend internamente:
+   a. Busca artículos relevantes (icontains title/content + keywords array)
+   b. Construye system prompt con artículos encontrados (máx. 4)
+   c. Recupera últimos 8 mensajes del historial
+   d. Llama a OpenAI gpt-4o-mini con stream=True
+   e. Yield tokens SSE → "data: {"token":"..."}\n\n"
+   f. Al terminar: guarda ChatMessage en BD + "data: [DONE]\n\n"
+
+3. Frontend:
+   fetch + ReadableStream (no EventSource — no soporta POST)
+   Parsea líneas "data: {...}" y actualiza el último mensaje del asistente en tiempo real
+```
+
+#### Renderizado de Markdown
+
+Las respuestas del asistente se renderizan con un parser Markdown inline (sin dependencias externas) que soporta:
+- Tablas `| col | col |` → tablas HTML con estilos
+- `**negrita**` y `*cursiva*`
+- Listas `- item` y `1. item`
+- Headers `##` y `###`
+- Párrafos con saltos de línea
+
 ---
 
 ## 5. Vistas del Prototipo
@@ -412,6 +481,21 @@ El admin **configura** el catálogo (qué servicios existen, en qué planes, pre
 | ------ | ------ | --------------------------------------- | --------------------------------------------- |
 | ⭐     | `GET`  | `/api/v1/app/referrals/`                | Stats + código + historial de referidos       |
 
+### Chat IA
+
+| Estado | Método | Endpoint                                      | Descripción                                                     |
+| ------ | ------ | --------------------------------------------- | --------------------------------------------------------------- |
+| ✅     | `POST` | `/api/v1/public/chat/session/`                | Crea o recupera sesión anónima de chat (sin auth requerida)     |
+| ✅     | `POST` | `/api/v1/public/chat/message/`                | Envía mensaje → SSE streaming con respuesta de GPT              |
+| ✅     | `GET`  | `/api/v1/public/chat/history/`                | Historial de mensajes de una sesión (`?session_token=...`)      |
+| ✅     | `GET`  | `/api/v1/admin/knowledge-base/`               | Lista artículos de la KB (requiere `knowledge_base.manage`)     |
+| ✅     | `POST` | `/api/v1/admin/knowledge-base/`               | Crear artículo                                                  |
+| ✅     | `PATCH`| `/api/v1/admin/knowledge-base/{id}/`          | Editar artículo                                                 |
+| ✅     | `DELETE`| `/api/v1/admin/knowledge-base/{id}/`         | Eliminar artículo                                               |
+| ✅     | `POST` | `/api/v1/admin/knowledge-base/{id}/toggle/`   | Activar / desactivar artículo                                   |
+
+> **Nota:** Los endpoints de chat público están bajo `/api/v1/public/` y no requieren `X-Tenant-Slug` ni autenticación. El rate limit es 30 mensajes/hora por IP (`ChatRateThrottle`).
+
 ---
 
 ## 10. Criterios de Aceptación
@@ -498,6 +582,21 @@ El admin **configura** el catálogo (qué servicios existen, en qué planes, pre
 - [ ] El usuario recibe alertas de renovación próxima (7 días antes)
 - [ ] El usuario recibe alerta si el pago falla
 - [ ] Las notificaciones de uso al 80% del límite se muestran en el dashboard
+
+### Chat IA ✅ Implementado
+
+- [x] El widget flotante aparece en la esquina inferior derecha en todas las páginas del Hub
+- [x] El chat es accesible para visitantes anónimos (sin login)
+- [x] El chat es accesible para usuarios autenticados
+- [x] El mensaje de bienvenida aparece automáticamente al abrir el panel
+- [x] Las respuestas se muestran en streaming (letra a letra)
+- [x] El botón de reset permite iniciar una nueva conversación
+- [x] La sesión persiste en `sessionStorage` durante la visita
+- [x] Al alcanzar 30 mensajes muestra el mensaje de límite
+- [x] Las respuestas con Markdown (tablas, negrita, listas) se renderizan correctamente
+- [x] El widget se cierra con `Escape` o con el botón ✕
+- [x] Los artículos de la KB son gestionables desde el Admin Panel
+- [x] Solo los artículos activos son usados por el asistente
 
 ---
 
@@ -756,6 +855,74 @@ El campo `type` del modelo original (`card` | `bank_account`) se amplía con `wa
 
 ---
 
+### ✅ ChatKnowledgeArticle + ChatSession + ChatMessage — implementado en `apps/chat_assistant/`
+
+```python
+class ChatKnowledgeArticle(BaseModel):
+    """Artículos de la base de conocimiento del asistente IA"""
+    CATEGORY_CHOICES = [
+        ('general', 'General'),
+        ('pricing', 'Precios y Planes'),
+        ('features', 'Características'),
+        ('onboarding', 'Primeros Pasos'),
+        ('faq', 'Preguntas Frecuentes'),
+        ('support', 'Soporte'),
+    ]
+    title     = models.CharField(max_length=200)
+    content   = models.TextField()               # Markdown
+    category  = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    keywords  = ArrayField(models.CharField(max_length=100), default=list)
+    is_active = models.BooleanField(default=True)
+    order     = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'chat_knowledge_articles'
+        ordering = ['order', 'title']
+
+
+class ChatSession(BaseModel):
+    """Sesión anónima del visitante (sin FK a User)"""
+    session_token    = models.CharField(max_length=64, unique=True, db_index=True)
+    ip_address       = models.GenericIPAddressField(null=True, blank=True)
+    user_agent       = models.CharField(max_length=500, blank=True)
+    message_count    = models.PositiveIntegerField(default=0)
+    converted        = models.BooleanField(default=False)  # ¿se registró después?
+    last_activity_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'chat_sessions'
+
+
+class ChatMessage(BaseModel):
+    """Mensaje individual dentro de una sesión de chat"""
+    session     = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages')
+    role        = models.CharField(max_length=10, choices=[('user','User'),('assistant','Assistant')])
+    content     = models.TextField()
+    tokens_used = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'chat_messages'
+        ordering = ['created_at']
+```
+
+**Lógica RAG liviano:** `get_relevant_articles(user_message)` busca artículos activos con `icontains` en título, contenido y `keywords__contains`. Fallback: top 3 artículos por orden si sin coincidencias. Máx. 4 artículos por request inyectados en system prompt.
+
+**Límites configurados:**
+- `MAX_MESSAGES_PER_SESSION = 30` — sesión bloqueada tras 30 mensajes
+- `MAX_HISTORY_MESSAGES = 8` — mensajes de historial enviados a OpenAI
+- `MAX_ARTICLES_IN_CONTEXT = 4` — artículos máximos en system prompt
+- Rate limit: `ChatRateThrottle` — 30 mensajes/hora por IP
+
+**Variables de entorno requeridas (backend):**
+```
+OPENAI_API_KEY=sk-...
+OPENAI_CHAT_MODEL=gpt-4o-mini
+```
+
+**Artículos iniciales cargados en producción:** 10 artículos con datos reales de Digisider (fixture `apps/chat_assistant/fixtures/initial_knowledge.json`).
+
+---
+
 ### Corrección: Invoice.amount_cents
 
 El modelo `Invoice` usa `amount_cents = PositiveIntegerField()` (entero en centavos), NO `amount = DecimalField()`. La respuesta API expone `amount_cents: number` y `amount_display: string` (ej. `"$29.00"`). Actualizado en `prd/technical/data-models.md`.
@@ -793,6 +960,8 @@ Mapeo de permisos del catálogo (62 permisos) usados por cada vista del Hub:
 | Notifications  | Solo `IsAuthenticated` (filtrado por tenant)                 | Todos los usuarios     |
 | Referrals      | `referrals.read` _(nuevo permiso — añadir al catálogo)_      | Owner + Admin          |
 | Services (SSO) | Solo `IsAuthenticated` + tenant activo                       | Todos los usuarios     |
+| Chat IA (Hub)  | `AllowAny` (sin auth) — rate limit por IP                    | Visitantes + clientes  |
+| KB Admin       | `knowledge_base.manage`                                      | Owner + Admin          |
 
 > **Permisos nuevos a agregar al catálogo:**
 > ```python
@@ -800,11 +969,23 @@ Mapeo de permisos del catálogo (62 permisos) usados por cada vista del Hub:
 >            description='Permite ver el programa de referidos y el historial')
 > Permission(codename='referrals.manage', name='Gestionar Referidos', resource='referrals', action='manage',
 >            description='Permite gestionar códigos de referido')
+> Permission(codename='knowledge_base.manage', name='Gestionar Base de Conocimiento', resource='knowledge_base', action='manage',
+>            description='Permite crear, editar, activar y eliminar artículos del chat IA')
 > ```
 
 ---
 
 **Creado:** 2026-03-04
-**Actualizado:** 2026-03-04 (v1.3.0 — revisión de inconsistencias backend, modelos requeridos, endpoints corregidos, permisos RBAC Hub)
+**Actualizado:** 2026-06-20 (v1.4.0 — Chat IA con RAG liviano: sección 4.11, endpoints chat, modelos ChatKnowledgeArticle/ChatSession/ChatMessage, criterios de aceptación, permisos RBAC)
 **Prototipo relacionado:** `docs/ui-ux/prototype-hub-client/` (puerto 3003)
 **Prototipos consumidores:** `docs/ui-ux/prototype-workspace/` (puerto 3001)
+
+### Historial de versiones
+
+| Versión | Fecha | Cambios |
+|---------|-------|---------|
+| 1.0.0 | 2026-03-04 | Versión inicial — flujos de registro, SSO, dashboard de servicios |
+| 1.1.0 | 2026-03-04 | Métodos de pago LATAM (Yape, Plin, Nequi, Daviplata, MercadoPago) |
+| 1.2.0 | 2026-03-04 | Dark mode, i18n ES/EN, referidos, equipo, notificaciones |
+| 1.3.0 | 2026-03-04 | Correcciones de inconsistencias backend, modelos requeridos, permisos RBAC |
+| 1.4.0 | 2026-06-20 | Chat IA con RAG liviano — widget Hub + KB Admin Panel ✅ Implementado |
