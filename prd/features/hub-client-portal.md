@@ -53,7 +53,7 @@ Visitante llega al Hub
   → Landing Page (beneficios, planes, CTA)
   → Registro: nombre + email + contraseña + nombre de organización
   → Verificación de email
-  → Selección de plan (Free trial 14 días o plan de pago)
+  → Selección de plan (Free, trial Professional 30 días o plan de pago)
   → Dashboard del Hub (catálogo de servicios)
 ```
 
@@ -61,7 +61,7 @@ Visitante llega al Hub
 
 - El registro crea un nuevo tenant de forma atómica
 - El tenant owner recibe el rol `Owner` automáticamente
-- El trial de 14 días no requiere tarjeta de crédito
+- El trial Professional de 30 días no requiere tarjeta de crédito ni Yape (`?plan=professional&trial=true`) ✅ implementado
 
 ### 4.2 Dashboard de Servicios Adquiridos
 
@@ -510,7 +510,7 @@ El admin **configura** el catálogo (qué servicios existen, en qué planes, pre
 - [ ] El paso 3 permite seleccionar plan con click; el seleccionado muestra check
 - [ ] Al completar el paso 4, el usuario queda autenticado y llega al dashboard sin pasar por login
 - [ ] El registro crea automáticamente un tenant con el usuario como Owner
-- [ ] El trial de 14 días se activa automáticamente sin requerir tarjeta
+- [x] El trial Professional de 30 días se activa sin requerir tarjeta ni Yape (flujo `?plan=professional&trial=true`)
 
 ### Dashboard de Servicios
 

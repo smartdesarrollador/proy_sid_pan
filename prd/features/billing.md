@@ -121,12 +121,12 @@
 **Como** nuevo usuario, quiero elegir un plan (Free trial, Starter, Professional) durante el registro, para empezar con el plan adecuado a mis necesidades.
 
 **Criterios de Aceptación:**
-- [ ] Durante onboarding, se muestra comparación de planes con features/límites
-- [ ] Por defecto se selecciona Free Trial (14 días, no requiere tarjeta)
-- [ ] Si elige plan pago, se solicita método de pago (Stripe Elements)
-- [ ] Tras trial, si no upgradea, pasa a plan Free (limitado)
-- [ ] Email recordatorio 7 días antes de fin de trial
-- [ ] Dashboard muestra días restantes de trial con CTA "Upgrade Now"
+- [x] Durante onboarding, se muestra comparación de planes con features/límites
+- [x] El plan Professional ofrece trial de 30 días gratis (`?plan=professional&trial=true`) — no requiere tarjeta ni Yape
+- [x] Si elige plan Starter/Enterprise, continúa por flujo Yape (ver sección Pago Manual vía Yape)
+- [x] Tras trial, si no upgradea, pasa a plan Free (Celery hace downgrade automático a las 4AM)
+- [x] Email recordatorio 7 días antes de fin de trial
+- [ ] Dashboard muestra días restantes de trial con CTA "Upgrade Now" (pendiente)
 
 ---
 
@@ -240,10 +240,13 @@
 - El sistema DEBE permitir facturación mensual y anual (10% descuento anual)
 
 ### FR-015: Trial y Onboarding
-- El sistema DEBE ofrecer trial de 14 días sin tarjeta (plan Professional)
-- El sistema DEBE enviar emails días 7, 12, 13 recordando fin de trial
-- Tras trial, si no upgradea, DEBE migrar a plan Free automáticamente
-- Plan Free DEBE deshabilitar features Pro y aplicar límites
+- El sistema DEBE ofrecer trial de **30 días sin tarjeta** (plan Professional) ✅ implementado
+- El trial DEBE estar disponible al registrarse (`?plan=professional&trial=true`) y para usuarios Free existentes desde `/subscription` ✅ implementado
+- El trial solo aplica a tenants con `plan='free'` — no a Starter ni Enterprise ✅ implementado
+- Solo se permite **un trial por organización** (`professional_trial_used` en `Tenant`) ✅ implementado
+- El sistema DEBE enviar email de recordatorio 7 días antes del vencimiento ✅ implementado
+- Tras trial, DEBE migrar a plan Free automáticamente (Celery Beat, crontab 4AM) ✅ implementado
+- Plan Free DEBE deshabilitar features Pro y aplicar límites al vencer el trial ✅ implementado
 
 ### FR-016: Upgrade/Downgrade con Proration
 - El sistema DEBE calcular proration al upgrade: (días restantes/días totales) * diferencia
@@ -410,6 +413,78 @@ Panel UI administrativo dedicado a la gestión y visualización del historial fi
 
 ---
 
+## Trial Gratuito 30 Días Plan Professional (implementado)
+
+### Descripción
+
+Flujo de prueba gratuita de 30 días del plan Professional, disponible en dos puntos de entrada:
+
+1. **Al registrarse**: `GET /register?plan=professional&trial=true` → el Step 3 muestra precio "Gratis →", badge "30 días gratis" y el Step 4 confirma la activación sin pasar por Yape.
+2. **Usuario Free existente**: desde `/subscription` → botón "Probar 30 días gratis" en la tarjeta Professional → `POST /api/v1/admin/subscriptions/trial`.
+
+Decisión de arquitectura documentada en [ADR-006 — Trial Gratuito Plan Professional](../../docs/adr/006-trial-gratuito-plan-professional.md).
+Implementación documentada en [reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md](../../reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md).
+
+### Reglas de negocio
+
+- Solo disponible para tenants con `plan='free'` (no Starter ni Enterprise)
+- Un trial por organización (`Tenant.professional_trial_used = True` tras activarse)
+- Al vencer: Celery Beat (4AM) hace downgrade a Free automáticamente
+- Recordatorio 7 días antes del vencimiento (Celery Beat, 10AM)
+- `Subscription.status = 'trialing'` durante el período (MRR reportado como $0 en Admin Panel)
+
+### User Stories
+
+#### US-121: Registro con Trial Professional
+**Como** nuevo usuario, quiero probar el plan Professional 30 días gratis al registrarme, sin necesidad de pagar.
+
+**Criterios de Aceptación:**
+- [x] URL `?plan=professional&trial=true` preselecciona Professional con badge "30 días gratis"
+- [x] El precio muestra "Gratis →" en lugar del precio mensual
+- [x] El Step 4 muestra banner "¡Prueba Professional activa por 30 días!" sin paso de pago
+- [x] `Subscription.status = 'trialing'`, `trial_end = now + 30d`
+- [x] `Tenant.professional_trial_used = True` para prevenir trials duplicados
+
+#### US-122: Activación de Trial desde Suscripción (usuario Free existente)
+**Como** usuario con plan Free, quiero activar un trial de 30 días de Professional desde mi panel de suscripción.
+
+**Criterios de Aceptación:**
+- [x] El botón "Probar 30 días gratis" aparece solo si `plan='free'` y `professional_trial_used=False`
+- [x] El botón desaparece si ya se usó el trial (`professional_trial_used=True`)
+- [x] Al confirmar, `CurrentPlanCard` muestra banner con fecha de vencimiento del trial
+- [x] `POST /api/v1/admin/subscriptions/trial` requiere permiso `subscriptions.manage`
+
+#### US-123: Expiración Automática del Trial
+**Como** sistema, debo degradar automáticamente los trials vencidos a plan Free.
+
+**Criterios de Aceptación:**
+- [x] Celery Beat corre `expire_professional_trials` diario a las 4AM
+- [x] Busca `status='trialing'`, `trial_end <= now()` → downgrade a `plan='free'`, `status='active'`
+- [x] Email enviado al owner del tenant al vencer
+- [x] Celery Beat corre `remind_professional_trial_expiry` diario a las 10AM
+- [x] Busca trials con `trial_end` en ventana `[now+6d, now+8d]` → envía email de recordatorio
+
+### Functional Requirements
+
+#### FR-145: Trial Professional al Registro
+- `RegisterSerializer` DEBE aceptar `is_trial: bool` (default False)
+- Si `plan='professional'` e `is_trial=True`: crear suscripción `status='trialing'`, `trial_end=now+30d`, `tenant.plan='professional'`, `tenant.professional_trial_used=True`
+- `RegisterView` DEBE retornar `{ trial_active: true, trial_end: '...' }` omitiendo el flujo de pago Yape
+- Si `professional_trial_used=True`: rechazar con error 400 `trial_already_used`
+
+#### FR-146: Trial Professional para Usuarios Existentes
+- `StartTrialView` (`POST /api/v1/admin/subscriptions/trial`) DEBE validar `tenant.plan == 'free'`
+- DEBE validar `tenant.professional_trial_used == False`
+- DEBE ejecutar la actualización en `transaction.atomic()`
+- DEBE retornar la suscripción actualizada via `CurrentSubscriptionSerializer`
+
+#### FR-147: Expiración y Recordatorio de Trial
+- `expire_professional_trials`: crontab `hour=4, minute=0`, downgrade atómico por tenant, email al owner
+- `remind_professional_trial_expiry`: crontab `hour=10, minute=0`, ventana `[now+6d, now+8d]`
+- Ambas tareas registradas en `CELERY_BEAT_SCHEDULE` con `DatabaseScheduler`
+
+---
+
 ## Pago Manual vía Yape (implementado)
 
 ### Descripción
@@ -525,4 +600,4 @@ públicos de Yape.
 
 ---
 
-**Última actualización**: 2026-06-16
+**Última actualización**: 2026-06-21

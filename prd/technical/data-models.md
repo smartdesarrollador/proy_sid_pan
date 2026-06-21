@@ -37,6 +37,9 @@ class Tenant(models.Model):
         default='free'
     )
     
+    # Trial — un solo trial Professional por organización
+    professional_trial_used = models.BooleanField(default=False)  # ✅ migration 0004
+
     # Settings
     branding = models.JSONField(default=dict)  # {logo_url, primary_color, etc.}
     settings = models.JSONField(default=dict)
@@ -1032,6 +1035,6 @@ class Referral(models.Model):
 
 ---
 
-**Última actualización**: 2026-03-04
+**Última actualización**: 2026-06-21
 
 **Nota**: Para modelos completos con todos los campos y relaciones, consultar el archivo original en `/prd/rbac-subscription-system.md` sección 6.1.

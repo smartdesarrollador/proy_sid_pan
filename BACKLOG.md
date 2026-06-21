@@ -17,6 +17,13 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-06-21 — Trial 30 días Professional + Descarga Desktop en Landing** ✅
+  Campo `professional_trial_used` en Tenant (migration 0004). Endpoint `POST /admin/subscriptions/trial`.
+  Tasks Celery de expiración (4AM) y recordatorio (10AM). Frontend: `useStartTrial`, banner en
+  `CurrentPlanCard`, botón "Probar 30 días gratis" en `PlanComparisonGrid`, flujo `?trial=true`
+  en `RegisterPageClient`, sección Desktop Download en `LandingPageClient`.
+  _→ [Reporte](reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md) · [ADR-006](docs/adr/006-trial-gratuito-plan-professional.md)_
+
 - **2026-06-20 — Chat IA con RAG liviano** ✅
   Widget flotante en toda la app Hub. RAG liviano con PostgreSQL + `gpt-4o-mini`.
   Gestión de KB desde Admin Panel. 10 artículos de Digisider cargados en producción.
@@ -26,11 +33,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   Auditoría de feature gates en Vista, Workspace y Hub. Identificados 3 cambios de
   prioridad media (portfolio en Starter, sharing en Free, export en todos los planes).
   _→ [Reporte](reports/2026-06-17-feature-gates-analysis.md)_
-
-- **2026-06-15 — Integración de Pago Yape** ✅
-  Flujo de comprobante manual vía Telegram bot. Upgrade desde Hub con `YapePaymentProofView`.
-  Aprobación/rechazo por admin activa suscripción automáticamente.
-  _→ [Reporte](reports/2026-06-15-implementacion-pago-yape.md) · [ADR-004](docs/adr/004-pago-manual-yape.md)_
 
 ---
 
@@ -68,6 +70,15 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       desde el Hub) duplica parte de la lógica de `YapePaymentProofView` del registro.
       Candidato a extraer a un helper/service compartido si se añaden más puntos de
       entrada de comprobantes Yape.
+- [ ] Template HTML para el email de expiración de trial — `expire_professional_trials` usa `send_mail`
+      con texto plano; diseñar template consistente con el resto de emails de la plataforma.
+      _Origen: [reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md](reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md)_
+- [ ] Panel en Admin para ver tenants en estado `trialing` con vencimiento próximo — útil para
+      seguimiento comercial y detección de oportunidades de conversión antes del vencimiento.
+      _Origen: [reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md](reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md)_
+- [ ] Mostrar `professional_trial_used` en la vista de detalle de cliente del Admin Panel —
+      actualmente no es visible sin consultar la BD directamente.
+      _Origen: [reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md](reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md)_
 - [ ] Agregar TTL/expiración a los `admin_token` de `YapePaymentProof` — los links de
       aprobación/rechazo de Telegram quedan vigentes indefinidamente.
       _Origen: [reports/2026-06-15-implementacion-pago-yape.md](reports/2026-06-15-implementacion-pago-yape.md),
