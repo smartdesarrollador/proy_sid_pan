@@ -23,6 +23,12 @@ trabajar. Este paso evita arrancar "con la mente en blanco" y permite detectar s
 feature nueva ya tiene contexto previo (deuda técnica relacionada, decisiones ya
 tomadas, etc.).
 
+Si se trata de un **bug o un síntoma concreto**, consultar también la base de
+incidencias del skill `lessons-learned` (grep en
+`.claude/skills/lessons-learned/references/knowledge-base.md`): es muy probable que algo
+igual ya se haya resuelto (entradas `LL-0XX`) y se aplique la solución conocida en vez de
+re-investigar desde cero.
+
 ---
 
 ## 2. PRD — solo para features nuevas de tamaño mediano/grande
@@ -94,6 +100,14 @@ Recordatorio: siempre correr `make test` antes de dar por cerrada la tarea
     original).
 - Si existe un ADR relacionado con el reporte, citarlo en el encabezado del reporte
   (y viceversa) para mantener trazabilidad entre "qué pasó" y "por qué se diseñó así".
+- **Destilar la lección** (`lessons-learned`): si hubo un problema no trivial (causa raíz
+  no obvia o probable que reaparezca), agregar una entrada `LL-0XX` a
+  `.claude/skills/lessons-learned/references/knowledge-base.md` (síntoma → causa → fix →
+  prevención). Es la versión accionable y consultable del reporte — cierra el loop para que
+  no se repita.
+- **Si el cambio tocó el harness** (skills, hooks, reglas o `CLAUDE.md`): correr la suite de
+  `evals/` y revisar `evals/observations/runs.md` para confirmar que no hubo regresión
+  (ver [evals-y-observability.md](evals-y-observability.md)).
 
 ---
 
@@ -114,14 +128,16 @@ Como respaldo, el usuario puede recordarlo manualmente al final de una tarea lar
 ## Resumen del flujo
 
 ```
-Revisar BACKLOG.md (pedir a Claude que lo recuerde)
+Revisar BACKLOG.md + lessons-learned (ante un bug, consultar la KB primero)
   → PRD (solo features grandes)            → prd/
   → Plan de implementación                  → plans/ (o roadmaps/ si son varias secciones)
   → Tasks con criterios verificables (opcional, features medianas/grandes)
   → Código + corrección de errores          → make test
   → Reporte (si aplica)                     → reports/
+  → Lección destilada (si no trivial)       → lessons-learned (LL-0XX)
   → ADR (solo si hubo decisión arquitectónica) → docs/adr/
   → BACKLOG.md se actualiza solo (regla en CLAUDE.md)
+  → Si tocó el harness: correr evals/
 ```
 
 ## Relación entre artefactos
@@ -133,4 +149,5 @@ Revisar BACKLOG.md (pedir a Claude que lo recuerde)
 | `plans/` | ¿Cómo se va a implementar? | Antes de codear una sección reducida | Se puede archivar al completarse |
 | `roadmaps/` | ¿Cómo se mapean varias secciones/planes? | Al construir muchas páginas/secciones | Living doc de alto nivel |
 | `reports/` | ¿Qué pasó y cómo se solucionó? | Al cerrar un bug significativo o feature no trivial | Sí — histórico, con fecha |
+| `lessons-learned` (KB) | ¿Ya nos pasó esto? síntoma→causa→fix→prevención | Al resolver un problema no trivial (destilado del reporte) | Sí — acumulativo, consultable por síntoma/tag |
 | `docs/adr/` | ¿Por qué se eligió este diseño sobre otros? | Cuando hubo una decisión arquitectónica con alternativas | Sí — inmutable, se reemplaza con un ADR nuevo |

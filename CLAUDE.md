@@ -401,6 +401,31 @@ Features de backend por plan: `mfa` (professional+), `sso` (enterprise), `webhoo
   - Mover pendientes resueltos fuera de la lista
   - Agregar nueva deuda técnica o ideas de feature que hayan surgido durante el trabajo,
     citando el reporte de origen si existe
+- Tras resolver un problema **no trivial** (causa raíz no obvia, o probable que reaparezca),
+  destilar la lección en el skill `lessons-learned` (entrada `LL-0XX` en
+  `.claude/skills/lessons-learned/references/knowledge-base.md`), además del reporte en
+  `reports/` y de `BACKLOG.md`. Antes de depurar, consultar primero esa KB (puede que ya esté resuelto)
+- Si el cambio tocó el **harness** (skills, hooks, reglas o este `CLAUDE.md`), correr la suite de
+  `evals/` y revisar `evals/observations/runs.md` antes de dar por cerrado
+
+## Sistema de conocimiento del proyecto
+
+Además de los skills genéricos de framework, este repo tiene una capa propia de **conocimiento +
+medición del agente**. Usarla activamente:
+
+**Skills específicos del proyecto** (distintos de los `drf-*`/`react-*`/`tauri-*` genéricos):
+- `lessons-learned` — KB de incidencias del proyecto (síntoma → causa raíz → solución → prevención,
+  entradas `LL-001…LL-091` en 9 secciones). **CONSULTAR** (grep en `references/knowledge-base.md`) antes
+  de depurar un bug; **REGISTRAR** una entrada nueva tras resolver algo no trivial.
+- `dokploy-deploy` — desplegar/redeployar las apps en el VPS (Dokploy + Traefik).
+- `new-admin-feature` — andamiar una sección nueva del Admin Panel con las convenciones del repo.
+
+**Capa de medición** (¿el harness mejora?):
+- `evals/` — 5 tareas-patrón con rúbrica + `RESULTS.md` (línea base/comparación). Correr tras tocar el harness.
+- `evals/observations/runs.md` — traza automática por sesión (qué skills/tools usó, si consultó la KB,
+  si corrió tests); generada por el hook `observability-run-log.py`.
+
+**Guías**: `docs/guides/project-skills.md` y `docs/guides/evals-y-observability.md`.
 
 ## Custom Tools & Skills
 

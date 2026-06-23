@@ -7,6 +7,11 @@
 - **Dos agentes no pueden escribir el mismo archivo en paralelo** — asignar ownership claro
 - **Cadenas secuenciales**: el output de un agente es el input del siguiente
 - **Ante la duda, secuencial** — más lento pero más seguro que resultados conflictivos
+- **Consultar `lessons-learned` al arrancar** — todo flujo de bug/feature empieza consultando la KB de
+  incidencias (`.claude/skills/lessons-learned/references/knowledge-base.md`); los subagentes ya traen el
+  bloque «Conocimiento del proyecto» para hacerlo. Tras resolver algo no trivial, registrar la lección.
+- **Cambios al harness → correr `evals/`** — si el flujo modifica skills, hooks, reglas o `CLAUDE.md`,
+  correr la suite de `evals/` y revisar `evals/observations/runs.md` antes de dar por cerrado.
 
 ## Grupos de paralelización segura
 
