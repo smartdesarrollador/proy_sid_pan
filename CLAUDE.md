@@ -408,5 +408,5 @@ Features de backend por plan: `mfa` (professional+), `sso` (enterprise), `webhoo
 - Commands: `.claude/commands/` (create-prd, generate-report, onboard, pr-review)
 - Agents: `.claude/agents/` (api-documenter, billing-validator, code-reviewer, compliance-checker, database-optimizer, migration-manager, nextjs-builder, planner, react-vite-builder, researcher, security-auditor, tauri-desktop-builder, test-generator, ui-ux-designer)
 - Rules: `.claude/rules/` (agent-orchestration, ai-development, code-style, security)
-- Hooks: `.claude/hooks/` (detect-doc-changes.sh, lessons-learned-consult.sh, sync-claude-md.sh, task-finished-alert.py)
+- Hooks: `.claude/hooks/` (detect-doc-changes.sh, lessons-learned-consult.sh, sync-claude-md.sh, observability-run-log.py, task-finished-alert.py)
 - See `.claude/README.md` for full configuration reference

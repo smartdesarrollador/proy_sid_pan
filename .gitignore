@@ -2,6 +2,12 @@
 # .gitignore - AI/ML Development Project
 # ============================================
 
+# ---------- Observability del agente (telemetría local) ----------
+# Traza por sesión generada por .claude/hooks/observability-run-log.py.
+# Se versiona solo evals/observations/README.md (quitar estas líneas para historial compartido).
+evals/observations/runs.jsonl
+evals/observations/runs.md
+
 # ---------- Environment & Secrets ----------
 .env
 .env.local

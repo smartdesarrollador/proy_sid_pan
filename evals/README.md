@@ -46,5 +46,5 @@ puntaje **baja**, detectaste una regresión; usa las "Señales de fallo" del eva
 - Los evals dan una **línea base medible** y responden directo "¿mi cambio al harness ayudó?".
 - Son baratos de arrancar (markdown + rúbrica), sin instrumentación.
 - La **observability** entra cuando un eval falla y necesitas ver *por qué*: ahí miras la traza de la
-  sesión (qué skill usó, qué tocó, si consultó `lessons-learned`). De momento, `RESULTS.md` + las
-  "Señales de fallo" + los `reports/` cumplen ese rol de forma ligera.
+  sesión (qué skill usó, qué tocó, si consultó `lessons-learned`). Implementada en
+  [`observations/`](observations/) — un hook registra cada sesión automáticamente en `observations/runs.md`.
