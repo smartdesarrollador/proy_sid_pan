@@ -141,3 +141,6 @@ Los permisos RBAC que gobiernan la feature (`<recurso>.read/create/...`) **deben
 - **Crear un skill nuevo**: usar `/skill-creator`. Candidatos pendientes recomendados:
   `api-endpoint-conventions` (convenciones DRF del proyecto) y `new-hub-feature`/`new-vista-feature`
   (equivalentes a `new-admin-feature` para los frontends Next.js).
+- **Medir si un cambio al harness ayuda**: ver [`evals/`](../../evals/) — 5 tareas-patrón con rúbrica
+  para puntuar al agente sobre estos skills y detectar mejoras/regresiones. Correr la suite tras tocar
+  un skill, una regla o el `CLAUDE.md`; registrar el puntaje en `evals/RESULTS.md`.
