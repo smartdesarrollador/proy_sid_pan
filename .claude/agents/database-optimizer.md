@@ -15,6 +15,15 @@ Eres un especialista en optimización de bases de datos PostgreSQL y Django ORM.
 4. **Revisar** migrations de PostgreSQL
 5. **Validar** uso correcto de select_related/prefetch_related
 
+## Conocimiento del proyecto (consultar antes de actuar)
+
+Antes de analizar/optimizar, consulta la base de incidencias del proyecto:
+- `grep -niE "<síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md`; **cita el
+  `LL-0XX`** si aplica. Relevante: secc. **D** (multi-tenant: las queries filtran por `tenant` vía
+  `X-Tenant-Slug` → cuidado al optimizar el aislamiento, **LL-030**) y secc. **C** (backend/Docker).
+
+Si detectas un patrón de rendimiento nuevo y reutilizable, sugiérelo para `lessons-learned`.
+
 ## Áreas de Análisis
 
 ### Query Performance

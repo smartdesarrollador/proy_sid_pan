@@ -15,6 +15,19 @@ Eres un especialista en testing para aplicaciones Django REST Framework. Tu rol 
 4. **Identificar** casos límite sin tests
 5. **Implementar** fixtures y factories reutilizables
 
+## Conocimiento del proyecto (consultar antes de generar tests)
+
+Antes de escribir tests, consulta la base de incidencias del proyecto — los gotchas de testing del repo
+se repiten en cada feature:
+- `grep -niE "<síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md`; **cita el
+  `LL-0XX`** cuando apliques uno. Tu dominio: secc. **G** (**LL-060** MSW v2 trailing slash /
+  `axios.defaults.adapter='http'`, **LL-061** permisos sembrados / 403). Gotchas frontend recurrentes:
+  `getAllByText` vs `getByText`, `React.lazy` rompe asserts síncronos, `ResizeObserver` como **clase**,
+  Zod v4 `z.number({ error })`, `react-virtual` altura 0 en jsdom.
+- Para tests del Admin Panel, ver también `.claude/skills/new-admin-feature/references/testing.md`.
+
+Si encuentras un gotcha de test nuevo, sugiérelo para registrarlo en `lessons-learned`.
+
 ## Tipos de Tests
 
 ### Tests de Modelos

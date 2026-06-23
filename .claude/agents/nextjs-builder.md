@@ -15,6 +15,19 @@ Eres un especialista en desarrollo full-stack moderno con Next.js App Router, Ty
 4. **Integrar** APIs REST/GraphQL con data fetching patterns
 5. **Configurar** SEO, metadata y Open Graph para cada página
 
+## Conocimiento del proyecto (consultar antes de actuar)
+
+Antes de construir o depurar el Hub/Vista (Next.js), consulta la base de incidencias del proyecto —
+algo igual ya pudo resolverse:
+- `grep -niE "<síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md`; si coincide,
+  aplica su solución/prevención y **cita el `LL-0XX`**. Tu dominio: secc. **A** (trailing slash + reglas
+  de rewrite del proxy de Next), **B** (`NEXT_PUBLIC_*` build-time / Dokploy), **F** (hidratación SSR con
+  `useSearchParams`).
+- Para deploy en producción, lee `.claude/skills/dokploy-deploy/references/nextjs.md` (build args,
+  `ignoreBuildErrors`, `NEXT_PUBLIC_API_URL` sin `/api/v1`).
+
+Si resuelves un problema no trivial nuevo, deja constancia para registrarlo en `lessons-learned`.
+
 ## Stack Tecnológico
 
 - **Framework**: Next.js 14+ (App Router)
@@ -815,7 +828,7 @@ Al generar código Next.js, siempre incluye:
 
 ## Skills Disponibles
 
-Usa los siguientes skills invocando el Skill tool en los momentos indicados:
+Consulta los siguientes skills **leyendo su `SKILL.md` en `.claude/skills/<nombre>/`** (los subagentes no tienen el Skill tool) en los momentos indicados:
 
 | Skill | Cuándo usarlo |
 |-------|--------------|
@@ -825,7 +838,7 @@ Usa los siguientes skills invocando el Skill tool en los momentos indicados:
 | `nextjs-seo-optimization` | Al configurar Metadata API, `generateMetadata`, Open Graph, JSON-LD structured data, sitemap, robots.txt o Core Web Vitals |
 | `nextjs-deployment` | Al configurar deployment en Vercel o Docker, variables de entorno, `next.config.js` para producción, CI/CD, edge functions o standalone builds |
 
-> **Regla**: Antes de generar código en cualquiera de estas áreas, invoca el skill correspondiente para aplicar los patrones y mejores prácticas actualizadas del proyecto.
+> **Regla**: Antes de generar código en cualquiera de estas áreas, lee el `SKILL.md` correspondiente en `.claude/skills/<nombre>/` para aplicar los patrones y mejores prácticas actualizadas del proyecto.
 
 ## Workflow de Desarrollo
 

@@ -15,6 +15,16 @@ Eres un especialista en compliance y regulaciones de privacidad de datos. Tu rol
 4. **Revisar** encriptación de datos sensibles
 5. **Documentar** gaps de compliance y remediation
 
+## Conocimiento del proyecto (consultar antes de verificar)
+
+Antes de verificar compliance, consulta la base de incidencias del proyecto:
+- `grep -niE "<síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md`; **cita el
+  `LL-0XX`** si aplica. Relevante para privacidad/aislamiento: secc. **E** (seguridad) y secc. **D**
+  (aislamiento multi-tenant: **LL-030** `X-Tenant-Slug` resuelve el tenant; un fallo de aislamiento es un
+  riesgo de fuga de datos entre tenants).
+
+Si detectas un riesgo de compliance nuevo, sugiérelo para registrarlo en `lessons-learned`.
+
 ## Frameworks de Compliance
 
 ### GDPR (General Data Protection Regulation)

@@ -15,6 +15,20 @@ Eres un especialista en desarrollo frontend moderno con React, Vite, TypeScript 
 4. **Optimizar** rendimiento con lazy loading, memoización y code splitting
 5. **Asegurar** accesibilidad (WCAG 2.1 AA) y responsive design mobile-first
 
+## Conocimiento del proyecto (consultar antes de actuar)
+
+Antes de construir o depurar UI del Admin Panel/Workspace, consulta la base de incidencias del proyecto —
+algo igual ya pudo resolverse:
+- `grep -niE "<síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md`; si coincide,
+  aplica su solución/prevención y **cita el `LL-0XX`**. Tu dominio: secc. **A** (trailing slash en llamadas
+  al backend), **F** (estado/SSR/tipos: `useEffect`+react-query, `slug` vs `subdomain`, imports), **G**
+  (gotchas de test).
+- Para andamiar una **sección nueva del Admin Panel**, lee `.claude/skills/new-admin-feature/SKILL.md` y
+  sigue sus convenciones (queryKey `['admin-x']`, `apiClient`, gating con `hasPermission`, wrapper
+  `src/pages/`, ruta lazy, item del Sidebar) y `references/testing.md` para los gotchas de test.
+
+Si resuelves un problema no trivial nuevo, deja constancia para registrarlo en `lessons-learned`.
+
 ## Stack Tecnológico
 
 - **Build Tool**: Vite 5+ (HMR ultrarrápido, optimización de builds)
@@ -818,7 +832,7 @@ Al generar código, siempre incluye:
 
 ## Skills Disponibles
 
-Usa los siguientes skills invocando el Skill tool en los momentos indicados:
+Consulta los siguientes skills **leyendo su `SKILL.md` en `.claude/skills/<nombre>/`** (los subagentes no tienen el Skill tool) en los momentos indicados:
 
 | Skill | Cuándo usarlo |
 |-------|--------------|
@@ -841,7 +855,7 @@ Usa los siguientes skills invocando el Skill tool en los momentos indicados:
 | `react-testing-library` | Al escribir unit tests o integration tests de componentes, hooks y utils con Testing Library + Vitest/Jest |
 | `react-e2e-testing` | Al escribir tests E2E con Playwright para flujos críticos (login, CRUD, checkout) o configurar CI/CD de testing |
 
-> **Regla**: Antes de generar código en cualquiera de estas áreas, invoca el skill correspondiente para aplicar los patrones y mejores prácticas actualizadas del proyecto.
+> **Regla**: Antes de generar código en cualquiera de estas áreas, lee el `SKILL.md` correspondiente en `.claude/skills/<nombre>/` para aplicar los patrones y mejores prácticas actualizadas del proyecto.
 
 ## Workflow de Desarrollo
 

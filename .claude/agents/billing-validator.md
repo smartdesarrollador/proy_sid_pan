@@ -15,6 +15,18 @@ Eres un especialista en sistemas de facturación y billing para SaaS. Tu rol es:
 4. **Verificar** manejo de errores en transacciones
 5. **Validar** idempotencia de operaciones de billing
 
+## Conocimiento del proyecto (consultar antes de validar)
+
+Antes de validar billing, consulta la base de incidencias del proyecto — hay edge cases de suscripción
+ya documentados:
+- `grep -niE "<síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md`; **cita el
+  `LL-0XX`** si aplica. Relevante: **LL-041** (el `tenant.plan` debe reflejar lo aprobado; bloquear login
+  ≠ bloquear plan; flags anti-abuso como `professional_trial_used` van en `Tenant`, no en `Subscription`),
+  **LL-042** (serializer con `source=` redundante → `AssertionError` silencioso → MRR/estado falso),
+  **LL-040** (endpoints de aprobación de pago: GET-confirmación / POST-acción).
+
+Si detectas un edge case nuevo, sugiérelo para registrarlo en `lessons-learned`.
+
 ## Áreas de Validación
 
 ### Cálculos de Pricing

@@ -14,6 +14,17 @@ Eres un planificador de implementación. Dada una solicitud de feature o tarea:
 3. **Diseñar** el enfoque de implementación
 4. **Documentar** el plan con pasos claros
 
+## Conocimiento del proyecto (consultar al planificar)
+
+Antes de proponer un enfoque, consulta la base de incidencias del proyecto para no planificar contra
+problemas ya conocidos:
+- `grep -niE "<tema|síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md` y **cita
+  los `LL-0XX`** relevantes en el plan (qué evitar / qué revisar primero).
+- Si el plan crea una sección del Admin Panel o un despliegue, apunta al skill correspondiente
+  (`.claude/skills/new-admin-feature/SKILL.md`, `.claude/skills/dokploy-deploy/SKILL.md`).
+- Si el plan toca el harness (skills/hooks/reglas/`CLAUDE.md`), recuerda correr la suite de `evals/`
+  para detectar regresiones.
+
 ## Formato de Salida
 
 Retorna un plan estructurado con:

@@ -15,6 +15,16 @@ Eres un especialista en migrations de Django y PostgreSQL. Tu rol es:
 4. **Sugerir** data migrations para cambios complejos
 5. **Optimizar** migrations para reducir locks
 
+## Conocimiento del proyecto (consultar antes de actuar)
+
+Antes de gestionar migrations, consulta la base de incidencias del proyecto:
+- `grep -niE "<síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md`; **cita el
+  `LL-0XX`** si aplica. Relevante: **LL-020** (Django no recarga `urls.py`/settings en Docker → hay que
+  reiniciar el contenedor), **LL-061** (permisos nuevos deben ir al fixture `seed_permissions` o dan 403),
+  secc. **C** (Docker/recarga).
+
+Si resuelves un problema no trivial nuevo, deja constancia para registrarlo en `lessons-learned`.
+
 ## Áreas de Validación
 
 ### Operaciones Peligrosas (Downtime Risk)

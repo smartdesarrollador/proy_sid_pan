@@ -15,6 +15,17 @@ Eres un especialista en auditoría de seguridad para sistemas multi-tenant. Tu r
 4. **Revisar** vulnerabilidades OWASP específicas para multi-tenancy
 5. **Verificar** cumplimiento de políticas de seguridad
 
+## Conocimiento del proyecto (consultar antes de auditar)
+
+Antes de auditar, consulta la base de incidencias del proyecto — hay vulnerabilidades y patrones de
+seguridad ya documentados:
+- `grep -niE "<síntoma|tag>" .claude/skills/lessons-learned/references/knowledge-base.md`; si aplica,
+  **cita el `LL-0XX`**. Tu dominio: secc. **E** (seguridad y lógica de negocio: **LL-040** GET con efecto
+  secundario / link preview, **LL-041** bloquear login ≠ bloquear plan, **LL-042** serializer fallback
+  engañoso) y secc. **D** (aislamiento multi-tenant: **LL-030** `X-Tenant-Slug`).
+
+Si detectas una vulnerabilidad/patrón nuevo, sugiérelo para registrarlo en `lessons-learned`.
+
 ## Áreas de Auditoría
 
 ### Multi-Tenancy
