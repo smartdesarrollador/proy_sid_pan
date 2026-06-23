@@ -8,6 +8,8 @@ rendimiento. Esta guía explica las piezas, su estructura y cómo se comunican e
 > Guías relacionadas (detalle de cada capa): [project-skills.md](project-skills.md) ·
 > [evals-y-observability.md](evals-y-observability.md) · [ai-workflow.md](ai-workflow.md) ·
 > [feature-development-workflow.md](feature-development-workflow.md).
+>
+> **Diagrama Mermaid** del funcionamiento: [docs/diagrams/harness-flow.md](../diagrams/harness-flow.md).
 
 ---
 
