@@ -7,11 +7,11 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 
 - [A. Trailing slash, proxies y routing HTTP](#a-trailing-slash-proxies-y-routing-http) — LL-001 … LL-004
 - [B. Variables de entorno y build (Next.js / Dokploy)](#b-variables-de-entorno-y-build-nextjs--dokploy) — LL-010 … LL-011
-- [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-024
+- [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-025
 - [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-032
 - [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-042
-- [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-054
-- [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-061
+- [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-055
+- [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-062
 - [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-079
 - [I. Tauri / Desktop en producción](#i-tauri--desktop-en-producción) — LL-090 … LL-091
 
@@ -131,6 +131,19 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** `reports/varios/frontend_next_hub_deployment_issues.md`
 - **Tags:** docker-compose-v1, ContainerConfig, orphan-container
 
+### LL-025 — `ChunkLoadError` (timeout) en Next dev tras `.next` stale + borrado root-owned
+- **Síntoma:** En el Hub en dev, runtime `ChunkLoadError: Loading chunk app/layout failed (timeout: http://hub.local.test/_next/static/chunks/app/layout.js)`. Next ancla el error en `app/layout.tsx` (`<Providers>`), pero no es un bug de código: el navegador pide un hash de chunk que ya no existe y cuelga hasta el timeout del proxy (nginx-proxy-manager sirve `hub.local.test` → `next dev :4000`).
+- **Causa raíz:** `.next` stale / chunks desincronizados (HMR a medias, compile crasheado, o alternar webpack/turbopack) → el manifest cacheado en el browser referencia chunks inexistentes. Variante con timeout de la familia LL-023/LL-011.
+- **Solución (recreate, NO restart):**
+  1. `docker stop rbac_next_hub_dev && docker rm -f rbac_next_hub_dev` (si `compose down` falla con *network has active endpoints*, el contenedor sigue colgado: fórzalo).
+  2. Borrar `.next` — está **root-owned** por Docker, `rm -rf` desde el host da *Permission denied* y lo deja corrupto. Usar contenedor efímero: `docker run --rm -v "$PWD":/work -w /work alpine rm -rf /work/.next` (o `docker exec rbac_next_hub_dev rm -rf .next` antes de bajarlo).
+  3. `docker-compose up -d` (recrear, no `restart`: re-lee `.env.local` y fuerza compile limpio — ver LL-021).
+  4. En el browser, **hard refresh** (`Ctrl+Shift+R`) para soltar el manifest viejo (chunks con `Cache-Control: immutable`, LL-011).
+  5. Verificar: `curl -H "Host: hub.local.test" http://localhost/_next/static/chunks/app/layout.js` → 200.
+- **Prevención:** Ante errores de chunk/build raros en Next dentro de Docker, sospechar `.next` antes que del código. Nunca `rm -rf .next` desde el host (root-owned) ni `docker restart` (no limpia): borrar vía contenedor + recrear. Si el timeout persiste con `.next` limpio, es el proxy → en nginx-proxy-manager subir `proxy_read_timeout`/`proxy_send_timeout` y `proxy_buffering off`. Ver también [[LL-023]], [[LL-011]], [[LL-021]].
+- **Fuente:** sesión 2026-06-25 (depuración ChunkLoadError Hub dev)
+- **Tags:** nextjs, docker, cache, chunkloaderror, webpack, nginx-proxy-manager, docker-reload, dev
+
 ---
 
 ## D. Multi-tenancy, CORS y headers
@@ -239,6 +252,14 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** `reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md`
 - **Tags:** typescript, import, named-export, default-export
 
+### LL-055 — `400 Bad Request` al crear/editar por nombres de campo distintos del serializer de escritura
+- **Síntoma:** Un POST/PATCH de creación falla con **400** y la UI muestra un error genérico ("Ocurrió un error. Intenta de nuevo."). En consola: `POST /api/v1/app/<recurso>/ 400`. No hay error de TypeScript: el tipo del frontend es *self-consistent* pero usa otro vocabulario que el serializer de escritura del backend. Caso real: Calendario en Workspace enviaba `start_date`/`end_date`/`all_day`/`category`, pero `CalendarEventCreateUpdateSerializer` exige `start_datetime`/`end_datetime` (required) e `is_all_day` y no tiene `category` → faltan los required → 400.
+- **Causa raíz:** Desalineación de nombres entre el payload del frontend y el contrato de **escritura** del backend. Agravante frecuente: el serializer de **lectura** expone *alias* de conveniencia (p.ej. `start_date`/`end_date` además de `start_datetime`), lo que oculta el problema en el GET y hace creer que esos nombres también valen para escribir. Variante de runtime de [[LL-053]] (que sí daba error TS) y de la nota de [[LL-079]].
+- **Solución:** El backend (modelo + serializer) es el esquema canónico. Mapear en la **frontera**: en `onSubmit`/el hook de mutación construir el payload con los nombres exactos del serializer de escritura (`start_datetime`, `end_datetime`, `is_all_day`, …). Si la lectura usa nombres distintos (`is_all_day` vs `all_day`, sin `category`), transformar también en el `select` del hook de query (mapear back→front) para que editar prellene bien. Los conceptos solo-frontend (p.ej. `category`) se derivan a/desde un campo real (`color`) con un mapa y su inverso.
+- **Prevención:** Antes de cablear un form a un endpoint, abrir el serializer de **escritura** (no fiarse del de lectura ni del tipo TS del front) y copiar los nombres/required exactos. Probar **crear** de verdad, no solo listar. Recordar que un GET correcto no garantiza que el POST use los mismos nombres. Candidato a generar tipos desde el schema OpenAPI. Ver [[LL-053]], [[LL-079]].
+- **Fuente:** sesión 2026-06-25 (bugfix crear evento Calendario Workspace)
+- **Tags:** drf, serializer, field-mismatch, 400, calendar, workspace, write-contract, frontend-backend
+
 ---
 
 ## G. Testing (MSW, fixtures, permisos)
@@ -258,6 +279,14 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Todo permiso referenciado en una vista debe existir en los fixtures de `seed_permissions`. Tras crear apps/roles, correr el seed antes de probar.
 - **Fuente:** memoria PASO 21; `reports/2026-06-20-implementacion-chat-ia.md` (deuda `knowledge_base.manage`)
 - **Tags:** rbac, permissions, seed, fixtures, 403
+
+### LL-062 — Test con fechas hardcodeadas falla con el paso del tiempo
+- **Síntoma:** Un test que pasaba empieza a fallar sin tocar el código (p.ej. `los eventos aparecen en la vista mes` no encuentra los eventos). Falla igual con o sin los cambios en curso (confirmar con `git stash`).
+- **Causa raíz:** Fixtures con fechas **absolutas** (`start_date: '2026-03-10T09:00'`) contra UI que muestra el **mes/día actual** por defecto. Cuando la fecha real avanza fuera de ese mes, el componente ya no renderiza esos eventos. El test era válido solo en la ventana temporal en que se escribió.
+- **Solución:** Derivar las fechas de los fixtures de `new Date()` (hoy) para que siempre caigan en el rango mostrado: `const today = new Date(); const ymd = ...; start_date: \`${ymd}T09:00\``. Alternativa: fijar el reloj con `vi.setSystemTime(new Date('...'))` en `beforeEach` + `vi.useRealTimers()` en `afterEach`.
+- **Prevención:** Nunca hardcodear fechas absolutas en fixtures que se comparan contra vistas "hoy/mes actual". Antes de culpar un cambio por un test roto, correr el test con `git stash` para descartar fallo pre-existente dependiente del tiempo.
+- **Fuente:** sesión 2026-06-25 (bugfix crear evento Calendario Workspace)
+- **Tags:** testing, fixtures, fechas, time-dependent, vitest, flaky
 
 ---
 
