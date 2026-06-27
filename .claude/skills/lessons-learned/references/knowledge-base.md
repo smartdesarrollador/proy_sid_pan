@@ -12,7 +12,7 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-042
 - [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-055
 - [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-062
-- [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-079
+- [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-080
 - [I. Tauri / Desktop en producción](#i-tauri--desktop-en-producción) — LL-090 … LL-091
 
 ---
@@ -438,6 +438,19 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Casos vistos:** admin (5 archivos de test + api.ts), workspace (6 archivos).
 - **Fuente:** `reports/2026-04-03-deploy-frontend-admin-dokploy.md`, `reports/2026-04-03-deploy-frontend-workspace-dokploy.md`
 - **Tags:** typescript, build, zod, zodResolver, mocks, slug-subdomain, deploy
+
+### LL-080 — Error CORS en el navegador que en realidad es un 502 por OOM de gunicorn
+- **Síntoma:** En producción el login (u otra request a `api-rbac.<dominio>`) falla **intermitentemente** con `Access to XMLHttpRequest ... has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present` + `net::ERR_FAILED`. Tienta a revisar/ampliar `CORS_ALLOWED_ORIGINS`, pero el origen ya está permitido.
+- **Causa raíz:** El backend devuelve un **`502 Bad Gateway`** generado por **Traefik** (no por Django), y la respuesta de error del proxy **no incluye headers CORS** → el navegador lo reporta como fallo de CORS (falso positivo). El 502 ocurre porque los workers de **gunicorn mueren por OOM**: en el log del contenedor aparece `[ERROR] Worker (pid:XXXX) was sent SIGKILL! Perhaps out of memory?` de forma recurrente. El cap de memoria del contenedor (`deploy.resources.limits.memory`) era demasiado bajo (400M) para 2 workers de Django (~175M c/u en reposo → 87%); un `POST /login` (bcrypt + queries) cruzaba el límite → SIGKILL. Agravado por **VPS sin swap** (`free -m` → `Swap: 0`) → el OOM killer actúa al instante sin colchón.
+- **Solución:**
+  1. Confirmar que NO es CORS: `OPTIONS` preflight responde `200` con `access-control-allow-origin`, y un `POST`/health responde 2xx-4xx **con** header CORS. Si el preflight pasa pero la request real falla → 502/OOM, no CORS.
+  2. Revisar el log del backend en Dokploy → buscar `SIGKILL ... Perhaps out of memory?`.
+  3. **Añadir swap** al VPS (2 GB swapfile + `vm.swappiness=10`) — fix de mayor impacto y menor riesgo.
+  4. Subir el cap de memoria del contenedor con moderación según `free -m` (django 400M→512M; celery-worker 300M→384M) y añadir `--max-requests 500 --max-requests-jitter 50` a gunicorn para reciclar workers y cortar fugas.
+- **Prevención:** Ante "No 'Access-Control-Allow-Origin' header" + `ERR_FAILED`, **verificar primero que el backend responde** antes de tocar la config CORS — un 502 del proxy se disfraza de error CORS. Todo VPS de producción debe tener swap. Vigilar `docker stats`: si un contenedor vive >85% de su `limits.memory`, está a un pico de morir por OOM. **Bajar el límite de otro contenedor (p.ej. n8n) NO libera RAM para el backend** — los limits de Docker son techos independientes, no un pool compartido; la RAM solo se libera cuando un contenedor *usa* menos.
+- **Casos vistos:** login del Hub `digisider.com` cayendo intermitente (jun 2026).
+- **Fuente:** `reports/2026-06-27-login-cors-502-oom-gunicorn.md`
+- **Tags:** cors, 502, oom, gunicorn, sigkill, traefik, swap, docker-memory-limit, false-positive, deploy
 
 ---
 

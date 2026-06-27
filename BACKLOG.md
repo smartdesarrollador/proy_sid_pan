@@ -17,6 +17,16 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-06-27 — Fix login prod: error CORS que era 502 por OOM de gunicorn** ✅
+  El login del Hub (`digisider.com`) caía intermitente con "No 'Access-Control-Allow-Origin'"
+  + `ERR_FAILED`. **No era CORS** (origen permitido): era un **502 de Traefik** sin headers CORS,
+  causado por **OOM** matando workers de gunicorn (`SIGKILL ... Perhaps out of memory?`). El cap de
+  memoria del contenedor (400M) era muy bajo para 2 workers y el VPS **no tenía swap**. Fix: swap de
+  2 GB (`vm.swappiness=10`) + subir caps en `docker-compose.dokploy.yml` (django 400M→512M,
+  celery-worker 300M→384M) + `--max-requests 500 --max-requests-jitter 50` en gunicorn. Verificado:
+  django 87%→58%, login OK. Lección registrada en [[LL-080]].
+  _→ [Reporte](reports/2026-06-27-login-cors-502-oom-gunicorn.md)_
+
 - **2026-06-27 — Bóveda: datos protegidos con contraseña maestra (Workspace)** ✅
   Nueva app Django `apps/vault` (`VaultKey`, `VaultItem`) + feature `frontend_workspace/src/features/vault`.
   **Envelope encryption**: DEK por usuario envuelta con `KEK = Argon2id(master_password, salt)` (módulo
@@ -37,17 +47,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   en `Avatar`. Reutiliza toda la infra (mensajes, adjuntos, convertir a nota, WebSocket). 51/51 tests
   backend (7 nuevos), 16/16 chat frontend (1 nuevo).
   _→ [Reporte](reports/2026-06-27-chat-mensajes-guardados-self-chat.md)_
-
-- **2026-06-26 — Chat en Workspace (3 fases: intra-tenant, cross-tenant, tiempo real)** ✅
-  Nueva app Django `apps/chat` (`Conversation`, `ConversationMember`, `Message`, `MessageAttachment`,
-  `ChatConnection`) + feature `frontend_workspace/src/features/chat`. **Fase 1**: directos+grupos
-  intra-tenant, polling, convertir mensaje→nota/contacto/snippet (con `check_plan_limit`). **Fase 2**:
-  conexiones cross-tenant (invitar por email, aceptar/rechazar, grupos mixtos). **Fase 3**: WebSockets
-  (Django Channels+daphne+channels-redis /3, JWT en query string, typing/online) con **fallback a
-  polling**, adjuntos (multipart, 10MB), y onboarding de emails no registrados (signal `post_save`).
-  Auth por membresía (`IsAuthenticated`). 44/44 tests backend, 15/15 chat frontend, WS smoke OK.
-  Surgió y se resolvió LL-026 (debug_toolbar/djdt al pasar a ASGI).
-  _→ [Reporte](reports/2026-06-26-chat-workspace-3-fases.md)_
 
 ---
 
@@ -76,7 +75,10 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       En dev el `runserver` ya es ASGI/Daphne, pero producción corre **gunicorn (WSGI)**. Para que el
       chat en vivo funcione en prod hay que servir Django con **daphne/uvicorn (ASGI)** y exponer el
       upgrade WebSocket en Traefik. Documentar con skill `dokploy-deploy`. Sin esto, prod cae al
-      **fallback de polling** (funciona, sin tiempo real). _Origen: Fase 3 chat, sesión 2026-06-26._
+      **fallback de polling** (funciona, sin tiempo real). **Confirmado en prod (2026-06-27):** el log
+      del backend muestra `GET /ws/chat/` devolviendo `301` cada ~60 s (el cliente reintenta el WS
+      contra WSGI y nunca conecta). _Origen: Fase 3 chat, sesión 2026-06-26; evidencia en
+      [reports/2026-06-27-login-cors-502-oom-gunicorn.md](reports/2026-06-27-login-cors-502-oom-gunicorn.md)._
 - [ ] **Chat — almacenamiento de adjuntos:** los `MessageAttachment` usan `MEDIA_ROOT` local
       (`chat_attachments/`). En prod (contenedor efímero) migrar a S3/volumen persistente
       (django-storages) si los adjuntos deben sobrevivir redeploys. _Origen: Fase 3 chat._
