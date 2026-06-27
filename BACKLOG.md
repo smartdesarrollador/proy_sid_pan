@@ -17,6 +17,16 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-06-27 — Chat completo en sidebar desktop (Tauri v2)** ✅
+  Port completo del chat del Workspace al `ChatPanel` del desktop. 25 archivos nuevos
+  (`features/chat/types`, `utils`, `ws`, 13 hooks, 9 componentes + orquestador). Sin añadir
+  dependencias: hooks con `useState`/`apiFetch` igual que los demás paneles. WebSocket con
+  callbacks en vez de `queryClient`. Layout drill-down `lista → thread` para el panel angosto
+  (320 px default). Vistas inline `NewChatView` + `ConnectionsView` reemplazan los modales del
+  Workspace. Funcionalidades completas: mensajes, adjuntos, respuestas, typing, grupos, cross-tenant,
+  mensajes guardados, convertir a nota/snippet/contacto. `tsc --noEmit` sin errores.
+  _→ [Reporte](reports/2026-06-27-chat-desktop-sidebar.md)_
+
 - **2026-06-27 — Fix login prod: error CORS que era 502 por OOM de gunicorn** ✅
   El login del Hub (`digisider.com`) caía intermitente con "No 'Access-Control-Allow-Origin'"
   + `ERR_FAILED`. **No era CORS** (origen permitido): era un **502 de Traefik** sin headers CORS,
@@ -37,16 +47,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   (free 10 / starter 50 / pro+ ∞). Sección "Bóveda" en sidebar (DEVOPS) + setup en Configuración →
   Seguridad. Auth por membresía/usuario (`IsAuthenticated`). 17/17 tests backend, 4/4 frontend, build OK.
   _→ [Reporte](reports/2026-06-27-vault-datos-protegidos-contrasena-maestra.md) · [PRD](prd/features/vault-datos-protegidos.md)_
-
-- **2026-06-27 — Chat propio "Mensajes guardados" (self-chat)** ✅
-  Conversación consigo mismo estilo Telegram Saved Messages: `Conversation.type='self'` (migration
-  0004) con un único `ConversationMember`. `SelfConversationView` get-or-create idempotente en
-  `POST /app/chat/conversations/self/` (antes del matcher UUID). Serializer devuelve
-  `display_name='Mensajes guardados'` + `display_avatar.type='self'`. Frontend: hook
-  `useSelfConversation`, entrada fija con icono `Bookmark` arriba de `ConversationList`, prop `isSelf`
-  en `Avatar`. Reutiliza toda la infra (mensajes, adjuntos, convertir a nota, WebSocket). 51/51 tests
-  backend (7 nuevos), 16/16 chat frontend (1 nuevo).
-  _→ [Reporte](reports/2026-06-27-chat-mensajes-guardados-self-chat.md)_
 
 ---
 
@@ -157,3 +157,13 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       lista vacía (no 401/403) — el comportamiento silencioso puede confundir si no
       está cubierto por test.
       _Origen: [reports/2026-03-15-bugfix-desktop-snippets.md](reports/2026-03-15-bugfix-desktop-snippets.md)_
+- [ ] Notificaciones nativas Tauri cuando llega un mensaje de chat con el panel de chat
+      cerrado: usar `@tauri-apps/plugin-notification` para mostrar el nombre del remitente
+      y el preview del mensaje; requiere que `useChatSocket` quede activo en background
+      (considerar moverlo al nivel de `App.tsx`).
+      _Origen: [reports/2026-06-27-chat-desktop-sidebar.md](reports/2026-06-27-chat-desktop-sidebar.md)_
+- [ ] Badge de mensajes no leídos en el ícono de Chat del `IconStrip`: sumar `unread_count`
+      de todas las conversaciones y mostrar un dot/badge rojo. Requiere compartir el estado
+      de conversaciones fuera del `ChatPanel` (subir al store de navegación o crear un
+      `chatStore` global).
+      _Origen: [reports/2026-06-27-chat-desktop-sidebar.md](reports/2026-06-27-chat-desktop-sidebar.md)_
