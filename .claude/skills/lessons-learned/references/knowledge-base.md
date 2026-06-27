@@ -144,6 +144,20 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** sesión 2026-06-25 (depuración ChunkLoadError Hub dev)
 - **Tags:** nextjs, docker, cache, chunkloaderror, webpack, nginx-proxy-manager, docker-reload, dev
 
+### LL-026 — Pasar Django a ASGI/Daphne (Channels) activa `debug_toolbar` y rompe con `NoReverseMatch: 'djdt'`
+- **Síntoma:** Tras añadir `daphne`+`channels` a `INSTALLED_APPS` (para WebSockets), `runserver` arranca como *ASGI/Daphne* y de pronto **todas** las respuestas a `/api/...` desde `127.0.0.1` devuelven 500 con `django.urls.exceptions.NoReverseMatch: 'djdt' is not a registered namespace` (traceback en render de template del toolbar). Health/JSON incluidos.
+- **Causa raíz:** `debug_toolbar` estaba en `INSTALLED_APPS` + su middleware en `dev.py`, pero `config/urls.py` **nunca incluyó** `debug_toolbar.urls` → el namespace `djdt` no existe. Con WSGI el toolbar no se activaba; con Daphne/ASGI el `REMOTE_ADDR` de los requests locales queda como `127.0.0.1` (∈ `INTERNAL_IPS`) y el toolbar se activa, reventando al intentar `reverse('djdt:...')`.
+- **Solución:** Registrar las URLs del toolbar bajo guard en `config/urls.py`:
+  ```python
+  if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:
+      import debug_toolbar
+      urlpatterns += [path('__debug__/', include(debug_toolbar.urls))]
+  ```
+  Health vuelve a 200. (`daphne` debe ir **primero** en `INSTALLED_APPS`, antes de `django.contrib.staticfiles`, para proveer el runserver ASGI.)
+- **Prevención:** Al introducir Channels/Daphne, revisar middlewares dev que dependan de URLs (debug_toolbar, etc.) y registrar sus namespaces. Recordar que el cambio WSGI→ASGI altera `REMOTE_ADDR`/detección de IP interna y puede activar componentes antes dormidos. Rebuild del contenedor obligatorio por deps nuevas (ver [[LL-022]], [[LL-024]] para el arranque con `docker run` cuando compose v1 falla).
+- **Fuente:** sesión 2026-06-26 (Fase 3 chat Workspace: WebSockets)
+- **Tags:** django, channels, daphne, asgi, websockets, debug-toolbar, djdt, noreversematch, runserver
+
 ---
 
 ## D. Multi-tenancy, CORS y headers
@@ -203,6 +217,22 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** No poner `source=` igual al nombre del field. Cuidado con bloques `try/except` amplios alrededor de serialización: ocultan AssertionError de config y devuelven datos fallback plausibles pero falsos. Loguear la excepción en el except.
 - **Fuente:** `reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md`
 - **Tags:** drf, serializer, source-redundant, silent-assertion, fallback, mrr
+
+### LL-043 — Derivar una clave de cifrado: usar Argon2 raw determinista, NO el password-hasher de Django
+- **Síntoma (potencial):** Una clave derivada de una contraseña (p. ej. la KEK de la Bóveda, envelope encryption) no permite descifrar lo que se cifró con "la misma" contraseña; cada derivación da bytes distintos.
+- **Causa raíz:** Los password-hashers de Django (`make_password`, `Argon2PasswordHasher`) **incrustan un salt aleatorio nuevo** en cada llamada → sirven para *verificar* (`check_password`) pero **no** para re-derivar una clave determinista. Usarlos como KDF de cifrado rompe el descifrado.
+- **Solución:** Para derivar una clave de cifrado usar una KDF **determinista** con un salt almacenado: `argon2.low_level.hash_secret_raw(secret, salt, ..., type=Type.ID)` (o PBKDF2/HKDF de `cryptography`). Guardar el `salt` junto al dato. El *verificador* de la contraseña sí puede seguir usando `make_password`/`check_password` (su salt aleatorio es correcto ahí). Patrón en `apps/vault/crypto.py`.
+- **Prevención:** Separar conceptualmente "verificar contraseña" (hasher con salt aleatorio) de "derivar clave" (KDF determinista con salt persistido). Nunca derivar claves de cifrado con un password-hasher de autenticación.
+- **Fuente:** `reports/2026-06-27-vault-datos-protegidos-contrasena-maestra.md`
+- **Tags:** seguridad, cifrado, argon2, kdf, envelope-encryption, vault, determinismo
+
+### LL-044 — Header HTTP custom nuevo del frontend → añadirlo a `CORS_ALLOW_HEADERS` (preflight)
+- **Síntoma:** Una feature nueva manda un header propio (p. ej. `X-Vault-Token`) y el navegador bloquea la llamada: *"Request header field x-vault-token is not allowed by Access-Control-Allow-Headers in preflight response"* + `net::ERR_FAILED`. Curiosamente otras llamadas de la misma feature **sí** pasan (las que no llevan el header).
+- **Causa raíz:** `django-cors-headers` solo refleja en el preflight los headers de la lista **explícita** `CORS_ALLOW_HEADERS`. Como el frontend está en otro origen (`workspace.local.test` → `rbac.local.test`), cada request con un header no estándar dispara un preflight `OPTIONS` que falla si el header no está permitido.
+- **Solución:** Añadir el header (en minúsculas) a `CORS_ALLOW_HEADERS` en `config/settings/base.py` (junto a `x-tenant-slug`). Reiniciar Django.
+- **Prevención:** Al introducir cualquier header `X-*` propio en el `apiClient`, actualizar `CORS_ALLOW_HEADERS` en el mismo cambio. Si "unas llamadas funcionan y otras no" en una misma feature cross-origin, sospechar del header diferencial + preflight.
+- **Fuente:** `reports/2026-06-27-vault-datos-protegidos-contrasena-maestra.md`
+- **Tags:** cors, preflight, django-cors-headers, header-custom, cross-origin, vault
 
 ---
 

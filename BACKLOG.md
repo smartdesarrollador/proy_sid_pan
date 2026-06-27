@@ -17,26 +17,37 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
-- **2026-06-22 — Formulario de Contacto público con reCAPTCHA v3 + Panel Admin** ✅
-  Nueva app Django `apps/contact` (`ContactMessage`, endpoints público + admin). Sección "Contáctanos"
-  en landing Hub con reCAPTCHA v3 invisible, guarda en BD y envía email de confirmación. Panel
-  "Mensajes de Contacto" en Admin Panel (filtros + estados new/read/archived). Resuelta cadena de
-  bugs de entrega de `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` en producción (build-args de Dokploy).
-  _→ [Reporte](reports/2026-06-22-formulario-contacto-recaptcha.md)_
+- **2026-06-27 — Bóveda: datos protegidos con contraseña maestra (Workspace)** ✅
+  Nueva app Django `apps/vault` (`VaultKey`, `VaultItem`) + feature `frontend_workspace/src/features/vault`.
+  **Envelope encryption**: DEK por usuario envuelta con `KEK = Argon2id(master_password, salt)` (módulo
+  `apps/vault/crypto.py`); ni la clave global del servidor sola descifra. **Código de recuperación**
+  (envuelve la misma DEK con segunda KEK). Unlock cachea la DEK en Redis bajo `X-Vault-Token` (TTL 15min,
+  cifrada con la clave global); rate-limit + lockout; 423 Locked sin token. Lista visible bloqueada
+  (solo título/tipo). Tipos: login/api_key/secure_note/card. Plan gating `max_vault_items`
+  (free 10 / starter 50 / pro+ ∞). Sección "Bóveda" en sidebar (DEVOPS) + setup en Configuración →
+  Seguridad. Auth por membresía/usuario (`IsAuthenticated`). 17/17 tests backend, 4/4 frontend, build OK.
+  _→ [Reporte](reports/2026-06-27-vault-datos-protegidos-contrasena-maestra.md) · [PRD](prd/features/vault-datos-protegidos.md)_
 
-- **2026-06-22 — Footer administrable Hub (3 landing pages nuevas + Admin Panel)** ✅
-  Nueva app Django `site_config` con modelos `FooterConfig`+`FooterLink` (singleton pk=1).
-  API pública `GET /public/footer` y 4 endpoints admin (GET/PUT config, POST/PATCH/DELETE links).
-  Componente `LandingFooter` (3 columnas: marca+redes, servicios, contacto) compartido en 6 páginas Hub.
-  Sección "Footer del Hub" en Admin Panel con edición inline de enlaces. 2 landing pages nuevas: `/digital-design` y `/aprende-inteligencia-artificial`.
-  _→ [Reporte](reports/2026-06-22-footer-administrable-hub.md)_
+- **2026-06-27 — Chat propio "Mensajes guardados" (self-chat)** ✅
+  Conversación consigo mismo estilo Telegram Saved Messages: `Conversation.type='self'` (migration
+  0004) con un único `ConversationMember`. `SelfConversationView` get-or-create idempotente en
+  `POST /app/chat/conversations/self/` (antes del matcher UUID). Serializer devuelve
+  `display_name='Mensajes guardados'` + `display_avatar.type='self'`. Frontend: hook
+  `useSelfConversation`, entrada fija con icono `Bookmark` arriba de `ConversationList`, prop `isSelf`
+  en `Avatar`. Reutiliza toda la infra (mensajes, adjuntos, convertir a nota, WebSocket). 51/51 tests
+  backend (7 nuevos), 16/16 chat frontend (1 nuevo).
+  _→ [Reporte](reports/2026-06-27-chat-mensajes-guardados-self-chat.md)_
 
-- **2026-06-21 — Trial 30 días Professional + Descarga Desktop en Landing** ✅
-  Campo `professional_trial_used` en Tenant (migration 0004). Endpoint `POST /admin/subscriptions/trial`.
-  Tasks Celery de expiración (4AM) y recordatorio (10AM). Frontend: `useStartTrial`, banner en
-  `CurrentPlanCard`, botón "Probar 30 días gratis" en `PlanComparisonGrid`, flujo `?trial=true`
-  en `RegisterPageClient`, sección Desktop Download en `LandingPageClient`.
-  _→ [Reporte](reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md) · [ADR-006](docs/adr/006-trial-gratuito-plan-professional.md)_
+- **2026-06-26 — Chat en Workspace (3 fases: intra-tenant, cross-tenant, tiempo real)** ✅
+  Nueva app Django `apps/chat` (`Conversation`, `ConversationMember`, `Message`, `MessageAttachment`,
+  `ChatConnection`) + feature `frontend_workspace/src/features/chat`. **Fase 1**: directos+grupos
+  intra-tenant, polling, convertir mensaje→nota/contacto/snippet (con `check_plan_limit`). **Fase 2**:
+  conexiones cross-tenant (invitar por email, aceptar/rechazar, grupos mixtos). **Fase 3**: WebSockets
+  (Django Channels+daphne+channels-redis /3, JWT en query string, typing/online) con **fallback a
+  polling**, adjuntos (multipart, 10MB), y onboarding de emails no registrados (signal `post_save`).
+  Auth por membresía (`IsAuthenticated`). 44/44 tests backend, 15/15 chat frontend, WS smoke OK.
+  Surgió y se resolvió LL-026 (debug_toolbar/djdt al pasar a ASGI).
+  _→ [Reporte](reports/2026-06-26-chat-workspace-3-fases.md)_
 
 ---
 
@@ -44,6 +55,10 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
+- [ ] **Deploy Bóveda a prod:** redeployar backend (`back_dj_sp`) + `migrate vault`, redeployar
+      workspace (`front_ws_sp`). **Requisitos**: (1) `ENCRYPTION_KEY` válida en Dokploy (Fernet,
+      una sola vez — si cambia se pierde lo cifrado); (2) que el cambio de `CORS_ALLOW_HEADERS`
+      (`x-vault-token`) esté en el commit desplegado. _Origen: E2E Bóveda 2026-06-27._
 - [ ] Verificar que las notificaciones por correo (activación, rechazo, etc.) lleguen
       al correo real del usuario en producción (no solo en entorno de pruebas).
 - [ ] Implementar cambios de prioridad media del análisis de feature gates: portfolio
@@ -57,6 +72,20 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Chat Fase 3 — deploy prod (Dokploy):** el Workspace ahora usa WebSockets (Django Channels).
+      En dev el `runserver` ya es ASGI/Daphne, pero producción corre **gunicorn (WSGI)**. Para que el
+      chat en vivo funcione en prod hay que servir Django con **daphne/uvicorn (ASGI)** y exponer el
+      upgrade WebSocket en Traefik. Documentar con skill `dokploy-deploy`. Sin esto, prod cae al
+      **fallback de polling** (funciona, sin tiempo real). _Origen: Fase 3 chat, sesión 2026-06-26._
+- [ ] **Chat — almacenamiento de adjuntos:** los `MessageAttachment` usan `MEDIA_ROOT` local
+      (`chat_attachments/`). En prod (contenedor efímero) migrar a S3/volumen persistente
+      (django-storages) si los adjuntos deben sobrevivir redeploys. _Origen: Fase 3 chat._
+- [ ] **Bóveda — zero-knowledge (fase futura):** hoy es envelope server-side ("Nivel B"): el servidor
+      ve la master password en tránsito durante el unlock. Para máxima seguridad, mover el cifrado al
+      navegador (WebCrypto/Argon2) para que la master password nunca llegue al servidor. Implica perder
+      búsqueda server-side y recuperación. _Origen: feature Bóveda, sesión 2026-06-27._
+- [ ] **Bóveda — extras:** generador de contraseñas, autocompletar, importar/exportar, compartir ítems
+      entre usuarios del tenant, adjuntos cifrados. _Origen: feature Bóveda (fuera de alcance v1)._
 - [ ] `featureGates.ts` de `frontend_next_vista` está hardcodeado (client-side). Migrar
       a server-driven consumiendo `GET /api/v1/features/` igual que Hub y Workspace,
       para eliminar la deuda de sincronización manual cuando cambian las definiciones de plan.
