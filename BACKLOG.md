@@ -17,6 +17,15 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-06-28 — Bóveda en sidebar desktop (Tauri v2)** ✅
+  Port completo del Vault al `VaultPanel`. 22 archivos nuevos + 5 modificados. Store efímero
+  (sin `localStorage` → recarga = re-lock). Drill-down `lista → detalle/formulario`. X-Vault-Token
+  inyectado en `buildHeaders` via `getState()`. 3 bugs corregidos: panel nuevo ignorado en sidebar
+  guardado (fix: migración automática en `settingsStore`), `isUnlocked` como función Zustand no
+  disparaba re-render (fix: suscribir a `unlockToken`/`expiresAt`), respuesta `{ items }` no `{ results }`.
+  `tsc --noEmit` sin errores. Ítems sincronizados con workspace.
+  _→ [Reporte](reports/2026-06-28-vault-desktop-sidebar.md)_
+
 - **2026-06-27 — Chat completo en sidebar desktop (Tauri v2)** ✅
   Port completo del chat del Workspace al `ChatPanel` del desktop. 25 archivos nuevos
   (`features/chat/types`, `utils`, `ws`, 13 hooks, 9 componentes + orquestador). Sin añadir
@@ -36,17 +45,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   celery-worker 300M→384M) + `--max-requests 500 --max-requests-jitter 50` en gunicorn. Verificado:
   django 87%→58%, login OK. Lección registrada en [[LL-080]].
   _→ [Reporte](reports/2026-06-27-login-cors-502-oom-gunicorn.md)_
-
-- **2026-06-27 — Bóveda: datos protegidos con contraseña maestra (Workspace)** ✅
-  Nueva app Django `apps/vault` (`VaultKey`, `VaultItem`) + feature `frontend_workspace/src/features/vault`.
-  **Envelope encryption**: DEK por usuario envuelta con `KEK = Argon2id(master_password, salt)` (módulo
-  `apps/vault/crypto.py`); ni la clave global del servidor sola descifra. **Código de recuperación**
-  (envuelve la misma DEK con segunda KEK). Unlock cachea la DEK en Redis bajo `X-Vault-Token` (TTL 15min,
-  cifrada con la clave global); rate-limit + lockout; 423 Locked sin token. Lista visible bloqueada
-  (solo título/tipo). Tipos: login/api_key/secure_note/card. Plan gating `max_vault_items`
-  (free 10 / starter 50 / pro+ ∞). Sección "Bóveda" en sidebar (DEVOPS) + setup en Configuración →
-  Seguridad. Auth por membresía/usuario (`IsAuthenticated`). 17/17 tests backend, 4/4 frontend, build OK.
-  _→ [Reporte](reports/2026-06-27-vault-datos-protegidos-contrasena-maestra.md) · [PRD](prd/features/vault-datos-protegidos.md)_
 
 ---
 
