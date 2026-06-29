@@ -9,8 +9,8 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - [B. Variables de entorno y build (Next.js / Dokploy)](#b-variables-de-entorno-y-build-nextjs--dokploy) — LL-010 … LL-011
 - [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-025
 - [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-032
-- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-042
-- [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-055
+- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-045
+- [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-056
 - [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-062
 - [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-080
 - [I. Tauri / Desktop en producción](#i-tauri--desktop-en-producción) — LL-090 … LL-091
@@ -234,6 +234,14 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** `reports/2026-06-27-vault-datos-protegidos-contrasena-maestra.md`
 - **Tags:** cors, preflight, django-cors-headers, header-custom, cross-origin, vault
 
+### LL-045 — Buscar en un recurso cifrado: solo el campo plano (título), nunca el ciphertext
+- **Síntoma (potencial):** Al sumar un recurso con datos cifrados (p. ej. la Bóveda) a una búsqueda global, la tentación es buscar/"mostrar un snippet" del contenido — lo que exigiría descifrar y arriesgaría filtrar secretos en la respuesta de un endpoint que no requiere unlock.
+- **Causa raíz:** En `VaultItem` el `title` se guarda en **texto plano** mientras que lo sensible vive en `data_ciphertext`. Mezclar ambos en el `search` (o serializar el item entero) expondría el ciphertext y/o obligaría a manejar el `X-Vault-Token` fuera de su flujo.
+- **Solución:** En el agregador (`apps/search/views.py`) buscar **solo `title__icontains`** y devolver únicamente `{title, type-label}`. El `data_ciphertext` no se consulta ni se serializa nunca; el `snippet` muestra solo metadata no sensible (la etiqueta del tipo: Login/API Key/…). Así el endpoint no necesita unlock ni `X-Vault-Token`.
+- **Prevención:** Para cualquier modelo con campos cifrados, tratar el ciphertext como **inalcanzable** desde features transversales (search, export, audit). Test explícito: si el término solo está en el secreto, **no** debe haber match y el secreto **no** debe aparecer en el JSON (`assertNotIn` sobre `json.dumps(body)`). Cuidado: el término sí se hace *echo* en `query`, así que asertar sobre el resto del secreto. Ver [[LL-043]].
+- **Fuente:** `reports/2026-06-29-buscador-general-workspace.md`
+- **Tags:** seguridad, cifrado, vault, search, ciphertext, fuga-de-datos, multi-tenant
+
 ---
 
 ## F. Frontend React / Next.js (estado, SSR, tipos)
@@ -289,6 +297,14 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Antes de cablear un form a un endpoint, abrir el serializer de **escritura** (no fiarse del de lectura ni del tipo TS del front) y copiar los nombres/required exactos. Probar **crear** de verdad, no solo listar. Recordar que un GET correcto no garantiza que el POST use los mismos nombres. Candidato a generar tipos desde el schema OpenAPI. Ver [[LL-053]], [[LL-079]].
 - **Fuente:** sesión 2026-06-25 (bugfix crear evento Calendario Workspace)
 - **Tags:** drf, serializer, field-mismatch, 400, calendar, workspace, write-contract, frontend-backend
+
+### LL-056 — El error nativo "WebSocket … failed" no es suprimible desde JS; acotar reintentos
+- **Síntoma:** La consola del navegador se llena de `WebSocket connection to 'ws://…/ws/chat/…' failed` repetido cada pocos segundos, incluso en páginas que no son el chat (la consola de una SPA **persiste** los logs entre rutas).
+- **Causa raíz:** Dos cosas combinadas. (1) Ese mensaje lo emite **el navegador** al fallar `new WebSocket()`; no lo captura `try/catch`, `onerror` ni un override de `console` → no se puede silenciar desde JS. (2) `useChatSocket` reconectaba con backoff **indefinidamente** (cada ≤15 s para siempre), así que cada reintento generaba un error nuevo. En entornos sin ASGI/Daphne (o proxy que no hace upgrade WS) el socket nunca conecta → spam infinito. El chat igual funciona por el **fallback de polling**.
+- **Solución:** Acotar los reintentos: `MAX_RECONNECT_ATTEMPTS = 4` en `useChatSocket.ts`; en `onclose`, si se alcanzó el tope, **no** reprogramar `connect()`. Resetear el contador a 0 en `onopen` (un corte transitorio recupera su presupuesto). El spam pasa de infinito a ~5 líneas.
+- **Prevención:** Todo cliente WS con reconexión debe tener un tope de intentos (o circuit breaker), no un bucle eterno. Asumir que el "log de conexión fallida" es **inevitable** por intento; lo único controlable es **cuántos intentos**. La cura de raíz es servir el WS de verdad (ASGI/Daphne + upgrade en Traefik) — deuda "Chat Fase 3" en `BACKLOG.md`. Para WS solo necesarios en una vista, montar el hook **solo** en esa vista (no global).
+- **Fuente:** `reports/2026-06-29-buscador-general-workspace.md` (cambio colateral)
+- **Tags:** websocket, consola, reconexion, backoff, chat, asgi, polling-fallback, frontend
 
 ---
 

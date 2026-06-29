@@ -17,6 +17,17 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-06-29 — Buscador general (Workspace)** ✅
+  Nueva pestaña "Buscar" (lupa) en el sidebar → página `/search` con agregador en backend
+  (`GET /api/v1/app/search/`, nueva app `apps.search`). Un término busca a la vez en 9 tipos:
+  notas, tareas, eventos, contactos, bookmarks, snippets, **proyectos**, **bóveda** y **mensajes
+  de chat**, agrupados con resaltado y filtros avanzados (tipo + rango de fechas). Aislamiento
+  multi-tenant + chat por membresía en un solo punto. **Bóveda: solo se busca/devuelve el `title`**
+  (texto plano); el `data_ciphertext` nunca se consulta ni serializa. Colateral: acotado el spam de
+  consola del chat (`useChatSocket` ahora corta reintentos de WS tras 4 fallos → polling).
+  Backend 12/12 tests · frontend typecheck + 5/5 search + build ✓.
+  _→ [Reporte](reports/2026-06-29-buscador-general-workspace.md)_
+
 - **2026-06-28 — Bóveda en sidebar desktop (Tauri v2)** ✅
   Port completo del Vault al `VaultPanel`. 22 archivos nuevos + 5 modificados. Store efímero
   (sin `localStorage` → recarga = re-lock). Drill-down `lista → detalle/formulario`. X-Vault-Token
@@ -35,16 +46,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   Workspace. Funcionalidades completas: mensajes, adjuntos, respuestas, typing, grupos, cross-tenant,
   mensajes guardados, convertir a nota/snippet/contacto. `tsc --noEmit` sin errores.
   _→ [Reporte](reports/2026-06-27-chat-desktop-sidebar.md)_
-
-- **2026-06-27 — Fix login prod: error CORS que era 502 por OOM de gunicorn** ✅
-  El login del Hub (`digisider.com`) caía intermitente con "No 'Access-Control-Allow-Origin'"
-  + `ERR_FAILED`. **No era CORS** (origen permitido): era un **502 de Traefik** sin headers CORS,
-  causado por **OOM** matando workers de gunicorn (`SIGKILL ... Perhaps out of memory?`). El cap de
-  memoria del contenedor (400M) era muy bajo para 2 workers y el VPS **no tenía swap**. Fix: swap de
-  2 GB (`vm.swappiness=10`) + subir caps en `docker-compose.dokploy.yml` (django 400M→512M,
-  celery-worker 300M→384M) + `--max-requests 500 --max-requests-jitter 50` en gunicorn. Verificado:
-  django 87%→58%, login OK. Lección registrada en [[LL-080]].
-  _→ [Reporte](reports/2026-06-27-login-cors-502-oom-gunicorn.md)_
 
 ---
 
@@ -68,6 +69,19 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 ## Deuda técnica
 
 > No es urgente, pero si no se corrige puede morder después.
+
+- [ ] **Buscador general (Workspace) — Fase 2:** el agregador `/api/v1/app/search/` cubre notas,
+      tareas, eventos, contactos, bookmarks, snippets, proyectos, bóveda (solo título) y mensajes
+      de chat con `icontains` (≤5 resultados por tipo). Pendiente: (a) incluir env-vars, ssh-keys,
+      ssl-certs y forms respetando su feature-gating; (b) si crece el volumen, migrar de `icontains`
+      a Postgres full-text (`SearchVector`/`SearchRank`) para ranking real; (c) opcional: command
+      palette ⌘K reutilizando el mismo hook/endpoint.
+      _Origen: feature buscador general, sesión 2026-06-29; ver
+      [reports/2026-06-29-buscador-general-workspace.md](reports/2026-06-29-buscador-general-workspace.md)._
+- [ ] **Workspace — 2 tests de auth pre-existentes fallando:** `ProtectedRoute.test.tsx`
+      (redirige a /login cuando no autenticado) y `SSOCallbackPage.test.tsx` (valida sso_token y
+      navega al dashboard, `waitFor` sobre `POST /auth/sso/validate`). Fallan en aislamiento, sin
+      relación con el buscador. _Detectado durante feature buscador general, 2026-06-29._
 
 - [ ] **Chat Fase 3 — deploy prod (Dokploy):** el Workspace ahora usa WebSockets (Django Channels).
       En dev el `runserver` ya es ASGI/Daphne, pero producción corre **gunicorn (WSGI)**. Para que el
