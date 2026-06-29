@@ -17,6 +17,16 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-06-29 — Buscador de chat estilo WhatsApp (Workspace)** ✅
+  El buscador del Chat solo filtraba nombres de conversaciones cargadas y **no buscaba mensajes**.
+  Nuevo endpoint `GET /api/v1/app/chat/search/` (`ChatSearchView`) que busca `content__icontains`
+  en todas las conversaciones del usuario (scopeado por membresía, excluye borrados, límite 50) y
+  resuelve `conversation_name`. Frontend: `useChatSearch` (debounce 300ms) + `MessageSearchResult`;
+  `ConversationList` ahora muestra resultados agrupados **"Chats"** (nombre, client-side) +
+  **"Mensajes"** (contenido, backend) con resaltado. Clic abre la conversación. Backend 5/5 tests ·
+  frontend typecheck + chat 16/16 + build ✓.
+  _→ [Reporte](reports/2026-06-29-buscador-chat-whatsapp-workspace.md)_
+
 - **2026-06-29 — Buscador general (Workspace)** ✅
   Nueva pestaña "Buscar" (lupa) en el sidebar → página `/search` con agregador en backend
   (`GET /api/v1/app/search/`, nueva app `apps.search`). Un término busca a la vez en 9 tipos:
@@ -36,16 +46,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   disparaba re-render (fix: suscribir a `unlockToken`/`expiresAt`), respuesta `{ items }` no `{ results }`.
   `tsc --noEmit` sin errores. Ítems sincronizados con workspace.
   _→ [Reporte](reports/2026-06-28-vault-desktop-sidebar.md)_
-
-- **2026-06-27 — Chat completo en sidebar desktop (Tauri v2)** ✅
-  Port completo del chat del Workspace al `ChatPanel` del desktop. 25 archivos nuevos
-  (`features/chat/types`, `utils`, `ws`, 13 hooks, 9 componentes + orquestador). Sin añadir
-  dependencias: hooks con `useState`/`apiFetch` igual que los demás paneles. WebSocket con
-  callbacks en vez de `queryClient`. Layout drill-down `lista → thread` para el panel angosto
-  (320 px default). Vistas inline `NewChatView` + `ConnectionsView` reemplazan los modales del
-  Workspace. Funcionalidades completas: mensajes, adjuntos, respuestas, typing, grupos, cross-tenant,
-  mensajes guardados, convertir a nota/snippet/contacto. `tsc --noEmit` sin errores.
-  _→ [Reporte](reports/2026-06-27-chat-desktop-sidebar.md)_
 
 ---
 
@@ -70,6 +70,13 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Buscador de chat — saltar al mensaje exacto + portar a desktop:** hoy el clic en un
+      resultado de mensaje (`/api/v1/app/chat/search/`) abre la conversación en su última página, pero
+      no hace scroll/resalta el mensaje específico (sobre todo si es antiguo). Requiere soporte backend
+      de "cargar contexto alrededor de un `message_id`" (paginación bidireccional; hoy solo hay cursor
+      `before` hacia atrás). Pendiente también portar el mismo buscador al ChatPanel del sidebar desktop
+      (Tauri). _Origen: feature buscador de chat WhatsApp, sesión 2026-06-29; ver
+      [reports/2026-06-29-buscador-chat-whatsapp-workspace.md](reports/2026-06-29-buscador-chat-whatsapp-workspace.md)._
 - [ ] **Buscador general (Workspace) — Fase 2:** el agregador `/api/v1/app/search/` cubre notas,
       tareas, eventos, contactos, bookmarks, snippets, proyectos, bóveda (solo título) y mensajes
       de chat con `icontains` (≤5 resultados por tipo). Pendiente: (a) incluir env-vars, ssh-keys,
