@@ -17,40 +17,40 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
-- **2026-06-29 — Importar Notas, Tareas y Calendario (Workspace)** ✅
-  Extiende el import a productividad: Notas (Markdown-zip/JSON), Tareas (CSV/JSON), Calendario (ICS),
-  gateados por `notes_import`/`tasks_import`/`calendar_import` (Starter+). Backend
-  `POST /api/v1/app/{notes,tasks,calendar}/import/` (mismo patrón: revalida por fila, límite parcial,
-  `bulk_create`, `AuditMixin`). Particularidades: **Tareas** resuelven un único board "General"
-  (`get_or_create`) y cuentan el límite a nivel tenant; **Calendario** rechaza `end < start` (→ `errors`);
-  **Notas** se leen del Markdown ZIP con `jszip.loadAsync`. `ImportModal` ganó una prop opcional
-  `parseFile` (ruta async/binaria) sin tocar contactos/bookmarks. Backend 17/17 · frontend parsers
-  (round-trips `parseICS↔toICS`, `parseNotesZip↔toMarkdownZip`) + suite 251 ✓ · typecheck + build ✓.
-  _→ [Reporte](reports/2026-06-29-import-notas-tareas-calendario-workspace.md)_
+- **2026-06-30 — Reportes Workspace Fase 3 (Actividad + Uso vs plan)** ✅
+  Cierra el roadmap de Reportes. **Actividad** (analítica agregada del `AuditLog`, **no** otra tabla —
+  el log crudo ya existe en `/audit`): timeline por día + distribución por `action`, gateada
+  **Professional+** (`audit_logs`, como Tendencias usan `analytics_trends`), con period toggle 7/30/90d
+  capado por retención. **Panel "Uso vs plan"** (Starter+): 6 barras (tareas/proyectos/notas/contactos/
+  bookmarks/snippets) verde/amarillo/rojo desde el bloque `usage` que `summary` ya devolvía, reusando la
+  lógica de `PlanUsageBanner`. Backend: nuevo `GET /api/v1/app/reports/activity/` (`_compute_activity`,
+  caché Redis por periodo, respeta `audit_log_days`). Backend 16/16 (3 nuevos) · ReportsPage 9/9 ·
+  suite 254 ✓ · typecheck + build ✓. Nota: `useTrends` envía `?period=7d` y el backend lo parsea con
+  `int()` → siempre cae a 30 (bug preexistente; el nuevo hook envía el número correcto).
+  _→ [Reporte](reports/2026-06-30-reportes-workspace-fase3-actividad-uso.md)_
 
-- **2026-06-29 — Importar Contactos y Bookmarks (Workspace)** ✅
-  Complemento del export. `ImportButton`/`ImportModal` genéricos (archivo → preview → resumen) en el
-  header de Contactos (vCard/CSV) y Bookmarks (HTML/CSV/JSON), gateados por `contact_import`/
-  `bookmark_import` (Starter+). Parsers en `src/lib/import.ts` (inversos de `export.ts`, con
-  `parseCSV` RFC 4180 + DOMParser). Backend: `POST /api/v1/app/{contacts,bookmarks}/import/`
-  (`ContactImportView`/`BookmarkImportView`) — el cliente parsea y manda filas JSON, el backend
-  **revalida cada fila** con el serializer de creación, **éxito parcial** (inválidas → `errors`),
-  **límite de plan parcial** (crea hasta el tope, resto → `skipped`), cap 1000, `bulk_create`,
-  `AuditMixin`. Decisión: importar todo (sin dedup). Backend 12/12 · frontend import/ImportModal
-  nuevos + suite 245 ✓ · typecheck + build ✓.
-  _→ [Reporte](reports/2026-06-29-import-contactos-bookmarks-workspace.md)_
+- **2026-06-29 — Reportes Workspace Fase 2 (ángulo DevOps)** ✅
+  Bloque **DevOps** en Reportes (gate `analytics`, Starter+): **Certificados SSL** (vigentes/por
+  vencer ≤30d/vencidos + lista de próximos a vencer, reusa `valid_until`/`days_until_expiry`),
+  **Higiene de secretos** (counts Env Vars/SSH Keys/Bóveda + "sin rotar >90 días" vía `updated_at` +
+  más antiguos) y **Snippets por lenguaje** (no había contador de uso → distribución). Backend: nuevo
+  `GET /api/v1/app/reports/devops/` (`_compute_devops`, caché Redis **per-usuario**). **Escopado a
+  `request.user`** porque ssl_certs/env_vars/ssh_keys/vault son personales — no expone secretos de
+  otros. Backend 13/13 (5 nuevos: buckets SSL, stale, snippets, scoping, gate) · ReportsPage 8/8 ·
+  suite 253 ✓ · typecheck + build ✓.
+  _→ [Reporte](reports/2026-06-29-reportes-workspace-fase2-devops.md)_
 
-- **2026-06-29 — Exportación de datos + Backup completo (Workspace)** ✅
-  Patrón único de export por sección (botón/dropdown `ExportMenu` gateado) con formatos nativos:
-  Notas (Markdown-zip/JSON/CSV), Tareas (CSV/JSON), Contactos (vCard/CSV), Bookmarks (HTML/CSV/JSON),
-  Snippets (código-zip/JSON), Calendario (ICS), Proyectos (JSON metadatos). Util compartido
-  `src/lib/export.ts` con escape **CSV RFC 4180** (arregla bug previo) + `jszip` lazy-loaded.
-  Backend: `GET /api/v1/app/workspace/backup/` (ZIP, `HasFeature('full_backup')`, `AuditMixin`,
-  aislamiento por tenant, **secretos enmascarados/excluidos**) + nuevos flags en `plans.py`. Se
-  **eliminó** el export de EnvVars (exportaba secretos). Bug latente corregido: 4 feature keys del
-  front no existían en `plans.py` → export siempre deshabilitado (ver `LL-057`). Backend 5/5 ·
-  frontend export/ExportMenu nuevos + 76/76 relevantes · typecheck + build ✓.
-  _→ [Reporte](reports/2026-06-29-export-datos-workspace.md)_
+- **2026-06-29 — Reportes Workspace Fase 1 (widgets accionables)** ✅
+  La sección Reportes pasa de descriptiva a accionable. Frontend: 4ª KPI **Almacenamiento** (0 GB
+  hardcodeado, sin backing real) → **Tareas Vencidas** (roja si >0); nuevos **"Distribución por
+  Prioridad"** (reusa `tasks_by_priority` que el backend ya calculaba y nadie pintaba), **donut Tasa
+  de finalización** (% al centro) y **lista top-5 de vencidas**. Backend: `overdue_tasks` en
+  `_compute_summary` y `overdue` (top 5, `due_date__lt=today` excl. `done`) en `_compute_usage` —
+  sin URLs nuevas, mismo gate `analytics` (Starter+), caché Redis. Bugs preexistentes corregidos:
+  `ReportExportView` leía `usage['resources']` inexistente (**KeyError/500**) y `test_reports.py`
+  asumía la forma vieja (`active_users`/`resources`/`forms`). Backend 8/8 · ReportsPage 7/7 · suite
+  252 ✓ · typecheck + build ✓.
+  _→ [Reporte](reports/2026-06-29-reportes-workspace-fase1.md)_
 
 ---
 
@@ -75,6 +75,16 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Reportes — transversales + export ejecutivo (roadmap Fases 1-3 completado):** hechas Fase 1
+      (vencidas/prioridad/tasa), Fase 2 (DevOps) y **Fase 3 (Actividad + Uso vs plan)**. Pendiente solo
+      lo transversal: **filtro de rango de fechas global** y **export por sección**; y el **export
+      ejecutivo incoherente** (`ExportReportButton` descarga `reporte.csv` algo que `ReportExportView`
+      sirve como **JSON**, y gatea con `analytics_export` mientras el backend exige `pdf_export` — decidir
+      formato CSV real vs JSON/PDF y unificar el gate). Bugs/opciones detectados: **`useTrends` envía
+      `?period=7d`** y el backend lo parsea con `int()` → siempre 30 (el toggle de Tendencias no surte
+      efecto; arreglar enviando el número como en `useActivityReport`); opción **contador de uso de
+      snippets** (`usage_count`) para "más usados". _Origen: Reportes Workspace Fases 1-3, 2026-06-29/30;
+      ver `reports/2026-06-30-reportes-workspace-fase3-actividad-uso.md`._
 - [ ] **Export/Import — pendientes y deploy:** (1) export de **metadata** de SSL Certs
       (dominio/vencimiento, sin private key) — no implementado; (2) **backups automáticos** programados +
       retención (hoy el backup es on-demand); (3) **deduplicación/upsert** en import (hoy se importa
