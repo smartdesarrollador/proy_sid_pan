@@ -17,35 +17,40 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
-- **2026-06-29 — Buscador de chat estilo WhatsApp (Workspace)** ✅
-  El buscador del Chat solo filtraba nombres de conversaciones cargadas y **no buscaba mensajes**.
-  Nuevo endpoint `GET /api/v1/app/chat/search/` (`ChatSearchView`) que busca `content__icontains`
-  en todas las conversaciones del usuario (scopeado por membresía, excluye borrados, límite 50) y
-  resuelve `conversation_name`. Frontend: `useChatSearch` (debounce 300ms) + `MessageSearchResult`;
-  `ConversationList` ahora muestra resultados agrupados **"Chats"** (nombre, client-side) +
-  **"Mensajes"** (contenido, backend) con resaltado. Clic abre la conversación. Backend 5/5 tests ·
-  frontend typecheck + chat 16/16 + build ✓.
-  _→ [Reporte](reports/2026-06-29-buscador-chat-whatsapp-workspace.md)_
+- **2026-06-29 — Importar Notas, Tareas y Calendario (Workspace)** ✅
+  Extiende el import a productividad: Notas (Markdown-zip/JSON), Tareas (CSV/JSON), Calendario (ICS),
+  gateados por `notes_import`/`tasks_import`/`calendar_import` (Starter+). Backend
+  `POST /api/v1/app/{notes,tasks,calendar}/import/` (mismo patrón: revalida por fila, límite parcial,
+  `bulk_create`, `AuditMixin`). Particularidades: **Tareas** resuelven un único board "General"
+  (`get_or_create`) y cuentan el límite a nivel tenant; **Calendario** rechaza `end < start` (→ `errors`);
+  **Notas** se leen del Markdown ZIP con `jszip.loadAsync`. `ImportModal` ganó una prop opcional
+  `parseFile` (ruta async/binaria) sin tocar contactos/bookmarks. Backend 17/17 · frontend parsers
+  (round-trips `parseICS↔toICS`, `parseNotesZip↔toMarkdownZip`) + suite 251 ✓ · typecheck + build ✓.
+  _→ [Reporte](reports/2026-06-29-import-notas-tareas-calendario-workspace.md)_
 
-- **2026-06-29 — Buscador general (Workspace)** ✅
-  Nueva pestaña "Buscar" (lupa) en el sidebar → página `/search` con agregador en backend
-  (`GET /api/v1/app/search/`, nueva app `apps.search`). Un término busca a la vez en 9 tipos:
-  notas, tareas, eventos, contactos, bookmarks, snippets, **proyectos**, **bóveda** y **mensajes
-  de chat**, agrupados con resaltado y filtros avanzados (tipo + rango de fechas). Aislamiento
-  multi-tenant + chat por membresía en un solo punto. **Bóveda: solo se busca/devuelve el `title`**
-  (texto plano); el `data_ciphertext` nunca se consulta ni serializa. Colateral: acotado el spam de
-  consola del chat (`useChatSocket` ahora corta reintentos de WS tras 4 fallos → polling).
-  Backend 12/12 tests · frontend typecheck + 5/5 search + build ✓.
-  _→ [Reporte](reports/2026-06-29-buscador-general-workspace.md)_
+- **2026-06-29 — Importar Contactos y Bookmarks (Workspace)** ✅
+  Complemento del export. `ImportButton`/`ImportModal` genéricos (archivo → preview → resumen) en el
+  header de Contactos (vCard/CSV) y Bookmarks (HTML/CSV/JSON), gateados por `contact_import`/
+  `bookmark_import` (Starter+). Parsers en `src/lib/import.ts` (inversos de `export.ts`, con
+  `parseCSV` RFC 4180 + DOMParser). Backend: `POST /api/v1/app/{contacts,bookmarks}/import/`
+  (`ContactImportView`/`BookmarkImportView`) — el cliente parsea y manda filas JSON, el backend
+  **revalida cada fila** con el serializer de creación, **éxito parcial** (inválidas → `errors`),
+  **límite de plan parcial** (crea hasta el tope, resto → `skipped`), cap 1000, `bulk_create`,
+  `AuditMixin`. Decisión: importar todo (sin dedup). Backend 12/12 · frontend import/ImportModal
+  nuevos + suite 245 ✓ · typecheck + build ✓.
+  _→ [Reporte](reports/2026-06-29-import-contactos-bookmarks-workspace.md)_
 
-- **2026-06-28 — Bóveda en sidebar desktop (Tauri v2)** ✅
-  Port completo del Vault al `VaultPanel`. 22 archivos nuevos + 5 modificados. Store efímero
-  (sin `localStorage` → recarga = re-lock). Drill-down `lista → detalle/formulario`. X-Vault-Token
-  inyectado en `buildHeaders` via `getState()`. 3 bugs corregidos: panel nuevo ignorado en sidebar
-  guardado (fix: migración automática en `settingsStore`), `isUnlocked` como función Zustand no
-  disparaba re-render (fix: suscribir a `unlockToken`/`expiresAt`), respuesta `{ items }` no `{ results }`.
-  `tsc --noEmit` sin errores. Ítems sincronizados con workspace.
-  _→ [Reporte](reports/2026-06-28-vault-desktop-sidebar.md)_
+- **2026-06-29 — Exportación de datos + Backup completo (Workspace)** ✅
+  Patrón único de export por sección (botón/dropdown `ExportMenu` gateado) con formatos nativos:
+  Notas (Markdown-zip/JSON/CSV), Tareas (CSV/JSON), Contactos (vCard/CSV), Bookmarks (HTML/CSV/JSON),
+  Snippets (código-zip/JSON), Calendario (ICS), Proyectos (JSON metadatos). Util compartido
+  `src/lib/export.ts` con escape **CSV RFC 4180** (arregla bug previo) + `jszip` lazy-loaded.
+  Backend: `GET /api/v1/app/workspace/backup/` (ZIP, `HasFeature('full_backup')`, `AuditMixin`,
+  aislamiento por tenant, **secretos enmascarados/excluidos**) + nuevos flags en `plans.py`. Se
+  **eliminó** el export de EnvVars (exportaba secretos). Bug latente corregido: 4 feature keys del
+  front no existían en `plans.py` → export siempre deshabilitado (ver `LL-057`). Backend 5/5 ·
+  frontend export/ExportMenu nuevos + 76/76 relevantes · typecheck + build ✓.
+  _→ [Reporte](reports/2026-06-29-export-datos-workspace.md)_
 
 ---
 
@@ -70,6 +75,16 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Export/Import — pendientes y deploy:** (1) export de **metadata** de SSL Certs
+      (dominio/vencimiento, sin private key) — no implementado; (2) **backups automáticos** programados +
+      retención (hoy el backup es on-demand); (3) **deduplicación/upsert** en import (hoy se importa
+      todo, sin detectar duplicados) — transversal a todos los recursos; import de Snippets/Proyectos no
+      priorizado; (4) al desplegar, los flags nuevos de `plans.py` (`*_export`, `full_backup`,
+      `*_import` de contactos/bookmarks/notas/tareas/calendario) **no requieren migración** pero sí
+      **redeploy** de backend + workspace; (5) revisar si `bookmark_export` debería bajar a Starter+ por
+      coherencia (hoy Professional+ por precedente).
+      _Origen: features export/import de datos, 2026-06-29; ver reportes `2026-06-29-export-datos-workspace.md`,
+      `…-import-contactos-bookmarks-workspace.md` y `…-import-notas-tareas-calendario-workspace.md`._
 - [ ] **Buscador de chat — saltar al mensaje exacto + portar a desktop:** hoy el clic en un
       resultado de mensaje (`/api/v1/app/chat/search/`) abre la conversación en su última página, pero
       no hace scroll/resalta el mensaje específico (sobre todo si es antiguo). Requiere soporte backend

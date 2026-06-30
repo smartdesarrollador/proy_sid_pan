@@ -158,6 +158,14 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** sesión 2026-06-26 (Fase 3 chat Workspace: WebSockets)
 - **Tags:** django, channels, daphne, asgi, websockets, debug-toolbar, djdt, noreversematch, runserver
 
+### LL-027 — Dependencia npm nueva no resuelta en dev (Vite/Next) porque `node_modules` es un volumen del contenedor
+- **Síntoma:** Tras `npm install <paquete>` en el host y usarlo en el código, el dev server (Vite/Next dentro de Docker) revienta con `[plugin:vite:import-analysis] Failed to resolve import "<paquete>" from "src/.../x.ts". Does the file exist?` (o el equivalente de Next). El `npm run build` y los tests en el host **sí** funcionan, lo que confunde.
+- **Causa raíz:** Cada app de `apps/` corre en su propio contenedor con `node_modules` montado como **volumen Docker nombrado** (`- node_modules:/app/node_modules` en su `docker-compose.yml`), separado del `node_modules` del host. `npm install` en el host actualiza `package.json` + el `node_modules` del host, pero **no** el del contenedor → Vite, que corre dentro, no ve el paquete. Verificación: `docker exec <cont> ls node_modules/<paquete>/package.json` → ausente. Mismo problema que [[LL-022]] pero del lado frontend/npm.
+- **Solución:** Instalar dentro del contenedor: `docker exec <cont> npm install <paquete>` y luego `docker restart <cont>` (Vite cachea deps optimizadas en `node_modules/.vite`; el restart fuerza re-optimizar). Verificar con `curl -s -o /dev/null -w "%{http_code}" http://localhost:<port>/src/.../x.ts` → 200. Contenedores dev del repo: `rbac_workspace_vite` (5176), `rbac_admin_vite` (5174), `rbac_next_hub_dev` (4000), `rbac_next_vista_dev` (3004).
+- **Prevención:** Al añadir una dependencia npm a una app dockerizada: instalar en el **contenedor vivo** y dejarla en `package.json` para el próximo build de imagen. No fiarse de que el typecheck/build/test del host pasen — el host y el contenedor tienen `node_modules` distintos. Ver `project_per_app_docker.md` (memoria) y [[LL-022]].
+- **Fuente:** `reports/2026-06-29-export-datos-workspace.md` (jszip para export de datos)
+- **Tags:** docker, npm, node_modules, volumen, vite, nextjs, dependencies, dev, failed-to-resolve
+
 ---
 
 ## D. Multi-tenancy, CORS y headers
@@ -305,6 +313,16 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Todo cliente WS con reconexión debe tener un tope de intentos (o circuit breaker), no un bucle eterno. Asumir que el "log de conexión fallida" es **inevitable** por intento; lo único controlable es **cuántos intentos**. La cura de raíz es servir el WS de verdad (ASGI/Daphne + upgrade en Traefik) — deuda "Chat Fase 3" en `BACKLOG.md`. Para WS solo necesarios en una vista, montar el hook **solo** en esa vista (no global).
 - **Fuente:** `reports/2026-06-29-buscador-general-workspace.md` (cambio colateral)
 - **Tags:** websocket, consola, reconexion, backoff, chat, asgi, polling-fallback, frontend
+
+---
+
+### LL-057 — Feature key del frontend que no existe en `plans.py` → la feature queda permanentemente deshabilitada (en silencio)
+- **Síntoma:** Un `<FeatureGate feature="xxx_export">` (o `useFeatureGate().hasFeature('xxx')`) muestra **siempre** el fallback deshabilitado, incluso en planes que deberían incluir la feature. No hay error: simplemente nunca se habilita.
+- **Causa raíz:** `FeaturesView` (`apps/rbac/views.py`) serializa **las claves crudas** de `PLAN_FEATURES` (`utils/plans.py`). `hasFeature(k)` hace `Boolean(data.features[k])`, así que una clave inexistente → `undefined` → `false` para todos los planes. En el Workspace había mismatch real: el front usaba `contacts_export`/`bookmarks_export`/`snippets_export`/`projects_export` mientras el back definía `contact_export`/`bookmark_export` (singular) y los otros dos **no existían**. Resultado: los 4 botones de export inline nunca se mostraban habilitados.
+- **Solución:** Reconciliar la clave del front con la del back (fuente de verdad = `plans.py`) y/o **agregar** la clave a los 4 dicts de plan. Verificar con `grep "'<feature>'" utils/plans.py` que la clave existe en `free/starter/professional/enterprise` antes de gatear con ella.
+- **Prevención:** El nombre del feature flag es un **contrato** front↔back sin validación en runtime. Al añadir un gate nuevo: (1) definir primero la clave en `plans.py` (los 4 planes), (2) usar **exactamente** ese string en el front. Un flag que falta no rompe ni loguea — se degrada a "deshabilitado para todos", que es fácil de no notar. Mismo espíritu que [[LL-053]] (interfaces TS desincronizadas con serializers) y [[LL-061]] (permisos no sembrados).
+- **Fuente:** `reports/2026-06-29-export-datos-workspace.md`
+- **Tags:** feature-gate, plans, featuregate, frontend, backend, contrato, silent-failure, export
 
 ---
 
