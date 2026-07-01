@@ -17,6 +17,14 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-01 — Catálogo de Servicios Dinámico** ✅
+  Nueva app `apps/catalog/` (backend) + sección CRUD en Admin Panel + Hub landing + Desktop
+  ServicesPanel dinámicos. `CatalogItem` con imagen/color, `target_apps` JSONField (`desktop`,
+  `mobile`, `web`), orden y activo/inactivo. Endpoints: `GET /api/v1/public/catalog/?app=X`
+  (AllowAny) + 4 endpoints staff en `/admin/catalog/`. Hub y Desktop reemplazan arrays
+  estáticos hardcodeados por fetch al mismo backend. typecheck + build ✓.
+  _→ [Reporte](reports/2026-07-01-catalogo-servicios-dinamico.md)_
+
 - **2026-06-30 — Reportes Workspace Fase 3 (Actividad + Uso vs plan)** ✅
   Cierra el roadmap de Reportes. **Actividad** (analítica agregada del `AuditLog`, **no** otra tabla —
   el log crudo ya existe en `/audit`): timeline por día + distribución por `action`, gateada
