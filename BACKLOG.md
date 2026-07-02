@@ -17,6 +17,16 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-01 — Modal de Anuncios/Promociones (Hub)** ✅
+  Feature en 3 fases: backend (nueva app `apps/announcements/`, staff-only admin + lectura
+  pública/autenticada cacheada 5 min con invalidación en mutación), Admin Panel (CRUD completo en
+  `/announcements`, imagen, CTA, placement, ventana de vigencia, toggle activo/inactivo) y Hub
+  (modal en Home pública + Dashboard, descarte persistente por `localStorage`, responsive). De paso
+  se corrigió un bug de `image_url` apuntando a un hostname interno de Docker (`utils/media.py`,
+  también afectaba a `catalog`) y un parpadeo del modal por descarte compartido entre Home/Dashboard.
+  Backend 16 tests nuevos · Admin 5 tests nuevos · Hub 65/65 sin regresiones. typecheck + build ✓.
+  _→ [Reporte](reports/2026-07-01-anuncios-modal-hub.md)_
+
 - **2026-07-01 — Catálogo de Servicios Dinámico** ✅
   Nueva app `apps/catalog/` (backend) + sección CRUD en Admin Panel + Hub landing + Desktop
   ServicesPanel dinámicos. `CatalogItem` con imagen/color, `target_apps` JSONField (`desktop`,
@@ -36,29 +46,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   suite 254 ✓ · typecheck + build ✓. Nota: `useTrends` envía `?period=7d` y el backend lo parsea con
   `int()` → siempre cae a 30 (bug preexistente; el nuevo hook envía el número correcto).
   _→ [Reporte](reports/2026-06-30-reportes-workspace-fase3-actividad-uso.md)_
-
-- **2026-06-29 — Reportes Workspace Fase 2 (ángulo DevOps)** ✅
-  Bloque **DevOps** en Reportes (gate `analytics`, Starter+): **Certificados SSL** (vigentes/por
-  vencer ≤30d/vencidos + lista de próximos a vencer, reusa `valid_until`/`days_until_expiry`),
-  **Higiene de secretos** (counts Env Vars/SSH Keys/Bóveda + "sin rotar >90 días" vía `updated_at` +
-  más antiguos) y **Snippets por lenguaje** (no había contador de uso → distribución). Backend: nuevo
-  `GET /api/v1/app/reports/devops/` (`_compute_devops`, caché Redis **per-usuario**). **Escopado a
-  `request.user`** porque ssl_certs/env_vars/ssh_keys/vault son personales — no expone secretos de
-  otros. Backend 13/13 (5 nuevos: buckets SSL, stale, snippets, scoping, gate) · ReportsPage 8/8 ·
-  suite 253 ✓ · typecheck + build ✓.
-  _→ [Reporte](reports/2026-06-29-reportes-workspace-fase2-devops.md)_
-
-- **2026-06-29 — Reportes Workspace Fase 1 (widgets accionables)** ✅
-  La sección Reportes pasa de descriptiva a accionable. Frontend: 4ª KPI **Almacenamiento** (0 GB
-  hardcodeado, sin backing real) → **Tareas Vencidas** (roja si >0); nuevos **"Distribución por
-  Prioridad"** (reusa `tasks_by_priority` que el backend ya calculaba y nadie pintaba), **donut Tasa
-  de finalización** (% al centro) y **lista top-5 de vencidas**. Backend: `overdue_tasks` en
-  `_compute_summary` y `overdue` (top 5, `due_date__lt=today` excl. `done`) en `_compute_usage` —
-  sin URLs nuevas, mismo gate `analytics` (Starter+), caché Redis. Bugs preexistentes corregidos:
-  `ReportExportView` leía `usage['resources']` inexistente (**KeyError/500**) y `test_reports.py`
-  asumía la forma vieja (`active_users`/`resources`/`forms`). Backend 8/8 · ReportsPage 7/7 · suite
-  252 ✓ · typecheck + build ✓.
-  _→ [Reporte](reports/2026-06-29-reportes-workspace-fase1.md)_
 
 ---
 
@@ -185,6 +172,24 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       automáticamente `Authorization` + `X-Tenant-Slug` (similar al axios instance del
       Workspace), para no repetir esa lógica en cada panel.
       _Origen: [reports/2026-03-15-bugfix-desktop-snippets.md](reports/2026-03-15-bugfix-desktop-snippets.md)_
+- [ ] **Anuncios (Hub) — sin tracking de impresiones/clics:** no hay forma de medir efectividad de
+      una campaña (cuántos la vieron, cuántos hicieron click en el CTA). Sería un contador
+      incremental simple, sin tabla de eventos pesada.
+      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
+- [ ] **Anuncios (Hub) — un solo anuncio activo por `placement`:** se resuelve por `priority` +
+      `created_at`. El campo `priority` ya está listo por si se quiere rotar varios en el futuro
+      (ej. carrusel de anuncios).
+      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
+- [ ] **Anuncios (Hub) — sin segmentación por plan del tenant:** todo tenant autenticado ve el mismo
+      anuncio de dashboard; podría filtrarse por `tenant.plan` para ofertas de upgrade dirigidas.
+      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
+- [ ] `apps/catalog` sigue sin tests — se tocó `serializers.py` en el fix de `image_url` (LL-033)
+      pero no se le agregaron tests. Buen candidato para una pasada de tests aparte.
+      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
+- [ ] Migrar `AnnouncementModal` del Hub (`frontend_next_hub`) de `<img>` plano a `next/image`
+      cuando `next.config.ts` tenga el dominio de medios de producción en `images.remotePatterns`
+      (mejor LCP; hoy genera warning de ESLint `no-img-element`, aceptado a propósito).
+      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
 
 ---
 

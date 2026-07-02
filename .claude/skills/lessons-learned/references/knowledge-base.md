@@ -195,6 +195,15 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** `reports/varios/frontend_next_hub_deployment_issues.md`
 - **Tags:** django, allowed-hosts, disallowed-host, docker-network, underscore, rfc1034
 
+### LL-033 — `request.build_absolute_uri()` en un serializer devuelve un hostname interno de Docker → `ERR_NAME_NOT_RESOLVED` en el navegador
+- **Síntoma:** Un campo `image_url` (o cualquier `FileField`/`ImageField` absolutizado en un serializer) se ve bien en el Admin Panel pero en `frontend_next_hub` la imagen no carga. Consola: `GET http://rbac-django:8000/media/... net::ERR_NAME_NOT_RESOLVED`.
+- **Causa raíz:** El navegador pide `hub.local.test/api/v1/public/...` → Next.js server-side `rewrites()` (`next.config.ts`, `API_TARGET=http://rbac-django:8000`) reenvía la petición a Django **sin** preservar el `Host` original (mismo mecanismo que LL-032). Django ve `Host: rbac-django:8000` y `request.build_absolute_uri()` construye la URL de la imagen con ese hostname, que solo resuelve **dentro** de la red de Docker. El JSON llega bien al navegador (la API en sí funciona), pero el `<img src="...">` del lado del cliente intenta resolver `rbac-django` directamente y falla. El Admin Panel no lo sufre porque `rbac.local.test` (su `VITE_API_URL`) proxea el dominio **completo** a Django sin pasar por un rewrite de Next que reescriba el Host.
+- **Solución:** No confiar en `request.build_absolute_uri()` para medios servidos a clientes detrás de un rewrite. Usar el helper `utils/media.py::build_media_url(field_file, request)`, que prioriza el setting `APP_BASE_URL` (dominio público real, ej. `http://rbac.local.test` en dev) y solo cae a `request.build_absolute_uri()` si no está configurado. Aplicado en `catalog`, `announcements` y `tenants` (branding). Además, corregir `APP_BASE_URL` en `.env` — no debe apuntar a `localhost:8000` si ese puerto no está mapeado al contenedor (en este entorno el puerto host es 8001; el dominio correcto es `rbac.local.test`).
+- **Prevención:** Cualquier serializer nuevo con `ImageField`/`FileField` debe usar `build_media_url()`, nunca `request.build_absolute_uri()` a pelo. Si se agrega un dominio/proxy nuevo, verificar `APP_BASE_URL` en `.env` contra el puerto realmente expuesto del contenedor Django.
+- **Nota Docker:** tras editar `.env`, `docker restart` no sirve (LL-021); y `docker-compose up -d --force-recreate` puede chocar con LL-024 (`KeyError: ContainerConfig` en contenedores huérfanos con hash-prefix) — usar `docker stop/rm` + `docker-compose up -d --no-deps <servicio>` para evitar que compose intente reconciliar servicios dependientes huérfanos.
+- **Fuente:** sesión de implementación de `announcements` (fase 3, Hub), Jul 2026.
+- **Tags:** build_absolute_uri, media-url, next-rewrites, docker-network, err_name_not_resolved, app_base_url
+
 ---
 
 ## E. Seguridad y lógica de negocio
