@@ -17,6 +17,13 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-02 — Anuncios en Tarjetas — Sidebar Desktop** ✅
+  Extiende la feature de anuncios al Desktop (Tauri v2): nuevo endpoint `GET /api/v1/app/announcements/top/?placement=dashboard&limit=2`
+  que retorna los N anuncios de mayor prioridad (caché 5 min, invalidación en mutaciones admin).
+  `HomePanel` muestra hasta 2 tarjetas con imagen full-width + texto debajo, descarte independiente
+  por ID persistido en `localStorage`. Sin cambios en el Hub.
+  _→ [Reporte](reports/2026-07-02-anuncios-tarjetas-desktop.md)_
+
 - **2026-07-01 — Modal de Anuncios/Promociones (Hub)** ✅
   Feature en 3 fases: backend (nueva app `apps/announcements/`, staff-only admin + lectura
   pública/autenticada cacheada 5 min con invalidación en mutación), Admin Panel (CRUD completo en
@@ -34,18 +41,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   (AllowAny) + 4 endpoints staff en `/admin/catalog/`. Hub y Desktop reemplazan arrays
   estáticos hardcodeados por fetch al mismo backend. typecheck + build ✓.
   _→ [Reporte](reports/2026-07-01-catalogo-servicios-dinamico.md)_
-
-- **2026-06-30 — Reportes Workspace Fase 3 (Actividad + Uso vs plan)** ✅
-  Cierra el roadmap de Reportes. **Actividad** (analítica agregada del `AuditLog`, **no** otra tabla —
-  el log crudo ya existe en `/audit`): timeline por día + distribución por `action`, gateada
-  **Professional+** (`audit_logs`, como Tendencias usan `analytics_trends`), con period toggle 7/30/90d
-  capado por retención. **Panel "Uso vs plan"** (Starter+): 6 barras (tareas/proyectos/notas/contactos/
-  bookmarks/snippets) verde/amarillo/rojo desde el bloque `usage` que `summary` ya devolvía, reusando la
-  lógica de `PlanUsageBanner`. Backend: nuevo `GET /api/v1/app/reports/activity/` (`_compute_activity`,
-  caché Redis por periodo, respeta `audit_log_days`). Backend 16/16 (3 nuevos) · ReportsPage 9/9 ·
-  suite 254 ✓ · typecheck + build ✓. Nota: `useTrends` envía `?period=7d` y el backend lo parsea con
-  `int()` → siempre cae a 30 (bug preexistente; el nuevo hook envía el número correcto).
-  _→ [Reporte](reports/2026-06-30-reportes-workspace-fase3-actividad-uso.md)_
 
 ---
 
@@ -172,17 +167,20 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       automáticamente `Authorization` + `X-Tenant-Slug` (similar al axios instance del
       Workspace), para no repetir esa lógica en cada panel.
       _Origen: [reports/2026-03-15-bugfix-desktop-snippets.md](reports/2026-03-15-bugfix-desktop-snippets.md)_
-- [ ] **Anuncios (Hub) — sin tracking de impresiones/clics:** no hay forma de medir efectividad de
-      una campaña (cuántos la vieron, cuántos hicieron click en el CTA). Sería un contador
-      incremental simple, sin tabla de eventos pesada.
-      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
-- [ ] **Anuncios (Hub) — un solo anuncio activo por `placement`:** se resuelve por `priority` +
-      `created_at`. El campo `priority` ya está listo por si se quiere rotar varios en el futuro
-      (ej. carrusel de anuncios).
-      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
-- [ ] **Anuncios (Hub) — sin segmentación por plan del tenant:** todo tenant autenticado ve el mismo
-      anuncio de dashboard; podría filtrarse por `tenant.plan` para ofertas de upgrade dirigidas.
-      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
+- [ ] **Anuncios — sin tracking de impresiones/clics:** no hay forma de medir efectividad de
+      una campaña (cuántos la vieron, cuántos hicieron click en el CTA) ni desde el Hub (modal)
+      ni desde el Desktop (tarjetas). Sería un contador incremental simple, sin tabla de eventos pesada.
+      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md) ·
+      [reports/2026-07-02-anuncios-tarjetas-desktop.md](reports/2026-07-02-anuncios-tarjetas-desktop.md)_
+- [ ] **Anuncios — sin segmentación por plan del tenant:** todo tenant autenticado ve los mismos
+      anuncios tanto en el Hub (modal) como en el Desktop (tarjetas); podría filtrarse por
+      `tenant.plan` para mostrar ofertas de upgrade dirigidas a planes específicos.
+      _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md) ·
+      [reports/2026-07-02-anuncios-tarjetas-desktop.md](reports/2026-07-02-anuncios-tarjetas-desktop.md)_
+- [ ] **Anuncios (Desktop) — `HubAnnouncementsTopView` sin tests:** el nuevo endpoint `top/`
+      comparte lógica con `active/` pero no tiene cobertura propia. Cubrir: placement filter,
+      clamp de `limit` (>5→5), orden por priority, hit/miss de caché, invalidación tras admin mutate.
+      _Origen: [reports/2026-07-02-anuncios-tarjetas-desktop.md](reports/2026-07-02-anuncios-tarjetas-desktop.md)_
 - [ ] `apps/catalog` sigue sin tests — se tocó `serializers.py` en el fix de `image_url` (LL-033)
       pero no se le agregaron tests. Buen candidato para una pasada de tests aparte.
       _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
