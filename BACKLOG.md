@@ -17,6 +17,67 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-03 — Tarjeta Digital: sección "Otros Enlaces" (lista dinámica + selector de ícono)** ✅
+  El editor de Tarjeta Digital solo permitía 6 redes sociales fijas (LinkedIn/Twitter/GitHub/
+  Instagram/Facebook/website). Se agregó una sección nueva y separada "Otros Enlaces" —
+  **decisión de diseño acordada con el usuario**: NO tocar ni migrar los 6 campos fijos existentes,
+  respaldar la lista nueva con un `JSONField` en `DigitalCard` (no una tabla aparte), mismo patrón
+  ya usado en el propio modelo para `specialties` y en `CVDocument` para `experience`/`projects`/
+  `awards` — evita cualquier migración de datos y mantiene consistencia arquitectónica. Backend:
+  campo `custom_links` (migración 0023, `[{id, label, url, icon}]`) + validación en el serializer
+  (label+url obligatorios por ítem, máximo 10 enlaces). Frontend: nuevo picker visual de 12 íconos
+  curados (`lucide-react`, ninguno colisiona con los ya usados en los enlaces fijos) en
+  `customLinkIcons.ts`, compartido entre el editor (`CardEditor.tsx`, componente `CustomLinkRow`
+  con popover de selección) y el render público (`ContactLinkList.tsx`), evitando duplicar el
+  mapeo ícono→componente. **Bug real encontrado y corregido en la verificación**:
+  `crypto.randomUUID()` para generar el id de cada fila nueva lanzaba `TypeError` en este entorno
+  de desarrollo — la Web Crypto API exige un "secure context" (HTTPS o `localhost` exacto) y
+  `http://next-vista.local.test` no califica; se reemplazó por un generador de id simple sin esa
+  dependencia. **Regresión propia detectada y corregida de paso**: la feature de resumen de
+  Analytics en el dashboard (turno anterior) había dejado `dashboard.test.tsx` roto — `ServiceGrid`
+  ahora llama `useServiceAnalytics` pero el test no envolvía en `QueryClientProvider`; se agregó el
+  wrapper faltante (5/5 tests recuperados). Confirmado que 2 fallos en `CardEditor.test.tsx` son
+  preexistentes (no introducidos por este cambio — reproducidos idénticos contra la versión
+  commiteada del archivo, sin tocar). Verificado end-to-end: agregar 2 enlaces con íconos distintos
+  (Tienda/YouTube), guardar, recargar página completa (persisten), confirmar en la tarjeta pública
+  real, eliminar uno y confirmar que desaparece de ambos lados. Backend 3 tests nuevos (55/55 ✓
+  suite completa), typecheck + lint sin regresiones.
+
+- **2026-07-03 — Analytics de Vista Digital: MVP de tracking real (backend + frontend)** ✅
+  La sección Analytics del dashboard (tabs Tarjeta/Landing/Portafolio/CV) siempre mostraba 0/"sin
+  datos" — no era un bug de renderizado: no existía ningún modelo de tracking, y
+  `DigitalAnalyticsView` devolvía conteos de contenido (`has_card`, `portfolio_items`...) en vez
+  de métricas de tráfico. Backend: nuevo modelo `PageEvent` (vista/share por servicio, migración
+  0022) + módulo `analytics.py` con `session_hash` peppered con `SECRET_KEY` (sha256, rota
+  diariamente — sin pepper el hash sería reversible por diccionario offline, hueco de privacidad
+  real encontrado en la validación del diseño). Tracking instrumentado en las 5 vistas públicas
+  **después** de validar que el perfil/contenido existe (no antes — evita registrar "vistas" para
+  usernames inexistentes). Nuevo endpoint `POST /public/track-share/<username>/`.
+  `DigitalAnalyticsView` reescrita: agrega por día (`TruncDate`), calcula `change_percent` vs.
+  período anterior, top referrers por hostname, y clampea `days` por plan (`digital_analytics_days`
+  en `utils/plans.py`, mismo patrón que `audit_log_days`) — antes nada impedía pedir `?days=365`
+  sin importar el plan. Frontend: **cero cambios en `src/features/analytics/`** (ya consumía el
+  contrato correcto, solo esperaba datos reales). El fix real fue en `publicApi.ts`: cada página
+  pública llamaba al mismo fetcher 2 veces (`generateMetadata` + body) sin dedup con
+  `cache: 'no-store'`, duplicando el conteo de vistas — se envolvieron los 4 fetchers en `cache()`
+  de `'react'`. Además se reenvían los headers reales del visitante (`User-Agent`/`Referer`/
+  `X-Forwarded-For`) desde `next/headers` hacia el fetch saliente a Django, ya que el request
+  server-to-server no los propaga por defecto. Hallazgo colateral: `PublicPortfolioItemView` es
+  código muerto desde el frontend hoy (la página de detalle reutiliza el listado y filtra en
+  memoria) — se instrumentó igual por consistencia de API, documentado que no recibe tráfico real
+  todavía. Diseño validado por un agente Plan dedicado antes de implementar (detectó el orden
+  correcto del tracking, el hueco de privacidad del hash, y la necesidad del clamp por plan).
+  Verificado end-to-end: 3 recargas reales de la Tarjeta pública → exactamente 3 `PageEvent` (no 6,
+  confirma el fix de doble conteo) con `session_hash` idéntico entre ellas; click en "Compartir" →
+  1 evento share registrado; dashboard Analytics reflejando los números reales por tab. Backend 21
+  tests nuevos (`test_analytics.py`) + suite completa 52/52 ✓, typecheck + lint sin regresiones.
+  **Extra**: el dashboard principal (Inicio) tenía una tarjeta "Analíticas — Próximamente"
+  hardcodeada (`QuickStats.tsx`) — se reemplazó por un resumen real (suma de `total_views` de los
+  4 servicios vía `useServiceAnalytics` x4 con `enabled` condicionado al feature-gate, nuevo param
+  agregado al hook sin romper compatibilidad con `ServiceAnalyticsView.tsx`), clickeable hacia
+  `/dashboard/analytics`. Verificado en navegador: la tarjeta pasó de "Próximamente" a mostrar el
+  total real y navega correctamente al hacer click.
+
 - **2026-07-03 — CV Digital: pestaña "Apariencia" (Fase 1+2+3, Vista)** ✅
   Agrega una pestaña "Apariencia" al dashboard de CV Digital (entre Editor y Vista previa),
   replicando el patrón de Portfolio. Antes del cambio, el selector de plantilla (solo texto, sin
@@ -61,39 +122,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   intencional confirmada. Backend sin cambios (31/31 sigue verde), typecheck + lint sin
   regresiones.
 
-- **2026-07-03 — Fix: botón "Ver público" ausente en dashboard de CV Digital** ✅
-  El usuario reportó que "el CV Digital no tiene vista pública" — la investigación (agente Explore)
-  reveló que la vista pública **ya existía completa y funcional** (backend `PublicCVView` +
-  frontend `app/[locale]/cv/[username]/page.tsx` con 3 templates, nav, footer, JSON-LD, i18n,
-  mismo patrón que Landing/Portfolio), y el botón "Ver público" también estaba implementado en
-  `CVEditorPage.tsx` — pero nunca se renderizaba. Causa raíz: `CVView.get()` (endpoint privado
-  `GET /app/digital/cv/`, `apps/backend_django/apps/digital_services/views.py`) solo retornaba
-  `{cv: ...}`, sin el campo `profile` que el frontend necesita para armar la URL pública
-  (`publicUrl = data?.profile ? ... : null` → siempre `null`). Fix de 1 línea: agregar
-  `'profile': PublicProfileSerializer(profile).data` a la respuesta (mismo serializer ya
-  importado, sin cambios de forma en el resto del payload). Verificado end-to-end: el link
-  aparece en el dashboard, apunta a la URL correcta, y al hacer click abre la vista pública real
-  en pestaña nueva. Backend 1 test nuevo (29/29 ✓). No se tocó nada del frontend — la lógica ya
-  estaba correcta, solo esperaba el dato que el backend no enviaba.
-
-- **2026-07-03 — Navbar con anclas a secciones en Portfolio público (Vista)** ✅
-  El navbar del portafolio público (`PortfolioNav.tsx`) estaba prácticamente vacío (solo nombre +
-  toggle de tema). Se agregaron enlaces de navegación a las secciones existentes (Sobre mí,
-  Habilidades, Servicios, Proyectos, Testimonios, Contacto) con scroll suave al hacer click, mismo
-  patrón que ya usa `PublicLandingNav.tsx` de Landing (anchors `href="#id"` + `scroll-smooth` en el
-  contenedor raíz + `IntersectionObserver` para resaltar la sección visible + menú hamburguesa en
-  mobile). Los enlaces se calculan dinámicamente en `page.tsx` según qué secciones tienen contenido
-  real (replican la misma condición de "no renderizar" que cada componente ya usa internamente,
-  p.ej. Testimonios solo aparece en el nav si `testimonials_content.items.length > 0`) — evita
-  enlaces rotos a secciones vacías. Cada `<section>` pública ganó su `id` (`about`, `skills`,
-  `services`, `projects`, `testimonials`, `contact`) + `scroll-mt-16` para compensar el nav fijo.
-  Gotcha encontrado en la verificación: con `nav_bg` personalizado (ej. morado oscuro), el texto de
-  los enlaces (`text-gray-600` por defecto) quedaba con muy poco contraste — se corrigió pasando
-  `theme_colors.header_text` como color del nav solo cuando `nav_bg` está configurado explícitamente
-  (las 4 paletas predefinidas garantizan buen contraste entre ambos). Cambio 100% frontend, sin
-  tocar backend. Verificado con click real + `getComputedStyle` + prueba de menú móvil en viewport
-  400px, sin errores de consola nuevos.
-
 ---
 
 ## Pendientes activos
@@ -117,6 +145,13 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **`CardEditor.test.tsx` — 2 tests preexistentes rotos, no relacionados a "Otros Enlaces":**
+      "calls mutate on valid form submission" y "shows URL validation error for invalid URL" nunca
+      llenan el campo `username` (`required: 'Nombre de usuario requerido'`), así que
+      `handleSubmit` de react-hook-form nunca invoca `onSubmit` — confirmado reproduciendo el
+      mismo fallo contra la versión commiteada del archivo, sin ningún cambio mío. Fix: agregar
+      `fireEvent.change` sobre el input de username en ambos tests. _Origen: verificación de
+      Tarjeta Digital "Otros Enlaces", 2026-07-03._
 - [ ] **Reportes — transversales + export ejecutivo (roadmap Fases 1-3 completado):** hechas Fase 1
       (vencidas/prioridad/tasa), Fase 2 (DevOps) y **Fase 3 (Actividad + Uso vs plan)**. Pendiente solo
       lo transversal: **filtro de rango de fechas global** y **export por sección**; y el **export
@@ -254,6 +289,16 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       carga de la fuente a un layout específico de la ruta pública de landing
       (`src/app/[locale]/landing/[username]/layout.tsx`, hoy no existe) en vez del layout raíz.
       _Origen: feature estilos preestablecidos Landing Fase 2, 2026-07-02._
+- [ ] **Analytics — posible doble conteo de vistas por prefetch de `next/link`:** encontrado al
+      verificar Landing/Portafolio tras el MVP de tracking — un par de `PageEvent` con 4ms de
+      diferencia y mismo referrer/hash, consistente con que el prefetch especulativo de un
+      `<Link>` interno + la navegación real generen 2 requests HTTP separados al backend (cada uno
+      fuera del alcance del `React.cache()` que solo dedupe dentro del mismo request). No
+      reproducido de forma controlada — hipótesis, no confirmada. No afecta navegación directa por
+      URL (verificado 1:1 en Tarjeta/Landing/Portafolio/CV). Si se confirma, la solución más
+      probable es detectar el header `Next-Router-Prefetch` en la request entrante a Next.js y
+      omitir el tracking para esos casos. _Origen: verificación manual Analytics tracking MVP,
+      2026-07-03._
 
 ---
 
