@@ -213,6 +213,24 @@ El Hub es el punto de entrada unificado para todos los clientes (tenants). Gesti
 | Vista | `apps/frontend_next_vista/` | Next.js App Router | — | `refreshToken` en localStorage + `accessToken` en cookie |
 | Desktop | `apps/frontend_sidebar_desktop/` | Tauri v2 + React | — | — |
 
+### Dominios (local vs producción)
+
+Local usa hosts `*.local.test` (mapeados a 127.0.0.1); producción usa Traefik/Dokploy bajo `digisider.com`.
+
+| App | Local | Producción | Variable Traefik (Dokploy) |
+|-----|-------|------------|------------------------------|
+| Backend Django (API) | `http://rbac.local.test` | `https://api-rbac.digisider.com` | hardcoded en `docker-compose.dokploy.yml` |
+| Hub Client Portal | `http://hub.local.test` (o `localhost:5175`) | `https://digisider.com` (dominio raíz, ya NO `hub.digisider.com`) | `HUB_DOMAIN` |
+| Admin Panel | `http://rbac-admin.local.test` (o `localhost:5173`) | `https://${ADMIN_DOMAIN}` (`admin.digisider.com`) | `ADMIN_DOMAIN` |
+| Workspace | `http://workspace.local.test` | `https://${WORKSPACE_DOMAIN}` | `WORKSPACE_DOMAIN` |
+| Vista | `http://next-vista.local.test` | `https://${VISTA_DOMAIN}` | `VISTA_DOMAIN` |
+| Desktop (Tauri) | `VITE_API_URL=http://rbac.local.test` | `VITE_API_URL=https://api-rbac.digisider.com`, `VITE_HUB_URL=https://digisider.com` | — (no se despliega vía Dokploy) |
+
+**Notas**:
+- Los hosts `*.local.test` deben estar en `CORS_ALLOWED_ORIGINS` / `ALLOWED_HOSTS` de `apps/backend_django/.env`.
+- `ADMIN_DOMAIN`, `WORKSPACE_DOMAIN`, `VISTA_DOMAIN`, `HUB_DOMAIN` se configuran en la pestaña **Environment** de cada app en Dokploy (no hardcodeados en el repo, salvo el `.env.example` de cada app como referencia).
+- El Hub migró de subdominio propio (`hub.digisider.com`) al dominio raíz (`digisider.com`) — ver `apps/frontend_next_hub/.env.example`.
+
 ### Vista — Features del área autenticada (`frontend_next_vista`)
 
 - `tarjeta` — editor de tarjeta digital + vista pública `/tarjeta/[username]`

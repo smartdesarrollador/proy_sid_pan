@@ -17,30 +17,82 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
-- **2026-07-02 — Anuncios en Tarjetas — Sidebar Desktop** ✅
-  Extiende la feature de anuncios al Desktop (Tauri v2): nuevo endpoint `GET /api/v1/app/announcements/top/?placement=dashboard&limit=2`
-  que retorna los N anuncios de mayor prioridad (caché 5 min, invalidación en mutaciones admin).
-  `HomePanel` muestra hasta 2 tarjetas con imagen full-width + texto debajo, descarte independiente
-  por ID persistido en `localStorage`. Sin cambios en el Hub.
-  _→ [Reporte](reports/2026-07-02-anuncios-tarjetas-desktop.md)_
+- **2026-07-03 — CV Digital: pestaña "Apariencia" (Fase 1+2+3, Vista)** ✅
+  Agrega una pestaña "Apariencia" al dashboard de CV Digital (entre Editor y Vista previa),
+  replicando el patrón de Portfolio. Antes del cambio, el selector de plantilla (solo texto, sin
+  preview) y el color de acento vivían sueltos dentro del tab Editor mezclados con el contenido.
+  **Fase 1 (colores)**: `accent_color` ya existía pero se aplicaba de forma muy inconsistente entre
+  los 3 templates — Classic lo usaba en ~4 lugares, Modern solo en el gradiente del header (texto
+  `text-blue-100` fijo sin relación al color elegido), Minimal no lo usaba en absoluto — corregido
+  de paso (Modern → `text-white/90` translúcido; Minimal → el nombre ahora usa `accent_color`).
+  Backend: JSONField `theme_colors` (`background`/`sidebar_bg` — `accent_color` se dejó como
+  `CharField` separado, sin migración de datos). `sidebar_bg` solo aplica a Classic (única con
+  sidebar), aclarado con nota en el picker. **Fase 2 (bordes/sombras/spacing)**: nuevo
+  `CVStyleTokens` (`radiusCard`/`shadowCard`/`spacingSection`) con 3 presets (Moderno/Clásico/
+  Suave). Simplificación real encontrada al diseñar: las 5 secciones compartidas
+  (`CVExperienceSection` etc.) no tienen ningún elemento tipo "card" — solo el contenedor raíz de
+  los 3 templates y la card de proyecto de Modern necesitaban tokenizarse, así que la fase terminó
+  tocando solo los 3 templates, no también las 5 secciones como se estimó al proponer la fase.
+  Minimal usa spacing por márgenes (`mb-8`/`mt-8`) en vez de `gap` como Classic/Modern — se dejó
+  fijo (layouts distintos no fuerzan un token común, mismo criterio que `sidebar_bg` en Fase 1).
+  Fix de consistencia incluido: badges de tecnología/skill usaban `rounded` en vez de `rounded-full`
+  como el resto de badges — corregido en los 3 templates. Backend: `style_preset` CharField en
+  `CVDocument` (migración 0021, mismo patrón que `PortfolioSettings.style_preset`). Frontend:
+  `CVTemplateSelector.tsx`/`CVStyleSelector.tsx` con mini-preview visual; nuevo `CVAppearanceTab.tsx`
+  agrupa Plantilla + Colores + Estilo + Visualización (toggles "Mostrar foto"/"Mostrar contacto",
+  movidos desde Editor). Fuera de alcance a propósito (ambas fases): `CVNav`/`<footer>` de la
+  página pública, que hoy no reciben ningún prop de `cv` — se decidió no abrir esa cadena de props.
+  Verificado end-to-end (dashboard → Apariencia → Vista previa con los 3 templates → Guardar →
+  recarga completa → CV público) con `getComputedStyle` confirmando colores/bordes/sombras reales
+  aplicados. Backend 2 tests nuevos entre ambas fases (31/31 ✓), typecheck + lint sin regresiones.
+  **Fase 3 (tipografía)**: extiende `CVStyleTokens` con `headingFont`/`headingWeight`/
+  `headingTracking`/`bodyLeading` sobre los **mismos 3 presets** de Fase 2 (sin agregar presets
+  nuevos, a diferencia de Portfolio) — cero cambios de backend, `style_preset` ya existía. Hallazgo
+  de la investigación: las 5 secciones compartidas SÍ tienen `<h2>` propios tokenizables (a
+  diferencia de Fase 2, donde no tenían "cards"), pero Minimal no usa 3 de esas 5 (Experience/
+  Education/Contact — las renderiza inline con su propio estilo `uppercase tracking-widest`).
+  Decisión: la tipografía tokenizada aplica solo a Classic/Modern; Minimal mantiene su tipografía
+  fija y distintiva (misma lógica que excluyó su spacing en Fase 2). Los 2 componentes compartidos
+  que Minimal sí usa (`CVSkillsSection`/`CVLanguagesSection`) reciben `styleTokens` como prop
+  opcional, sin regresión cuando no se pasa. Verificado con `getComputedStyle`: preset Clásico da
+  `fontWeight:700`/`letterSpacing:-0.5px` en `<h1>` y en el `<h2>` de "Experiencia" (viene del
+  componente compartido, confirma la propagación del prop); preset Suave da `500`/`+0.5px`;
+  Minimal se mantiene en `300`/`+0.75px` sin importar el preset seleccionado — regresión
+  intencional confirmada. Backend sin cambios (31/31 sigue verde), typecheck + lint sin
+  regresiones.
 
-- **2026-07-01 — Modal de Anuncios/Promociones (Hub)** ✅
-  Feature en 3 fases: backend (nueva app `apps/announcements/`, staff-only admin + lectura
-  pública/autenticada cacheada 5 min con invalidación en mutación), Admin Panel (CRUD completo en
-  `/announcements`, imagen, CTA, placement, ventana de vigencia, toggle activo/inactivo) y Hub
-  (modal en Home pública + Dashboard, descarte persistente por `localStorage`, responsive). De paso
-  se corrigió un bug de `image_url` apuntando a un hostname interno de Docker (`utils/media.py`,
-  también afectaba a `catalog`) y un parpadeo del modal por descarte compartido entre Home/Dashboard.
-  Backend 16 tests nuevos · Admin 5 tests nuevos · Hub 65/65 sin regresiones. typecheck + build ✓.
-  _→ [Reporte](reports/2026-07-01-anuncios-modal-hub.md)_
+- **2026-07-03 — Fix: botón "Ver público" ausente en dashboard de CV Digital** ✅
+  El usuario reportó que "el CV Digital no tiene vista pública" — la investigación (agente Explore)
+  reveló que la vista pública **ya existía completa y funcional** (backend `PublicCVView` +
+  frontend `app/[locale]/cv/[username]/page.tsx` con 3 templates, nav, footer, JSON-LD, i18n,
+  mismo patrón que Landing/Portfolio), y el botón "Ver público" también estaba implementado en
+  `CVEditorPage.tsx` — pero nunca se renderizaba. Causa raíz: `CVView.get()` (endpoint privado
+  `GET /app/digital/cv/`, `apps/backend_django/apps/digital_services/views.py`) solo retornaba
+  `{cv: ...}`, sin el campo `profile` que el frontend necesita para armar la URL pública
+  (`publicUrl = data?.profile ? ... : null` → siempre `null`). Fix de 1 línea: agregar
+  `'profile': PublicProfileSerializer(profile).data` a la respuesta (mismo serializer ya
+  importado, sin cambios de forma en el resto del payload). Verificado end-to-end: el link
+  aparece en el dashboard, apunta a la URL correcta, y al hacer click abre la vista pública real
+  en pestaña nueva. Backend 1 test nuevo (29/29 ✓). No se tocó nada del frontend — la lógica ya
+  estaba correcta, solo esperaba el dato que el backend no enviaba.
 
-- **2026-07-01 — Catálogo de Servicios Dinámico** ✅
-  Nueva app `apps/catalog/` (backend) + sección CRUD en Admin Panel + Hub landing + Desktop
-  ServicesPanel dinámicos. `CatalogItem` con imagen/color, `target_apps` JSONField (`desktop`,
-  `mobile`, `web`), orden y activo/inactivo. Endpoints: `GET /api/v1/public/catalog/?app=X`
-  (AllowAny) + 4 endpoints staff en `/admin/catalog/`. Hub y Desktop reemplazan arrays
-  estáticos hardcodeados por fetch al mismo backend. typecheck + build ✓.
-  _→ [Reporte](reports/2026-07-01-catalogo-servicios-dinamico.md)_
+- **2026-07-03 — Navbar con anclas a secciones en Portfolio público (Vista)** ✅
+  El navbar del portafolio público (`PortfolioNav.tsx`) estaba prácticamente vacío (solo nombre +
+  toggle de tema). Se agregaron enlaces de navegación a las secciones existentes (Sobre mí,
+  Habilidades, Servicios, Proyectos, Testimonios, Contacto) con scroll suave al hacer click, mismo
+  patrón que ya usa `PublicLandingNav.tsx` de Landing (anchors `href="#id"` + `scroll-smooth` en el
+  contenedor raíz + `IntersectionObserver` para resaltar la sección visible + menú hamburguesa en
+  mobile). Los enlaces se calculan dinámicamente en `page.tsx` según qué secciones tienen contenido
+  real (replican la misma condición de "no renderizar" que cada componente ya usa internamente,
+  p.ej. Testimonios solo aparece en el nav si `testimonials_content.items.length > 0`) — evita
+  enlaces rotos a secciones vacías. Cada `<section>` pública ganó su `id` (`about`, `skills`,
+  `services`, `projects`, `testimonials`, `contact`) + `scroll-mt-16` para compensar el nav fijo.
+  Gotcha encontrado en la verificación: con `nav_bg` personalizado (ej. morado oscuro), el texto de
+  los enlaces (`text-gray-600` por defecto) quedaba con muy poco contraste — se corrigió pasando
+  `theme_colors.header_text` como color del nav solo cuando `nav_bg` está configurado explícitamente
+  (las 4 paletas predefinidas garantizan buen contraste entre ambos). Cambio 100% frontend, sin
+  tocar backend. Verificado con click real + `getComputedStyle` + prueba de menú móvil en viewport
+  400px, sin errores de consola nuevos.
 
 ---
 
@@ -188,6 +240,20 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       cuando `next.config.ts` tenga el dominio de medios de producción en `images.remotePatterns`
       (mejor LCP; hoy genera warning de ESLint `no-img-element`, aceptado a propósito).
       _Origen: [reports/2026-07-01-anuncios-modal-hub.md](reports/2026-07-01-anuncios-modal-hub.md)_
+- [ ] **`LandingPreview.tsx` no refleja `theme_colors` en el tab Vista Previa:** el objeto
+      `landingForPreview` se construye campo por campo manualmente (no es un spread de `formState`)
+      y omite `theme_colors` — el usuario ve el estilo/plantilla pero no los colores personalizados
+      hasta guardar y ver la landing pública. Gap preexistente, detectado al agregar `style_preset`
+      a ese mismo objeto. _Origen: feature estilos preestablecidos Landing, 2026-07-02._
+- [ ] **Playfair Display (preset Editorial) se precarga en TODAS las rutas de `frontend_next_vista`,
+      no solo landing:** la CSS var `--font-playfair` se expone en `src/app/[locale]/layout.tsx`
+      (layout raíz, compartido por dashboard/landing/tarjeta/cv/etc.), y `next/font/google` precarga
+      por defecto cualquier fuente referenciada ahí sin importar si la ruta actual la usa. Confirmado
+      con Network tab: el `.woff2` de Playfair (~38KB, cacheado `immutable`) se descarga incluso en
+      `/es/dashboard`. Costo bajo (una vez por sesión, gzip+cache agresivo) pero evitable moviendo la
+      carga de la fuente a un layout específico de la ruta pública de landing
+      (`src/app/[locale]/landing/[username]/layout.tsx`, hoy no existe) en vez del layout raíz.
+      _Origen: feature estilos preestablecidos Landing Fase 2, 2026-07-02._
 
 ---
 

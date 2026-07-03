@@ -10,7 +10,7 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-025
 - [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-032
 - [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-045
-- [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-056
+- [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-059
 - [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-062
 - [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-080
 - [I. Tauri / Desktop en producción](#i-tauri--desktop-en-producción) — LL-090 … LL-091
@@ -332,6 +332,22 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** El nombre del feature flag es un **contrato** front↔back sin validación en runtime. Al añadir un gate nuevo: (1) definir primero la clave en `plans.py` (los 4 planes), (2) usar **exactamente** ese string en el front. Un flag que falta no rompe ni loguea — se degrada a "deshabilitado para todos", que es fácil de no notar. Mismo espíritu que [[LL-053]] (interfaces TS desincronizadas con serializers) y [[LL-061]] (permisos no sembrados).
 - **Fuente:** `reports/2026-06-29-export-datos-workspace.md`
 - **Tags:** feature-gate, plans, featuregate, frontend, backend, contrato, silent-failure, export
+
+### LL-058 — Clases Tailwind definidas como string literal fuera de `content` no se generan (aunque el className las interpole)
+- **Síntoma:** Un componente aplica `className={`... ${tokens.radiusCard} ...`}` donde `tokens.radiusCard` viene de un objeto/mapa (`Record<Key, string>`) definido en otro archivo (p.ej. `rounded-3xl`). En el navegador el className del DOM sí trae el string correcto, pero `getComputedStyle` no refleja la clase — border-radius queda en `0px`/el valor por defecto. Otras clases del mismo mapa (`shadow-md`, `rounded-full`) sí funcionan, lo que hace parecer un bug intermitente.
+- **Causa raíz:** El JIT de Tailwind genera CSS solo para clases que encuentra por **regex sobre los archivos listados en `content` de `tailwind.config.ts`**. El mapa de tokens vivía en `src/features/landing/types.ts`, y el `content` array solo listaba `src/pages`, `src/components` y `src/app` — nunca `src/features`. Las clases que "sí funcionaban" (`shadow-md`, `rounded-full`) coincidían por casualidad con otro literal ya presente en un archivo sí escaneado; `rounded-3xl` no aparecía en ningún otro lado y por eso faltaba en el CSS final.
+- **Solución:** Agregar la carpeta del mapa de tokens al `content` de `tailwind.config.ts` (`'./src/features/**/*.{js,ts,jsx,tsx,mdx}'`) y reiniciar/recompilar el dev server.
+- **Prevención:** Cualquier "mapa de tokens de diseño" (colores, radios, sombras, spacing) que viva fuera de `components`/`app`/`pages` — típicamente en `features/*/types.ts` o `lib/`— debe estar cubierto por `content`. Al crear un sistema de variantes/presets nuevo, verificar con `getComputedStyle` (no solo inspeccionar el className en el DOM) que la clase realmente tiene la regla CSS generada, sobre todo para valores "raros" (`rounded-3xl`, `py-36`) que no aparecen ya en otro lado del código escaneado.
+- **Fuente:** feature "Estilos preestablecidos Landing Page", sesión 2026-07-02.
+- **Tags:** tailwind, content-scanning, jit, css-purge, design-tokens, nextjs, style-preset
+
+### LL-059 — `next/font/google` precarga cualquier fuente expuesta en un layout compartido, aunque la ruta actual no la use
+- **Síntoma:** Se agrega una segunda familia tipográfica (p.ej. una serif para un preset "editorial") vía `next/font/google` en el layout raíz (`src/app/[locale]/layout.tsx`), expuesta como CSS var (`--font-playfair`) solo consumida por una clase Tailwind (`font-editorial`) usada en una sola ruta pública. La expectativa razonable es que el navegador solo descargue el `.woff2` cuando esa clase aparezca realmente en el DOM (comportamiento nativo de `@font-face` lazy-loading). Verificando con la pestaña Network en una ruta que NO usa `font-editorial` (p.ej. `/dashboard`), el archivo de la fuente nueva se descarga igual.
+- **Causa raíz:** `next/font/google` añade automáticamente un `<link rel="preload">` para toda fuente referenciada en un layout, sin importar si algún descendiente la usa — Next.js no puede saber estáticamente, por-ruta, si una hoja del árbol renderiza `font-editorial`, porque el layout raíz se comparte con todas las rutas. El preload fuerza la descarga eager, no lazy, independientemente del CSS lazy-loading nativo del navegador.
+- **Solución (si el costo importa):** Mover la carga de la fuente fuera del layout raíz, a un layout específico de la subruta que la usa (p.ej. `src/app/[locale]/landing/[username]/layout.tsx`), para que el preload solo se inyecte en esa rama del árbol de rutas.
+- **Prevención:** Si el archivo es pequeño (~30-50KB) y tiene cache `immutable` de un año, el costo real es "una descarga extra la primera vez que el usuario visita cualquier ruta de la app, cacheada después" — evaluar si vale la pena el layout adicional o es aceptable. Si se agregan más fuentes a futuro (p. ej. Fase 3 de estilos), considerar desde el inicio un layout segmentado para rutas públicas de landing en vez del layout raíz compartido con el dashboard.
+- **Fuente:** feature "Estilos preestablecidos Landing Page" Fase 2, sesión 2026-07-02.
+- **Tags:** nextjs, next-font, font-preload, google-fonts, layout, performance, style-preset
 
 ---
 
