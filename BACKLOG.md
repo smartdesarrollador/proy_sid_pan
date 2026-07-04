@@ -17,6 +17,38 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-03 — Tarjeta Digital: imagen OG dinámica para compartir (WhatsApp/redes)** ✅
+  Al compartir el link de la tarjeta por WhatsApp no aparecía imagen — `og_image_url` (el campo
+  que alimenta el preview) nunca se llena porque ningún editor de la plataforma lo expone. Se
+  generó una imagen dinámica tipo "mini-tarjeta" (nombre + cargo + avatar + color de marca) vía la
+  convención especial de Next.js `opengraph-image.tsx` + `ImageResponse` de `next/og` (nativo,
+  cero dependencias nuevas) — Next.js detecta el archivo y arma `og:image`/`twitter:image`
+  automáticamente. **3 bugs reales encontrados y corregidos durante la verificación** (ninguno
+  obvio de antemano): (1) Satori (el motor detrás de `ImageResponse`) no puede parsear el SVG
+  remoto de Dicebear (`Failed to parse SVG image: Invalid character`) — se resolvió pidiendo la
+  variante PNG de Dicebear específicamente, y omitiendo cualquier otro avatar SVG remoto (Satori
+  no soporta SVGs remotos de forma confiable en general); (2) el meta tag `og:image` no se
+  generaba en absoluto porque `generateMetadata` fijaba `openGraph.images: []` (array vacío)
+  incluso sin `og_image_url` — Next.js trata una clave `images` explícitamente presente (aunque
+  esté vacía o `undefined`) como "ya resuelta por el desarrollador" y no completa automáticamente
+  desde el archivo especial; el fix fue omitir la clave por completo (`...(cond ? {images:[...]} : {})`)
+  cuando no hay imagen manual, dejando que Next.js complete solo; (3) en `next dev` la URL de la
+  imagen resolvía a `localhost:<puerto interno>` en vez del dominio configurado en `metadataBase`
+  — **confirmado que es una limitación exclusiva del dev server** corriendo un build de producción
+  real (`next build` + `next start`) dentro del mismo contenedor en un puerto temporal: ahí
+  `metadataBase` (ya usa la misma variable `NEXT_PUBLIC_APP_URL` que `seo.ts`) resuelve
+  correctamente al dominio real — no bloquea producción. De paso se agregó `metadataBase` (no
+  existía en el layout raíz) y `allowedDevOrigins` en `next.config.ts` (elimina un warning de
+  cross-origin en dev, sin efecto en producción). Verificado: imagen 1200×630 renderizando avatar
+  real + nombre + color de marca en su URL directa; meta tags completos (`og:image`,
+  `twitter:image`, dimensiones, tipo) confirmados tanto en dev como en un build de producción real.
+  **Pendiente de que el usuario confirme visualmente en WhatsApp** — requiere un entorno accesible
+  desde internet (WhatsApp/Meta no puede alcanzar `localhost`/dominios `.local.test`); si ya se
+  compartió el link antes, Meta cachea el preview viejo (forzar refresco vía
+  `developers.facebook.com/tools/debug/`). Frontend: 1 test actualizado + 1 test nuevo en
+  `tarjeta-page.test.tsx` (57/59 ✓, las 2 fallas restantes son las ya documentadas como
+  preexistentes), typecheck + lint sin regresiones. Backend sin cambios (55/55 ✓).
+
 - **2026-07-03 — Tarjeta Digital: sección "Otros Enlaces" (lista dinámica + selector de ícono)** ✅
   El editor de Tarjeta Digital solo permitía 6 redes sociales fijas (LinkedIn/Twitter/GitHub/
   Instagram/Facebook/website). Se agregó una sección nueva y separada "Otros Enlaces" —
@@ -77,50 +109,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   agregado al hook sin romper compatibilidad con `ServiceAnalyticsView.tsx`), clickeable hacia
   `/dashboard/analytics`. Verificado en navegador: la tarjeta pasó de "Próximamente" a mostrar el
   total real y navega correctamente al hacer click.
-
-- **2026-07-03 — CV Digital: pestaña "Apariencia" (Fase 1+2+3, Vista)** ✅
-  Agrega una pestaña "Apariencia" al dashboard de CV Digital (entre Editor y Vista previa),
-  replicando el patrón de Portfolio. Antes del cambio, el selector de plantilla (solo texto, sin
-  preview) y el color de acento vivían sueltos dentro del tab Editor mezclados con el contenido.
-  **Fase 1 (colores)**: `accent_color` ya existía pero se aplicaba de forma muy inconsistente entre
-  los 3 templates — Classic lo usaba en ~4 lugares, Modern solo en el gradiente del header (texto
-  `text-blue-100` fijo sin relación al color elegido), Minimal no lo usaba en absoluto — corregido
-  de paso (Modern → `text-white/90` translúcido; Minimal → el nombre ahora usa `accent_color`).
-  Backend: JSONField `theme_colors` (`background`/`sidebar_bg` — `accent_color` se dejó como
-  `CharField` separado, sin migración de datos). `sidebar_bg` solo aplica a Classic (única con
-  sidebar), aclarado con nota en el picker. **Fase 2 (bordes/sombras/spacing)**: nuevo
-  `CVStyleTokens` (`radiusCard`/`shadowCard`/`spacingSection`) con 3 presets (Moderno/Clásico/
-  Suave). Simplificación real encontrada al diseñar: las 5 secciones compartidas
-  (`CVExperienceSection` etc.) no tienen ningún elemento tipo "card" — solo el contenedor raíz de
-  los 3 templates y la card de proyecto de Modern necesitaban tokenizarse, así que la fase terminó
-  tocando solo los 3 templates, no también las 5 secciones como se estimó al proponer la fase.
-  Minimal usa spacing por márgenes (`mb-8`/`mt-8`) en vez de `gap` como Classic/Modern — se dejó
-  fijo (layouts distintos no fuerzan un token común, mismo criterio que `sidebar_bg` en Fase 1).
-  Fix de consistencia incluido: badges de tecnología/skill usaban `rounded` en vez de `rounded-full`
-  como el resto de badges — corregido en los 3 templates. Backend: `style_preset` CharField en
-  `CVDocument` (migración 0021, mismo patrón que `PortfolioSettings.style_preset`). Frontend:
-  `CVTemplateSelector.tsx`/`CVStyleSelector.tsx` con mini-preview visual; nuevo `CVAppearanceTab.tsx`
-  agrupa Plantilla + Colores + Estilo + Visualización (toggles "Mostrar foto"/"Mostrar contacto",
-  movidos desde Editor). Fuera de alcance a propósito (ambas fases): `CVNav`/`<footer>` de la
-  página pública, que hoy no reciben ningún prop de `cv` — se decidió no abrir esa cadena de props.
-  Verificado end-to-end (dashboard → Apariencia → Vista previa con los 3 templates → Guardar →
-  recarga completa → CV público) con `getComputedStyle` confirmando colores/bordes/sombras reales
-  aplicados. Backend 2 tests nuevos entre ambas fases (31/31 ✓), typecheck + lint sin regresiones.
-  **Fase 3 (tipografía)**: extiende `CVStyleTokens` con `headingFont`/`headingWeight`/
-  `headingTracking`/`bodyLeading` sobre los **mismos 3 presets** de Fase 2 (sin agregar presets
-  nuevos, a diferencia de Portfolio) — cero cambios de backend, `style_preset` ya existía. Hallazgo
-  de la investigación: las 5 secciones compartidas SÍ tienen `<h2>` propios tokenizables (a
-  diferencia de Fase 2, donde no tenían "cards"), pero Minimal no usa 3 de esas 5 (Experience/
-  Education/Contact — las renderiza inline con su propio estilo `uppercase tracking-widest`).
-  Decisión: la tipografía tokenizada aplica solo a Classic/Modern; Minimal mantiene su tipografía
-  fija y distintiva (misma lógica que excluyó su spacing en Fase 2). Los 2 componentes compartidos
-  que Minimal sí usa (`CVSkillsSection`/`CVLanguagesSection`) reciben `styleTokens` como prop
-  opcional, sin regresión cuando no se pasa. Verificado con `getComputedStyle`: preset Clásico da
-  `fontWeight:700`/`letterSpacing:-0.5px` en `<h1>` y en el `<h2>` de "Experiencia" (viene del
-  componente compartido, confirma la propagación del prop); preset Suave da `500`/`+0.5px`;
-  Minimal se mantiene en `300`/`+0.75px` sin importar el preset seleccionado — regresión
-  intencional confirmada. Backend sin cambios (31/31 sigue verde), typecheck + lint sin
-  regresiones.
 
 ---
 
