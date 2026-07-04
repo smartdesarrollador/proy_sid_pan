@@ -17,6 +17,21 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-03 — Branding "Digisider" + PWA instalable en las 4 vistas públicas** ✅
+  El pie de página "Creado con Vista Digital" (tarjeta/landing/portafolio/cv) se reemplazó por
+  un link a **Digisider** (`digisider.com`). Además, respondiendo a la pregunta del usuario
+  sobre si el link compartido de una tarjeta se puede "instalar como app nativa", se implementó
+  un **manifest + íconos + service worker generados por tenant** en las 4 rutas (Next 15 no
+  permite `manifest.ts` en un segmento dinámico, así que se sirve con un Route Handler propio;
+  `icon.tsx`/`apple-icon.tsx` sí son anidables, igual que el `opengraph-image.tsx` ya existente).
+  Cada tenant instala su propia app aislada (ícono con su avatar/iniciales sobre su color de
+  marca, scope propio). El service worker es deliberadamente sin caché (solo cumple el
+  requisito de instalabilidad de Chrome, no promete modo offline — decisión confirmada con el
+  usuario). Verificado end-to-end vía `curl` contra un tenant real (`empresa15`): manifest JSON,
+  ícono 512×512, y tags `<head>` (`manifest`, `theme-color`, `apple-touch-icon`, etc.) correctos
+  en las 4 rutas. `npx tsc` limpio, `npx jest` 57/59 ✓ (2 fallos preexistentes sin relación).
+  _→ [Reporte](reports/2026-07-03-digisider-branding-pwa-vistas-publicas.md)_
+
 - **2026-07-03 — Tarjeta Digital: imagen OG dinámica para compartir (WhatsApp/redes)** ✅
   Al compartir el link de la tarjeta por WhatsApp no aparecía imagen — `og_image_url` (el campo
   que alimenta el preview) nunca se llena porque ningún editor de la plataforma lo expone. Se
@@ -75,47 +90,18 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   real, eliminar uno y confirmar que desaparece de ambos lados. Backend 3 tests nuevos (55/55 ✓
   suite completa), typecheck + lint sin regresiones.
 
-- **2026-07-03 — Analytics de Vista Digital: MVP de tracking real (backend + frontend)** ✅
-  La sección Analytics del dashboard (tabs Tarjeta/Landing/Portafolio/CV) siempre mostraba 0/"sin
-  datos" — no era un bug de renderizado: no existía ningún modelo de tracking, y
-  `DigitalAnalyticsView` devolvía conteos de contenido (`has_card`, `portfolio_items`...) en vez
-  de métricas de tráfico. Backend: nuevo modelo `PageEvent` (vista/share por servicio, migración
-  0022) + módulo `analytics.py` con `session_hash` peppered con `SECRET_KEY` (sha256, rota
-  diariamente — sin pepper el hash sería reversible por diccionario offline, hueco de privacidad
-  real encontrado en la validación del diseño). Tracking instrumentado en las 5 vistas públicas
-  **después** de validar que el perfil/contenido existe (no antes — evita registrar "vistas" para
-  usernames inexistentes). Nuevo endpoint `POST /public/track-share/<username>/`.
-  `DigitalAnalyticsView` reescrita: agrega por día (`TruncDate`), calcula `change_percent` vs.
-  período anterior, top referrers por hostname, y clampea `days` por plan (`digital_analytics_days`
-  en `utils/plans.py`, mismo patrón que `audit_log_days`) — antes nada impedía pedir `?days=365`
-  sin importar el plan. Frontend: **cero cambios en `src/features/analytics/`** (ya consumía el
-  contrato correcto, solo esperaba datos reales). El fix real fue en `publicApi.ts`: cada página
-  pública llamaba al mismo fetcher 2 veces (`generateMetadata` + body) sin dedup con
-  `cache: 'no-store'`, duplicando el conteo de vistas — se envolvieron los 4 fetchers en `cache()`
-  de `'react'`. Además se reenvían los headers reales del visitante (`User-Agent`/`Referer`/
-  `X-Forwarded-For`) desde `next/headers` hacia el fetch saliente a Django, ya que el request
-  server-to-server no los propaga por defecto. Hallazgo colateral: `PublicPortfolioItemView` es
-  código muerto desde el frontend hoy (la página de detalle reutiliza el listado y filtra en
-  memoria) — se instrumentó igual por consistencia de API, documentado que no recibe tráfico real
-  todavía. Diseño validado por un agente Plan dedicado antes de implementar (detectó el orden
-  correcto del tracking, el hueco de privacidad del hash, y la necesidad del clamp por plan).
-  Verificado end-to-end: 3 recargas reales de la Tarjeta pública → exactamente 3 `PageEvent` (no 6,
-  confirma el fix de doble conteo) con `session_hash` idéntico entre ellas; click en "Compartir" →
-  1 evento share registrado; dashboard Analytics reflejando los números reales por tab. Backend 21
-  tests nuevos (`test_analytics.py`) + suite completa 52/52 ✓, typecheck + lint sin regresiones.
-  **Extra**: el dashboard principal (Inicio) tenía una tarjeta "Analíticas — Próximamente"
-  hardcodeada (`QuickStats.tsx`) — se reemplazó por un resumen real (suma de `total_views` de los
-  4 servicios vía `useServiceAnalytics` x4 con `enabled` condicionado al feature-gate, nuevo param
-  agregado al hook sin romper compatibilidad con `ServiceAnalyticsView.tsx`), clickeable hacia
-  `/dashboard/analytics`. Verificado en navegador: la tarjeta pasó de "Próximamente" a mostrar el
-  total real y navega correctamente al hacer click.
-
 ---
 
 ## Pendientes activos
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
+- [ ] **Verificar instalación PWA real de las 4 vistas públicas (tarjeta/landing/portafolio/cv)
+      fuera de `curl`:** `navigator.serviceWorker` requiere "secure context" — `localhost`/
+      `127.0.0.1` califican sin HTTPS, pero el hostname de dev del proyecto
+      (`next-vista.local.test`, mapeado a `127.0.0.1` vía hosts) **no** califica solo por resolver
+      a loopback. Probar el botón "Instalar app" real con `http://localhost:3004` directo, o en
+      producción (HTTPS). _Origen: [reports/2026-07-03-digisider-branding-pwa-vistas-publicas.md](reports/2026-07-03-digisider-branding-pwa-vistas-publicas.md)_
 - [ ] **Deploy Bóveda a prod:** redeployar backend (`back_dj_sp`) + `migrate vault`, redeployar
       workspace (`front_ws_sp`). **Requisitos**: (1) `ENCRYPTION_KEY` válida en Dokploy (Fernet,
       una sola vez — si cambia se pierde lo cifrado); (2) que el cambio de `CORS_ALLOW_HEADERS`
@@ -287,6 +273,12 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       probable es detectar el header `Next-Router-Prefetch` en la request entrante a Next.js y
       omitir el tracking para esos casos. _Origen: verificación manual Analytics tracking MVP,
       2026-07-03._
+- [ ] **PWA instalable (tarjeta/landing/portafolio/cv) — sin tests automatizados:** los nuevos
+      Route Handlers (`manifest/route.ts`, `icon-512/route.ts`) y el componente
+      `PwaInstallRegister` solo se verificaron manualmente vía `curl` contra el contenedor de
+      dev real. Cubrir con tests: manifest devuelve 404 si el perfil no existe, colores/nombre
+      correctos por feature, ícono responde PNG con el tamaño esperado.
+      _Origen: [reports/2026-07-03-digisider-branding-pwa-vistas-publicas.md](reports/2026-07-03-digisider-branding-pwa-vistas-publicas.md)_
 
 ---
 
