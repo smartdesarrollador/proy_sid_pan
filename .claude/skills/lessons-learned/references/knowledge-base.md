@@ -9,7 +9,7 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - [B. Variables de entorno y build (Next.js / Dokploy)](#b-variables-de-entorno-y-build-nextjs--dokploy) — LL-010 … LL-011
 - [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-025
 - [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-032
-- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-045
+- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-046
 - [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-059
 - [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-062
 - [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-080
@@ -258,6 +258,26 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Para cualquier modelo con campos cifrados, tratar el ciphertext como **inalcanzable** desde features transversales (search, export, audit). Test explícito: si el término solo está en el secreto, **no** debe haber match y el secreto **no** debe aparecer en el JSON (`assertNotIn` sobre `json.dumps(body)`). Cuidado: el término sí se hace *echo* en `query`, así que asertar sobre el resto del secreto. Ver [[LL-043]].
 - **Fuente:** `reports/2026-06-29-buscador-general-workspace.md`
 - **Tags:** seguridad, cifrado, vault, search, ciphertext, fuga-de-datos, multi-tenant
+
+### LL-046 — Campo fantasma: el serializer de entrada lo valida, la vista lo descarta, el modelo nunca lo tuvo
+- **Síntoma:** Un campo del formulario (p. ej. "Etiquetas" en Notas) parece funcional — se puede
+  escribir, se envía, no da error — pero nunca se refleja en la UI después de guardar ni tras
+  recargar. Parece un bug de render en el frontend.
+- **Causa raíz:** El modelo (`Note`) nunca tuvo la columna `tags`. El serializer de entrada
+  (`NoteCreateUpdateSerializer`) sí validaba `tags`, pero las vistas lo descartaban explícitamente
+  (`data.pop('tags', None)  # model has no tags field`) y el serializer de salida devolvía
+  `SerializerMethodField` hardcodeado a `[]`. El contrato de API prometía un campo que el modelo
+  nunca implementó.
+- **Solución:** Verificar la cadena completa modelo → migración → serializer de salida → vista antes
+  de asumir que "no aparece" es un problema de render. Implementado como `ArrayField` (mismo patrón
+  que `Bookmark.tags`/`Snippet.tags`), con migración, y quitando los descartes explícitos en las
+  vistas.
+- **Prevención:** Si una vista tiene un comentario tipo `# model has no tags field` o similar
+  descartando un campo que el serializer de entrada sí valida, es una señal de feature a medio
+  implementar — no asumir que es intencional sin confirmarlo. Al depurar "el dato no se ve", probar
+  primero directo en el modelo (`Model.objects.first().<campo>`) antes de tocar el frontend.
+- **Fuente:** `reports/2026-07-08-notas-workspace-etiquetas-no-se-guardaban.md`
+- **Tags:** drf, serializer, campo-fantasma, modelo-incompleto, arrayfield, notes, data-integrity
 
 ---
 

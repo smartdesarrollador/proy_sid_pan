@@ -17,78 +17,51 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
-- **2026-07-03 — Branding "Digisider" + PWA instalable en las 4 vistas públicas** ✅
-  El pie de página "Creado con Vista Digital" (tarjeta/landing/portafolio/cv) se reemplazó por
-  un link a **Digisider** (`digisider.com`). Además, respondiendo a la pregunta del usuario
-  sobre si el link compartido de una tarjeta se puede "instalar como app nativa", se implementó
-  un **manifest + íconos + service worker generados por tenant** en las 4 rutas (Next 15 no
-  permite `manifest.ts` en un segmento dinámico, así que se sirve con un Route Handler propio;
-  `icon.tsx`/`apple-icon.tsx` sí son anidables, igual que el `opengraph-image.tsx` ya existente).
-  Cada tenant instala su propia app aislada (ícono con su avatar/iniciales sobre su color de
-  marca, scope propio). El service worker es deliberadamente sin caché (solo cumple el
-  requisito de instalabilidad de Chrome, no promete modo offline — decisión confirmada con el
-  usuario). Verificado end-to-end vía `curl` contra un tenant real (`empresa15`): manifest JSON,
-  ícono 512×512, y tags `<head>` (`manifest`, `theme-color`, `apple-touch-icon`, etc.) correctos
-  en las 4 rutas. `npx tsc` limpio, `npx jest` 57/59 ✓ (2 fallos preexistentes sin relación).
-  _→ [Reporte](reports/2026-07-03-digisider-branding-pwa-vistas-publicas.md)_
+- **2026-07-09 — Desktop Sidebar (Bookmarks/Snippets): mismo autocompletado + filtro de tags que Notas** ✅
+  Mismo patrón exacto recién implementado en Notas, replicado sin cambios de backend (misma
+  arquitectura 100% client-side en los tres paneles). `allTags` derivado de los datos ya cargados en
+  ambos paneles; fila de pills `#tag` (teal, consistente entre los tres) después de la fila de
+  colección/lenguaje; mismo bloque de autocompletado (dropdown al enfocar, filtro por substring,
+  clic inserta) en `BookmarkForm`/`SnippetForm`. Hallazgo resuelto como parte de la paridad (no bug
+  aparte): `SnippetsPanel.tsx` nunca mostraba tags en ningún lado (a diferencia de Bookmarks/Notas)
+  — se agregó la misma fila de tags al detalle expandido de `SnippetItem`, mismo estilo que
+  `BookmarkItemRow`, para que el nuevo filtro tenga confirmación visual. `tsc` y `vite build`
+  limpios. Verificado manualmente en navegador real (mismo procedimiento que Notas): filtro por tag
+  reduce la lista en ambos paneles, autocompletado sugiere/filtra correctamente (probado con "te" →
+  `#test`+`#urgente`), detalle expandido de snippet ahora muestra sus tags.
+  _→ [Reporte](reports/2026-07-09-desktop-bookmarks-snippets-autocompletado-filtro-tags.md)_
 
-- **2026-07-03 — Tarjeta Digital: imagen OG dinámica para compartir (WhatsApp/redes)** ✅
-  Al compartir el link de la tarjeta por WhatsApp no aparecía imagen — `og_image_url` (el campo
-  que alimenta el preview) nunca se llena porque ningún editor de la plataforma lo expone. Se
-  generó una imagen dinámica tipo "mini-tarjeta" (nombre + cargo + avatar + color de marca) vía la
-  convención especial de Next.js `opengraph-image.tsx` + `ImageResponse` de `next/og` (nativo,
-  cero dependencias nuevas) — Next.js detecta el archivo y arma `og:image`/`twitter:image`
-  automáticamente. **3 bugs reales encontrados y corregidos durante la verificación** (ninguno
-  obvio de antemano): (1) Satori (el motor detrás de `ImageResponse`) no puede parsear el SVG
-  remoto de Dicebear (`Failed to parse SVG image: Invalid character`) — se resolvió pidiendo la
-  variante PNG de Dicebear específicamente, y omitiendo cualquier otro avatar SVG remoto (Satori
-  no soporta SVGs remotos de forma confiable en general); (2) el meta tag `og:image` no se
-  generaba en absoluto porque `generateMetadata` fijaba `openGraph.images: []` (array vacío)
-  incluso sin `og_image_url` — Next.js trata una clave `images` explícitamente presente (aunque
-  esté vacía o `undefined`) como "ya resuelta por el desarrollador" y no completa automáticamente
-  desde el archivo especial; el fix fue omitir la clave por completo (`...(cond ? {images:[...]} : {})`)
-  cuando no hay imagen manual, dejando que Next.js complete solo; (3) en `next dev` la URL de la
-  imagen resolvía a `localhost:<puerto interno>` en vez del dominio configurado en `metadataBase`
-  — **confirmado que es una limitación exclusiva del dev server** corriendo un build de producción
-  real (`next build` + `next start`) dentro del mismo contenedor en un puerto temporal: ahí
-  `metadataBase` (ya usa la misma variable `NEXT_PUBLIC_APP_URL` que `seo.ts`) resuelve
-  correctamente al dominio real — no bloquea producción. De paso se agregó `metadataBase` (no
-  existía en el layout raíz) y `allowedDevOrigins` en `next.config.ts` (elimina un warning de
-  cross-origin en dev, sin efecto en producción). Verificado: imagen 1200×630 renderizando avatar
-  real + nombre + color de marca en su URL directa; meta tags completos (`og:image`,
-  `twitter:image`, dimensiones, tipo) confirmados tanto en dev como en un build de producción real.
-  **Pendiente de que el usuario confirme visualmente en WhatsApp** — requiere un entorno accesible
-  desde internet (WhatsApp/Meta no puede alcanzar `localhost`/dominios `.local.test`); si ya se
-  compartió el link antes, Meta cachea el preview viejo (forzar refresco vía
-  `developers.facebook.com/tools/debug/`). Frontend: 1 test actualizado + 1 test nuevo en
-  `tarjeta-page.test.tsx` (57/59 ✓, las 2 fallas restantes son las ya documentadas como
-  preexistentes), typecheck + lint sin regresiones. Backend sin cambios (55/55 ✓).
+- **2026-07-09 — Desktop Sidebar (Notas): autocompletado de tags + filtro de tags** ✅
+  El backend ya persistía tags correctamente (sesión previa); el campo en `NotesPanel.tsx` era texto
+  libre sin autocompletado, y no existía filtro por tag (solo por categoría). Hallazgo clave: este
+  panel filtra 100% client-side (`fetchNotes` trae todas las notas en una sola llamada, categoría y
+  búsqueda ya se filtran con `useMemo` sobre el array cargado) — así que el vocabulario de tags para
+  filtro y sugerencias se derivó directo de `notes` ya cargadas (`allTags`, mismo patrón que
+  `presentCategories`), **sin ninguna llamada nueva al backend**. Se agregó una fila de pills `#tag`
+  (mismo estilo que las de categoría, color teal) para el filtro, combinado por AND con
+  categoría/búsqueda. Para el autocompletado en `NoteForm` no había ningún dropdown/popover en toda
+  la app (grep sin resultados) — se construyó uno mínimo desde cero: lista de sugerencias al enfocar
+  el campo (todas si está vacío, filtradas por substring al escribir), clic inserta el tag y deja el
+  campo listo para el siguiente, cierre con clic-fuera o Escape. Sin cambios de backend. `tsc` y
+  `vite build` limpios; esta app no tiene infraestructura de testing (deuda ya trazada) — verificado
+  manualmente en navegador real (`vite dev` fuera de Docker + sesión sembrada en localStorage vía
+  login real): filtro por tag reduce la lista correctamente, autocompletado sugiere/filtra/inserta
+  bien, nota creada con dos tags (uno nuevo) persistió ambos y el nuevo apareció de inmediato en el
+  filtro.
+  _→ [Reporte](reports/2026-07-09-desktop-notas-autocompletado-filtro-tags.md)_
 
-- **2026-07-03 — Tarjeta Digital: sección "Otros Enlaces" (lista dinámica + selector de ícono)** ✅
-  El editor de Tarjeta Digital solo permitía 6 redes sociales fijas (LinkedIn/Twitter/GitHub/
-  Instagram/Facebook/website). Se agregó una sección nueva y separada "Otros Enlaces" —
-  **decisión de diseño acordada con el usuario**: NO tocar ni migrar los 6 campos fijos existentes,
-  respaldar la lista nueva con un `JSONField` en `DigitalCard` (no una tabla aparte), mismo patrón
-  ya usado en el propio modelo para `specialties` y en `CVDocument` para `experience`/`projects`/
-  `awards` — evita cualquier migración de datos y mantiene consistencia arquitectónica. Backend:
-  campo `custom_links` (migración 0023, `[{id, label, url, icon}]`) + validación en el serializer
-  (label+url obligatorios por ítem, máximo 10 enlaces). Frontend: nuevo picker visual de 12 íconos
-  curados (`lucide-react`, ninguno colisiona con los ya usados en los enlaces fijos) en
-  `customLinkIcons.ts`, compartido entre el editor (`CardEditor.tsx`, componente `CustomLinkRow`
-  con popover de selección) y el render público (`ContactLinkList.tsx`), evitando duplicar el
-  mapeo ícono→componente. **Bug real encontrado y corregido en la verificación**:
-  `crypto.randomUUID()` para generar el id de cada fila nueva lanzaba `TypeError` en este entorno
-  de desarrollo — la Web Crypto API exige un "secure context" (HTTPS o `localhost` exacto) y
-  `http://next-vista.local.test` no califica; se reemplazó por un generador de id simple sin esa
-  dependencia. **Regresión propia detectada y corregida de paso**: la feature de resumen de
-  Analytics en el dashboard (turno anterior) había dejado `dashboard.test.tsx` roto — `ServiceGrid`
-  ahora llama `useServiceAnalytics` pero el test no envolvía en `QueryClientProvider`; se agregó el
-  wrapper faltante (5/5 tests recuperados). Confirmado que 2 fallos en `CardEditor.test.tsx` son
-  preexistentes (no introducidos por este cambio — reproducidos idénticos contra la versión
-  commiteada del archivo, sin tocar). Verificado end-to-end: agregar 2 enlaces con íconos distintos
-  (Tienda/YouTube), guardar, recargar página completa (persisten), confirmar en la tarjeta pública
-  real, eliminar uno y confirmar que desaparece de ambos lados. Backend 3 tests nuevos (55/55 ✓
-  suite completa), typecheck + lint sin regresiones.
+- **2026-07-08 — Compartir (Notas/Contactos/Snippets + Bóveda) portado al Desktop Sidebar** ✅
+  El Workspace ya tenía compartir + selección múltiple en lote (Notas/Contactos/Snippets) y compartir
+  de ítems de Bóveda (E2E); se llevó ambas funcionalidades al Desktop (Tauri), adaptadas a su
+  contenedor angosto. Como esta app no comparte código con el Workspace (sin TanStack Query/axios/
+  módulo de sharing), todo se reimplementó con sus propias convenciones (`useState` + `apiFetch`).
+  Para Notas/Contactos/Snippets: bloque de compartir inline (mismo patrón que los forms de Crear/
+  Editar, en vez de un modal que no cabría), badge compacto, y selección múltiple con checkboxes +
+  barra de acciones. Para la Bóveda: se confirmó que toda la criptografía X25519/ECDH es 100%
+  server-side (ningún frontend toca claves), así que fue un port de UI+REST puro — sin selección
+  múltiple, tal como está en el Workspace. Cero cambios de backend. Verificado por el usuario en el
+  entorno real (Tauri) tras `npx tsc --noEmit` + `npx vite build` limpios.
+  _→ [Reporte](reports/2026-07-08-compartir-desktop-sidebar.md)_
 
 ---
 
@@ -119,6 +92,40 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Bookmarks: `collection` serializado como UUID crudo, no como objeto anidado:**
+      `BookmarkSerializer.collection` es el campo FK default de DRF (`PrimaryKeyRelatedField`,
+      devuelve solo el UUID), pero el tipo frontend `Bookmark.collection: BookmarkCollection | null`
+      y `BookmarkCard.tsx` (`<CollectionBadge collection={bookmark.collection} />`) esperan el objeto
+      completo `{id, name, color, bookmarks_count}`. El campo `collection_name` sí existe y es
+      correcto, pero nada lo usa para el badge. Esto hace que el filtro de colección (ya con el
+      query-param corregido a `?collection=`) siga sin mostrar resultados, y probablemente que el
+      badge de colección en las cards nunca renderice bien. Decidir enfoque: (a) devolver un objeto
+      anidado real (`collection = BookmarkCollectionSerializer(read_only=True)` + campo de escritura
+      separado), o (b) que el frontend use `collection`(id)+`collection_name` en vez de esperar un
+      objeto. _Origen: verificación end-to-end del fix de `collection_id`, 2026-07-09 — ver
+      [reports/2026-07-09-bookmarks-tags-favoritos-coleccion.md](reports/2026-07-09-bookmarks-tags-favoritos-coleccion.md)_
+- [ ] **`Tenant.plan` vs `Subscription.plan` pueden desincronizarse:** son dos campos distintos que
+      distintas pantallas leen indistintamente (Admin Panel "Usuarios" usa `Tenant.plan`; badge
+      "Plan" y barra de uso del Hub usan `Subscription.plan`). Los flujos de negocio reales (upgrade,
+      Yape, trial) actualizan ambos juntos correctamente — la causa más probable de la divergencia
+      observada es `seed_faker_data.py::_seed_subscriptions` usando `get_or_create` con `defaults`
+      que no se reaplican si la `Subscription` ya existía de una corrida anterior del seed. Decidir
+      una única fuente de verdad o sincronizar ambos campos con un signal.
+      _Origen: [reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md](reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md)_
+- [ ] **RLS de Postgres nunca implementado:** `TenantMiddleware` ejecuta `SET app.tenant_id` en cada
+      request (pensado para políticas RLS), pero no existe ningún `CREATE POLICY`/
+      `ENABLE ROW LEVEL SECURITY` en las migraciones. El aislamiento real depende 100% de que cada
+      vista recuerde filtrar por `tenant=request.tenant` — no hay segunda capa de defensa a nivel BD.
+      _Origen: [reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md](reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md)_
+- [ ] **`/team` (Hub) con i18n roto:** la página muestra literalmente `team.title`, `team.subtitle`,
+      `team.members` en vez de texto traducido — faltan esas keys en el namespace `hub` de i18next.
+      _Origen: [reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md](reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md)_
+- [ ] **Detalle de recursos compartidos no accesible (Notas/Contactos/Snippets):**
+      `NoteDetailView`/`ContactDetailView`/`CodeSnippetDetailView` siguen siendo owner-only; un
+      recurso compartido se ve en el listado con su badge "Compartida" pero no se puede abrir
+      individualmente. Calendario ya resolvió el caso análogo con `_get_visible_event` — aplicar el
+      mismo patrón aquí si se necesita.
+      _Origen: [reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md](reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md)_
 - [ ] **`CardEditor.test.tsx` — 2 tests preexistentes rotos, no relacionados a "Otros Enlaces":**
       "calls mutate on valid form submission" y "shows URL validation error for invalid URL" nunca
       llenan el campo `username` (`required: 'Nombre de usuario requerido'`), así que
@@ -181,8 +188,10 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       ve la master password en tránsito durante el unlock. Para máxima seguridad, mover el cifrado al
       navegador (WebCrypto/Argon2) para que la master password nunca llegue al servidor. Implica perder
       búsqueda server-side y recuperación. _Origen: feature Bóveda, sesión 2026-06-27._
-- [ ] **Bóveda — extras:** generador de contraseñas, autocompletar, importar/exportar, compartir ítems
-      entre usuarios del tenant, adjuntos cifrados. _Origen: feature Bóveda (fuera de alcance v1)._
+- [ ] **Bóveda — extras:** generador de contraseñas, autocompletar, importar/exportar, adjuntos
+      cifrados. _Origen: feature Bóveda (fuera de alcance v1)._ (compartir ítems entre usuarios del
+      tenant ya se implementó, tanto en Workspace como en Desktop — ver
+      [reports/2026-07-08-compartir-desktop-sidebar.md](reports/2026-07-08-compartir-desktop-sidebar.md))
 - [ ] `featureGates.ts` de `frontend_next_vista` está hardcodeado (client-side). Migrar
       a server-driven consumiendo `GET /api/v1/features/` igual que Hub y Workspace,
       para eliminar la deuda de sincronización manual cuando cambian las definiciones de plan.
@@ -228,6 +237,11 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       automáticamente `Authorization` + `X-Tenant-Slug` (similar al axios instance del
       Workspace), para no repetir esa lógica en cada panel.
       _Origen: [reports/2026-03-15-bugfix-desktop-snippets.md](reports/2026-03-15-bugfix-desktop-snippets.md)_
+- [ ] **`frontend_sidebar_desktop` sin infraestructura de testing (sin `vitest`):** todo lo agregado en
+      la sesión de compartir (bloques inline, selección múltiple, compartir de Bóveda) se verificó solo
+      con `tsc --noEmit` + `vite build` + prueba manual — sin red de tests automatizados como tiene el
+      Workspace. Evaluar si vale la pena instalar vitest+testing-library aquí dado el tamaño actual de
+      la app. _Origen: [reports/2026-07-08-compartir-desktop-sidebar.md](reports/2026-07-08-compartir-desktop-sidebar.md)_
 - [ ] **Anuncios — sin tracking de impresiones/clics:** no hay forma de medir efectividad de
       una campaña (cuántos la vieron, cuántos hicieron click en el CTA) ni desde el Hub (modal)
       ni desde el Desktop (tarjetas). Sería un contador incremental simple, sin tabla de eventos pesada.

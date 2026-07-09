@@ -13,6 +13,7 @@ generó cada uno. Para el modo **seed incremental**: procesar solo los reportes 
 | `reports/2026-03-15-bugfix-desktop-snippets.md` | LL-030, LL-031, LL-053 |
 | `reports/varios/frontend_next_hub_deployment_issues.md` | LL-003, LL-004, LL-011, LL-021, LL-024, LL-032, LL-060 |
 | `reports/2026-04-01-deploy-backend-dokploy.md` | LL-070, LL-071, LL-072, LL-075 |
+| `reports/2026-07-08-notas-workspace-etiquetas-no-se-guardaban.md` | LL-046 |
 | `reports/2026-04-03-deploy-frontend-admin-dokploy.md` | LL-070, LL-073, LL-074, LL-075, LL-079 |
 | `reports/2026-04-03-deploy-frontend-next-vista-dokploy.md` | LL-070, LL-073, LL-076, LL-077, LL-078 |
 | `reports/2026-04-03-deploy-frontend-workspace-dokploy.md` | LL-070, LL-073, LL-074, LL-078, LL-079 |
