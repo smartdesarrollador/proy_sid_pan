@@ -17,6 +17,18 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-11 — Fix: "Historial de facturas" vacío en el Hub (`/billing`)** ✅
+  Dos causas independientes: (1) trailing slash roto en `apps/subscriptions/urls.py` (`invoices`,
+  `payment-methods`, `webhooks` sin `/` final, mismo patrón que LL-005) — corregido en Django +
+  los 5 hooks de billing del Hub, que ya mandaban la barra manual del lado del cliente; (2) nunca
+  se creaba un `Invoice` al aprobar un pago Yape (ni en registro ni en upgrade) — se extrajo
+  `activate_yape_proof()` a `apps/subscriptions/services.py`, compartido entre
+  `YapeProofReviewView` (panel admin) y `YapeActivateView` (links de Telegram), más campos
+  `number`/`amount` agregados al `InvoiceSerializer` para que coincidan con lo que el frontend ya
+  esperaba. De regalo corrige `get_mrr()`, que siempre daba 0. 43/43 tests backend + 66/66 tests
+  frontend, verificado en navegador real y confirmado por el usuario.
+  _→ [Reporte](reports/2026-07-11-hub-billing-facturas-invoice-yape.md)_
+
 - **2026-07-11 — Feature: plan Enterprise agregado a la landing pública del Hub** ✅
   Cierra la cadena de fixes de "Enterprise no aparece" (ver registro, entrada de abajo). A
   diferencia del registro (un solo filtro), acá había 3 puntos acoplados en
@@ -45,19 +57,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   los 2 existentes (free→true, enterprise→false) siguen pasando. Verificado en navegador real
   (sesión inyectada, tenant Professional): la card Enterprise ahora muestra "Actualizar plan"
   habilitado. Suite: 66 tests frontend (2 nuevos), tsc/eslint limpios.
-
-- **2026-07-11 — Fix: el plan Enterprise no aparecía en el registro (`frontend_next_hub`)** ✅
-  El usuario notó que el wizard de registro (`/register`, step 3 "Elige tu plan") solo ofrecía
-  Free/Starter/Professional. Investigación confirmó que era una omisión, no una decisión de
-  producto: el backend (`RegisterSerializer`, `RegisterView`, `YapePaymentProofView`) ya trata
-  Enterprise igual que Starter/Professional en todo el flujo de registro + pago Yape, y el ADR-004
-  + el PRD de billing documentan explícitamente que Enterprise debía estar en el self-signup. La
-  causa: un filtro de una sola línea sin comentario en `RegisterPageClient.tsx`
-  (`allPlans.filter(p => p.id !== 'enterprise')`), presente desde el primer commit del archivo — no
-  existe en el código ningún concepto de "Enterprise = contactar ventas". Fix: se eliminó el
-  filtro, ahora usa `allPlans` (de `usePlans()` → `/public/plans/`) directo. Verificado: tsc/eslint
-  limpios, 22 tests de `features/auth` OK, curl a `/public/plans/` confirma que el backend ya
-  devolvía Enterprise correctamente ($199/mes).
 
 ---
 
@@ -324,7 +323,9 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       confirma que Yape es el único mecanismo de pago de este proyecto). Evaluar si se retoma
       Stripe a futuro (mantener) o se limpia del todo (borrar `StripeClient`, las vistas, el
       webhook y `STRIPE_*` de settings).
-      _Origen: fix "plan del tenant desincronizado en el Hub", 2026-07-11._
+      _Origen: fix "plan del tenant desincronizado en el Hub", 2026-07-11. Confirmado de nuevo al
+      arreglar "Historial de facturas" vacío — ver
+      [reports/2026-07-11-hub-billing-facturas-invoice-yape.md](reports/2026-07-11-hub-billing-facturas-invoice-yape.md)._
 - [ ] **`ClientSubscriptionSerializer.get_mrr` usa un `PLAN_MRR_MAP` hardcodeado, no
       `Plan.price_monthly` real:** mismo tipo de deuda que "límites de plan editables" cerró
       parcialmente (esa feature hizo editables los límites técnicos, no el MRR mostrado en el
@@ -337,6 +338,22 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       fix. Decidir si vale la pena agregar el ciclo anual al comprobante Yape (monto distinto,
       `billing_cycle` en el payload) o si se quita el toggle mientras no se soporte.
       _Origen: fix "plan del tenant desincronizado en el Hub", 2026-07-11._
+- [ ] **`YapeRejectView.post` (rama rechazo) duplica lógica con la rama `rejected` de
+      `YapeProofReviewView.patch`:** mismo tipo de duplicación que tenía la rama `approved` (ya
+      resuelta extrayendo `activate_yape_proof()` a `apps/subscriptions/services.py`). Extraer un
+      `reject_yape_proof()` análogo por consistencia — no es urgente porque no genera bugs, solo
+      deuda de duplicación (a diferencia de la rama aprobación, el rechazo no tiene ningún efecto
+      de negocio que se esté perdiendo).
+      _Origen: [reports/2026-07-11-hub-billing-facturas-invoice-yape.md](reports/2026-07-11-hub-billing-facturas-invoice-yape.md)_
+- [ ] **Ventana de doble-aprobación concurrente en `YapeProofReviewView`/`YapeActivateView`:** el
+      `.get()` del `YapePaymentProof` no usa `select_for_update()`, así que dos requests
+      simultáneas con `proof.status == 'pending'` en ambas lecturas podrían intentar aprobar el
+      mismo proof dos veces. Hoy la unicidad de `Invoice.stripe_invoice_id` actúa como red de
+      seguridad, pero la segunda aprobación devolvería un `IntegrityError` (500) en vez de un error
+      controlado. Agregar `select_for_update()` dentro de un `transaction.atomic()` que envuelva
+      también la lectura del proof (hoy el atomic solo envuelve la escritura, vía
+      `activate_yape_proof()`).
+      _Origen: [reports/2026-07-11-hub-billing-facturas-invoice-yape.md](reports/2026-07-11-hub-billing-facturas-invoice-yape.md)_
 
 ---
 

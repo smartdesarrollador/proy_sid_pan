@@ -88,8 +88,18 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
   Django test client — ninguno de los dos pasa por el rewrite de Next.js, así que ninguno detecta
   este bug. Si un hook del frontend manda la URL con slash "porque si no, no funciona", es señal
   de que el endpoint Django le falta el slash — arreglarlo ahí, no perpetuar el parche del cliente.
+- **Casos vistos:** además de los 5 endpoints de `subscription_urls.py`, el mismo patrón apareció en
+  `apps/subscriptions/urls.py` (billing): `invoices`, `payment-methods` (list) y `webhooks` sin
+  slash. Un cuarto endpoint del mismo archivo (`payment-methods/<uuid:pm_id>/`, detalle) **ya**
+  tenía el slash correcto en Django, pero rompía igual porque el hook del Hub también mandaba la
+  URL con `/` manual — en producción "funcionaba" solo porque Nginx Proxy Manager (LL-004) le quita
+  la barra al request antes de llegar al rewrite, coincidencia que oculta el bug en vez de
+  arreglarlo. Lección: la convención "cliente sin slash" (LL-002) hay que aplicarla a **todos** los
+  hooks de un mismo feature, incluso a los que ya "funcionan", para no depender de que un proxy
+  intermedio absorba el error.
 - **Fuente:** fix "plan del tenant desincronizado" + verificación en navegador con Chrome DevTools,
-  sesión 2026-07-11. Ver también [[LL-034]].
+  sesión 2026-07-11. También `reports/2026-07-11-hub-billing-facturas-invoice-yape.md` (mismo
+  patrón en billing, sesión distinta). Ver también [[LL-034]], [[LL-095]].
 - **Tags:** trailing-slash, nextjs-proxy, django, 404, browser-verification, rewrite
 
 ---
@@ -411,6 +421,43 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
   *dict crudo* no.
 - **Fuente:** feature "límites de plan editables desde el Admin", sesión 2026-07-11. Ver [[LL-048]].
 - **Tags:** business-logic, plan-limit, refactor, cache, hidden-coupling, code-review
+
+### LL-095 — Un evento de negocio (`Invoice`) nunca se registraba porque las dos rutas de aprobación duplicadas nunca lo escribían
+- **Síntoma:** "Historial de facturas" en el Hub (`/billing`) siempre vacío ("No tienes facturas
+  aún"), incluso para tenants que ya adquirieron un plan de pago en el registro o vía upgrade. No
+  es un bug de query ni de permisos: la tabla `invoices` estaba **literalmente vacía** para
+  cualquier tenant real — `Invoice.objects.create(...)` solo aparecía en tests, nunca en código de
+  producción.
+- **Causa raíz:** El único canal de cobro real del proyecto es Yape (pago manual, ver
+  `docs/adr/004-pago-manual-yape.md`); Stripe existe en el código (webhooks, `stripe_client.py`)
+  pero está desconectado de producción. La aprobación de un pago Yape tiene **dos** rutas
+  duplicadas que activan `Subscription`/`Tenant`/`User.is_active` con el mismo bloque de código
+  copiado: `YapeProofReviewView.patch` (panel admin, `yape_admin_views.py`) y `YapeActivateView.post`
+  (links de un click enviados por Telegram, `yape_public_views.py`). Ninguna de las dos escribía un
+  `Invoice` — el gap de negocio nunca se implementó, así que no había "una ruta que se olvidó
+  copiar" (patrón [[LL-047]]) sino una feature que jamás existió en ningún lado. Al arreglarlo, el
+  riesgo era el mismo de LL-047: implementarlo solo en la vista "obvia" (panel admin) y dejar la
+  ruta realmente usada por el staff (links de Telegram, más rápida en el flujo real) sin factura.
+- **Solución:** Extraer la lógica de activación a un helper compartido
+  (`apps/subscriptions/services.py::activate_yape_proof(proof) -> Invoice`) que hace
+  `Subscription`/`Tenant`/`User.is_active` **y** crea el `Invoice` (`status='paid'`,
+  `stripe_invoice_id=f'yape_{proof.id}'` para evitar colisión con el `unique=True` sin `null=True`
+  del campo, `amount_cents=int(proof.amount * 100)`, período de 30 días) en una sola
+  `transaction.atomic()`. Ambas vistas de aprobación llaman al mismo helper. De regalo, esto
+  también arregla `CurrentSubscriptionSerializer.get_mrr()`, que siempre daba `0` porque nunca
+  existía ningún invoice `status='paid'` que contar.
+- **Prevención:** Cuando se descubre que un evento de negocio (factura, notificación, auditoría)
+  nunca se registra, **grep primero cuántas rutas de código llevan al mismo estado final**
+  (`grep -rn "proof.status.*=.*'approved'"` en este caso) antes de escribir el fix en un solo
+  lugar — si hay lógica duplicada entre un panel admin y un flujo "rápido" (webhook, link de un
+  click, cron), el fix tiene que ir a un helper compartido, no a la vista que se abrió primero.
+  Además: si el modelo del evento tiene un campo `unique=True` sin `null=True`
+  (`stripe_invoice_id`), generar siempre un valor sintético único al crearlo manualmente — dejarlo
+  en blanco colisiona en el segundo registro.
+- **Fuente:** `reports/2026-07-11-hub-billing-facturas-invoice-yape.md`. Ver también [[LL-047]],
+  [[LL-005]] (mismo síntoma "lista vacía" en el mismo endpoint, causa raíz distinta pero
+  concurrente en esta sesión).
+- **Tags:** business-logic, billing, invoice, duplicate-code, multi-entry-point, yape, transaction
 
 ---
 
