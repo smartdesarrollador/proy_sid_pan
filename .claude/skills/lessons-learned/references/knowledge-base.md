@@ -5,13 +5,13 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 
 ## Tabla de contenidos
 
-- [A. Trailing slash, proxies y routing HTTP](#a-trailing-slash-proxies-y-routing-http) — LL-001 … LL-004
+- [A. Trailing slash, proxies y routing HTTP](#a-trailing-slash-proxies-y-routing-http) — LL-001 … LL-005
 - [B. Variables de entorno y build (Next.js / Dokploy)](#b-variables-de-entorno-y-build-nextjs--dokploy) — LL-010 … LL-011
 - [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-025
-- [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-032
-- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-046
+- [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-034
+- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-049
 - [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-059
-- [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-062
+- [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-063
 - [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-080
 - [I. Tauri / Desktop en producción](#i-tauri--desktop-en-producción) — LL-090 … LL-091
 
@@ -62,6 +62,35 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Asumir que cualquier proxy intermedio (NPM, CDN) puede tocar las slashes; la slash correcta hacia Django debe garantizarse en la capa más cercana al backend (el rewrite de Next).
 - **Fuente:** `reports/varios/frontend_next_hub_deployment_issues.md`
 - **Tags:** trailing-slash, nginx-proxy-manager, 308, proxy
+
+### LL-005 — Un endpoint nuevo bajo `/api/v1/admin/` sin trailing slash rompe silenciosamente por el rewrite catch-all
+- **Síntoma:** Un endpoint devuelve 404 **solo** a través del navegador real (`hub.local.test` →
+  Next.js → Django), pero funciona perfecto con `curl` directo a Django o con el Django test
+  client — por eso pasa desapercibido en tests y en verificación rápida por `curl`. El error 404
+  de Django muestra el path recibido **con** un `/` que el código fuente nunca escribió.
+- **Causa raíz:** El rewrite catch-all de `next.config.ts` (regla final, `/api/:path*` →
+  `${API_TARGET}/api/:path*/`) agrega trailing slash a **toda** request `/api/*` que no matchee
+  antes una regla específica de `/api/v1/auth/*`. Si una vista nueva se registra en Django sin
+  slash (`path('mi-endpoint', ...)`, sin la barra final), el rewrite igual le agrega una antes de
+  reenviar — Django nunca la reconoce y 404ea. Pasó con 5 endpoints completos de
+  `apps/subscriptions/subscription_urls.py` (`current`, `upgrade`, `cancel`, `yape-upgrade`,
+  `trial`) — los únicos de todo `/api/v1/admin/` sin la convención con slash del resto del
+  proyecto. Uno de los 5 (`cancel`) ya se había "parchado" del lado del cliente (mandando la URL
+  con slash), lo cual con el catch-all produce **doble** slash en vez de arreglarlo — pista de que
+  alguien ya se topó con el síntoma y no encontró la causa real.
+- **Solución:** Agregar el trailing slash al `path(...)` de Django, **no** al cliente. Ver
+  [[LL-002]]: la convención de este proyecto es "cliente sin slash, el rewrite de Next la agrega" —
+  el rewrite catch-all ya es correcto, la ruta Django es la que debe seguir la convención.
+- **Prevención:** Al agregar cualquier endpoint nuevo bajo `/api/v1/admin/`, `/api/v1/app/` o
+  `/api/v1/public/`, terminar el `path(...)` de Django con `/`, salvo que sea explícitamente parte
+  de las excepciones de auth ya documentadas (LL-003). **Verificar siempre por navegador real**
+  (o al menos con el proxy de Next.js de por medio), no solo con `curl` directo a Django ni con el
+  Django test client — ninguno de los dos pasa por el rewrite de Next.js, así que ninguno detecta
+  este bug. Si un hook del frontend manda la URL con slash "porque si no, no funciona", es señal
+  de que el endpoint Django le falta el slash — arreglarlo ahí, no perpetuar el parche del cliente.
+- **Fuente:** fix "plan del tenant desincronizado" + verificación en navegador con Chrome DevTools,
+  sesión 2026-07-11. Ver también [[LL-034]].
+- **Tags:** trailing-slash, nextjs-proxy, django, 404, browser-verification, rewrite
 
 ---
 
@@ -204,6 +233,35 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** sesión de implementación de `announcements` (fase 3, Hub), Jul 2026.
 - **Tags:** build_absolute_uri, media-url, next-rewrites, docker-network, err_name_not_resolved, app_base_url
 
+### LL-034 — Dos modelos, un mismo hecho de negocio (`Tenant.plan` vs `Subscription.plan`): el `get_or_create` con default hardcodeado los desincroniza en el nacimiento
+- **Síntoma:** El plan de un tenant se ve distinto según la pantalla — el topbar dice "Professional"
+  pero el Dashboard/página de Suscripción del Hub dicen "Free" (o `-`). No es un problema de caché
+  ni de timing: las dos pantallas literalmente leen **modelos distintos**.
+- **Causa raíz:** `Tenant.plan` (la fuente real, la que usa `check_plan_limit`/topbar) y
+  `Subscription.plan` (bookkeeping de billing) representan el mismo hecho de negocio en dos
+  columnas separadas. `apps/subscriptions/signals.py::auto_create_subscription` (dispara en cada
+  `Tenant` nuevo) y **4 vistas más** creaban la fila `Subscription` con
+  `Subscription.objects.get_or_create(tenant=..., defaults={'plan': 'free', ...})` —
+  **hardcodeado**, sin mirar `tenant.plan`. Si el tenant nace con un plan pagado (seed, Django
+  Admin, cualquier vía que no pase por un flujo de upgrade que sincronice ambos), la desincronía
+  queda clavada desde el primer instante. Mismo patrón conceptual que [[LL-041]]
+  ("el estado de negocio debe reflejar lo aprobado"), pero aquí el bug nace en la creación, no en
+  una aprobación.
+- **Solución:** (1) Los `get_or_create` siembran `defaults={'plan': tenant.plan, ...}` — cierra la
+  causa hacia adelante. (2) Los serializers de lectura (`CurrentSubscriptionSerializer`,
+  `ClientSubscriptionSerializer`) dejan de leer `obj.plan` (la columna de `Subscription`) y pasan a
+  `obj.tenant.plan` siempre — defensa en profundidad para filas ya desincronizadas en BD existente,
+  sin necesitar data migration/backfill.
+- **Prevención:** Cuando dos modelos guardan el mismo hecho de negocio en columnas separadas
+  (`Tenant.plan`/`Subscription.plan`, o cualquier par similar), **la lectura debe declarar
+  explícitamente cuál es la fuente de verdad** y no confiar en que ambos writers los mantengan
+  sincronizados por disciplina. Al revisar/tocar ese par de modelos, grep todos los
+  `get_or_create`/`create` con un default hardcodeado del campo duplicado — es el punto ciego más
+  común (se escribe una vez al prototipar y nadie vuelve a mirarlo).
+- **Fuente:** fix "plan del tenant desincronizado en el Hub (Dashboard/Suscripción)", 2026-07-11.
+  Ver también [[LL-041]], [[LL-049]].
+- **Tags:** multi-tenant, data-consistency, business-logic, source-of-truth, get_or_create, signals
+
 ---
 
 ## E. Seguridad y lógica de negocio
@@ -278,6 +336,81 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
   primero directo en el modelo (`Model.objects.first().<campo>`) antes de tocar el frontend.
 - **Fuente:** `reports/2026-07-08-notas-workspace-etiquetas-no-se-guardaban.md`
 - **Tags:** drf, serializer, campo-fantasma, modelo-incompleto, arrayfield, notes, data-integrity
+
+### LL-047 — Un recurso con dos vías de creación: el plan-gate solo se copió a una
+- **Síntoma:** Un límite de plan documentado (p. ej. "Hasta 5 usuarios" en Free) parece cumplirse
+  en algunas pruebas y no en otras. El endpoint "obvio" para crear el recurso sí lo bloquea con 402,
+  pero el flujo que realmente usa el botón de la UI no.
+- **Causa raíz:** `apps/auth_app/admin_views.py` tiene dos endpoints para "agregar un usuario al
+  tenant": `UserCreateView` (`POST /admin/users/create/`) y `UserInviteView`
+  (`POST /admin/users/invite/`). Solo `UserCreateView` llamaba `check_plan_limit(request.user,
+  'users', current_count)` antes de crear el `User`. `UserInviteView` — el que realmente invoca el
+  botón "Invitar usuario" del Admin Panel (`useInviteUser.ts` → `/admin/users/invite/`) — creaba el
+  `User` directamente, sin chequeo. El límite se implementó una vez y no se replicó al segundo punto
+  de entrada del mismo recurso.
+- **Solución:** Agregar el mismo `check_plan_limit(request.user, 'users', current_count)` al inicio
+  de `UserInviteView.post()`, antes de crear el usuario y disparar el email de invitación. Test
+  `test_invite_exceeds_plan_limit` en `apps/auth_app/tests/test_admin_users.py`, mismo patrón que
+  `test_create_exceeds_plan_limit` (mock de `check_plan_limit` con `side_effect=PlanLimitExceeded()`).
+- **Prevención:** Cuando un recurso gateado por plan tiene más de un endpoint de creación (create
+  directo, invite, import, duplicar/clonar, etc.), buscar `check_plan_limit` **por el nombre del
+  recurso** (`grep "check_plan_limit(.*'users'"`) en vez de asumir que un solo endpoint representativo
+  ya cubre el caso. Al auditar límites de plan, verificar también qué endpoint llama realmente la UI
+  (no solo cuál "suena" a la operación) — grep en el hook del frontend (`apiClient.post('/ruta/...')`)
+  antes de concluir que un límite está aplicado.
+- **Fuente:** auditoría de límites de plan vs "Gestión de Planes" (Admin Panel), 2026-07-11.
+- **Tags:** business-logic, plan-limit, check_plan_limit, rbac, multi-entry-point, security
+
+### LL-048 — Límite de plan "continuo" (bytes) no encaja en `check_plan_limit` (conteo de unidades)
+- **Síntoma (potencial):** Al ir a aplicar un límite de plan tipo `storage_gb` con el helper genérico
+  `check_plan_limit(user, resource, current_count)`, la comparación siempre da "ilimitado" aunque el
+  plan defina un número — o se tiene la tentación de renombrar el campo del plan a `max_storage` para
+  que encaje, arriesgando romper todos los lugares que ya leen `storage_gb` (serializers, frontend).
+- **Causa raíz:** `get_plan_limit(plan, resource)` (`utils/plans.py`) busca la clave
+  `f'max_{resource}'` en `PLAN_FEATURES` — convención que **todos** los recursos contables siguen
+  (`max_users`, `max_projects`, ...) salvo `storage_gb` y `api_calls_per_month`, que no tienen
+  prefijo `max_` porque son límites **operacionales continuos** (bytes, llamadas/mes), no conteos de
+  filas de un modelo. `check_plan_limit` además compara `current_count >= limit` (bloquea la
+  N-ésima+1 unidad discreta), semántica que no aplica a "¿esta subida de X bytes me pasa del tope?".
+- **Solución:** Para un recurso continuo, no reusar `check_plan_limit` — escribir un chequeo dedicado
+  que lea el campo real de `PLAN_FEATURES` (`PLAN_FEATURES[plan]['storage_gb']`, no
+  `get_plan_limit(plan, 'storage')`) y compare `uso_actual + adicional > límite`. Ver
+  `check_storage_limit()` en `apps/rbac/permissions.py` y `get_tenant_storage_bytes()` en
+  `utils/storage.py` (cómputo on-demand vía `Sum()`/`.size`, sin modelo de tracking dedicado — mismo
+  criterio que Analytics: "no DB models, computed on-demand").
+- **Prevención:** Antes de gatear un recurso nuevo, revisar si su clave en `PLAN_FEATURES` sigue la
+  convención `max_{resource}` (conteo → `check_plan_limit`) o no (`storage_gb`,
+  `api_calls_per_month` → continuo, necesita su propio chequeo). No renombrar campos de
+  `PLAN_FEATURES` para forzar el encaje: rompe todos los serializers/frontends que ya leen ese nombre.
+- **Fuente:** fix Bug #2 (tracking de `storage_gb`), sesión 2026-07-11. Ver también [[LL-047]].
+- **Tags:** business-logic, plan-limit, check_plan_limit, storage, naming-convention, rbac
+
+### LL-049 — Nueva fuente de override: grep todos los lectores directos del dict viejo, no confiar en "ya pasa por el helper"
+- **Síntoma (potencial):** Se agrega una forma de sobreescribir un valor de configuración
+  (`PLAN_FEATURES` → override en BD vía `Plan.limits`), se actualiza el helper central
+  (`get_plan_limit()`), y se asume que "todo lo que lee límites de plan ya pasa por ahí". Un
+  endpoint específico (`/api/v1/features/`, o un `get_usage()` de otro serializer) sigue mostrando
+  el valor viejo después de que un admin edita el límite — parece que el override "no aplicó",
+  pero sí aplicó, ese endpoint puntual nunca lo leyó.
+- **Causa raíz:** Antes de existir un mecanismo de override, es común que varios lugares del código
+  lean la fuente de config directo (`PLAN_FEATURES.get(plan, ...)`) en vez de pasar por el
+  helper "oficial" (`get_plan_limit()`), porque hasta ese momento daba exactamente lo mismo. Al
+  agregar el override, esos accesos directos quedan huérfanos — siguen viendo el dict de código,
+  nunca la BD. En este proyecto había 3: `FeaturesView` (`apps/rbac/views.py`),
+  `TenantSerializer.get_usage` (`apps/tenants/serializers.py`) y
+  `CurrentSubscriptionSerializer.get_usage` (`apps/subscriptions/serializers.py`) — ninguno pasaba
+  por `get_plan_limit`, los tres construían la respuesta a mano desde `PLAN_FEATURES`.
+- **Solución:** `grep -rn "PLAN_FEATURES\.get(\|PLAN_FEATURES\[" apps/` (o el nombre del dict/const
+  que se está reemplazando) **antes** de dar por completa una migración de "fuente hardcodeada" a
+  "fuente editable + helper cacheado". Reemplazar cada lectura directa por el helper nuevo
+  (`get_effective_plan_limits()`), dejando el acceso directo solo para lo que **no** es parte del
+  subset editable (ej. feature flags booleanos, que siguen siendo solo de código).
+- **Prevención:** Cuando el plan de implementación dice "el helper es el único choke point, los N
+  callers existentes se benefician sin cambios" — verificar esa afirmación con grep del símbolo
+  viejo, no asumirla por diseño. Los callers de la *función* se benefician solos; los que leen el
+  *dict crudo* no.
+- **Fuente:** feature "límites de plan editables desde el Admin", sesión 2026-07-11. Ver [[LL-048]].
+- **Tags:** business-logic, plan-limit, refactor, cache, hidden-coupling, code-review
 
 ---
 
@@ -369,6 +502,35 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** feature "Estilos preestablecidos Landing Page" Fase 2, sesión 2026-07-02.
 - **Tags:** nextjs, next-font, font-preload, google-fonts, layout, performance, style-preset
 
+### LL-092 — Ticket de soporte "no se registra" en el Hub: el POST sí funciona, pero el GET nunca lo muestra por mismatch de envelope + namespace de i18n inexistente
+- **Síntoma:** En `frontend_next_hub` (`/support`), al crear un ticket el modal muestra la pantalla de éxito, pero la lista de tickets se queda en "0 / sin tickets" — parece que el ticket nunca se creó. Además, **todos** los textos de la página de Soporte se ven como claves crudas sin traducir (`support.title`, `support.newTicket`, `support.serviceStatus: support.serviceStatusOk`, etc.) en vez del texto en español.
+- **Causa raíz (dos bugs independientes, ambos en el frontend):**
+  1. **Envelope mismatch:** `TicketListCreateView.get` (`apps/backend_django/apps/support/views.py`) responde `{'tickets': [...]}` y `TicketDetailView.get` responde `{'ticket': {...}}`. Pero `features/support/hooks/useMyTickets.ts` leía `res.data.results ?? []` (clave `results` que el backend nunca envía) y `useTicketDetail.ts` devolvía `res.data` completo en vez de `res.data.ticket`. El ticket sí se crea (201, con `AuditLog`), pero la lista siempre cae al fallback `[]` porque busca la clave equivocada. Mismo patrón de contrato front↔back no validado que [[LL-057]].
+  2. **Namespace de i18n inexistente:** Todos los componentes de `features/support/**` llamaban `useTranslation('hub')`, pero `i18n/config.ts` define `NAMESPACES` sin `'hub'` (solo `'support'`, `'profile'`, `'dashboard'`, etc., cada uno con claves **planas**, sin prefijo). Como el namespace `'hub'` no existe, i18next no encuentra nada y devuelve la propia key como texto — de ahí `support.title` literal en pantalla. El resto de features (`profile`, `dashboard`) sí usaban el namespace correcto (`useTranslation('profile')` + `t('title')` sin prefijo), por lo que el bug quedó aislado a `support`, posiblemente un refactor de namespaces que no tocó esos 7 archivos.
+  3. Bug menor asociado: `TicketComment.author_name` (tipo TS del Hub) vs `author` (campo real del serializer, y el que sí usa `frontend_admin/features/support`) — rompía el render de comentarios en el detail view.
+- **Solución:** `useMyTickets.ts` → `res.data.tickets ?? []`; `useTicketDetail.ts` → `res.data.ticket`; renombrar `author_name`→`author` en `types.ts` y `TicketDetailView.tsx`. En los 7 archivos de `features/support/`: `useTranslation('hub')` → `useTranslation('support')` y quitar el prefijo `support.` de cada `t('support.xxx')` → `t('xxx')` (incluyendo los mapas `STATUS_CONFIG`, `PRIORITY_CONFIG`, `CATEGORY_LABELS`). De paso se agregaron las claves faltantes `statusWaitingClient`/`statusClosed` (existían solo 3 de los 5 estados) y se completó `en.ts` con las claves de `support` que solo existían en `es.ts` (categoryField, allStatuses, noTickets, comments, etc.) — el inglés estaba con el mismo tipo de gap.
+- **Prevención:** Al crear un namespace nuevo de i18n en un frontend con `react-i18next` multi-namespace, copiar el patrón exacto de un feature ya funcionando (namespace = nombre de carpeta, claves sin prefijo) en vez de asumir un namespace compartido tipo `'hub'`. Un `useTranslation(ns)` con `ns` inexistente **no rompe nada, solo muestra la key** — no hay error en consola, así que hay que revisar visualmente cada página nueva (o un test de smoke con `i18n.exists(key, {ns})`). Para el envelope: cuando el backend versiona la respuesta como `{recurso: [...]}` (singular envuelto), el hook de fetch debe leer exactamente esa clave — no asumir `results` (paginación DRF) ni `Array.isArray` como fallback silencioso, porque un fallback a `[]` enmascara el bug (parece "no se creó" en vez de "no se está leyendo bien").
+- **Fuente:** captura de pantalla del usuario probando `/support` en `frontend_next_hub`, sesión 2026-07-10.
+- **Tags:** frontend, nextjs, react-i18next, namespace, support, envelope, contrato-api, silent-failure, hub
+
+### LL-093 — Soporte multi-tenant: el Admin Panel (superadmin) no veía tickets de ningún tenant cliente + mismo bug de envelope reaparece en `frontend_admin`
+- **Síntoma:** Tras resolver [[LL-092]] (tickets del Hub ya visibles/traducidos), el usuario reportó que `frontend_admin` (`rbac-admin.local.test/support`) seguía mostrando "0 tickets" pese a que el Hub sí tenía 2 tickets creados. Al abrir el detalle de un ticket (una vez arreglada la visibilidad), la app crasheaba con `TypeError: Cannot read properties of undefined (reading 'length')` en `TicketDetailView.tsx`.
+- **Causa raíz (dos problemas distintos):**
+  1. **Decisión de arquitectura no implementada:** `TicketListCreateView.get`/`_get_ticket` (`apps/support/views.py`) siempre filtraban por `tenant=request.tenant` — el tenant resuelto del header `X-Tenant-Slug`, que para el superadmin de `frontend_admin` es **su propio tenant adjunto** (en el seed local, "Demo Empresa S.A.", con 0 tickets), no "todos los tenants". No existía ninguna vista cross-tenant: un superadmin (`is_staff=True`) que administra la plataforma nunca podía ver los tickets de ningún tenant cliente real (Empresa108, etc.). Confirmado con el usuario (ver AskUserQuestion de la sesión) que el comportamiento esperado es: **todo usuario `is_staff=True` ve los tickets de todos los tenants** en el Admin Panel, mientras que el Hub sigue 100% aislado por tenant (sin cambios ahí).
+  2. **Mismo bug de envelope que LL-092, pero en `frontend_admin`:** `useTicketDetail.ts` (`apps/frontend_admin/src/features/support/hooks/`) trataba `res.data` completo como el ticket, cuando el backend responde `{'ticket': {...}}`. Nunca se había manifestado porque el tenant del superadmin tenía 0 tickets — la primera vez que hubo un ticket real que abrir (gracias al fix de #1) fue la primera vez que se ejecutó ese código, y crasheó en `ticket.comments.length` (`ticket.comments` era `undefined` porque `ticket` en realidad era `{ticket: {...}}`). `useTickets.ts` (la lista) sí leía `res.data.tickets` correctamente — el bug era solo en el detalle.
+- **Solución:** (1) En `views.py`: `_is_agent()` ahora también es `True` si `user.is_staff` (agente automático, coherente con "todo staff administra soporte"); `TicketListCreateView.get`, `_get_ticket()` y `TicketExportView.get` usan `SupportTicket.objects.all()` en vez de filtrar por tenant cuando `request.user.is_staff`. El lookup de `assigned_to` se mantuvo con `tenant=request.tenant` a propósito — el "agente asignado" es del equipo propio del admin (su tenant adjunto), no del tenant del cliente que abrió el ticket. (2) En `frontend_admin`: `useTicketDetail.ts` ahora desenvuelve `res.data.ticket`. Se agregó test `test_platform_staff_sees_tickets_across_all_tenants` (helper `_create_staff_user` con rol+permisos via RBAC, no solo `is_superuser`, para probar el caso real "`is_staff` sin ser superuser").
+- **Prevención:** Cuando un modelo es multi-tenant por diseño (`tenant=request.tenant` como filtro por defecto en casi toda vista), cualquier "vista de administración de la plataforma" (superadmin/staff) necesita una **bypass explícita y deliberada** de ese filtro — no ocurre solo porque el usuario tenga `is_staff`/`is_superuser`, hay que codificarlo vista por vista. Antes de dar por buena una vista "para el admin de la plataforma", verificar en el navegador con **datos reales cross-tenant** (no solo con el tenant de seed del propio superadmin, que en dev suele estar vacío) — así se hubiera detectado el crash del detalle antes de que lo reportara el usuario. Mismo patrón de bug de envelope que [[LL-092]]: si dos frontends distintos consumen el mismo endpoint, revisar **ambos** hooks de fetch, no asumir que arreglar uno basta.
+- **Fuente:** sesión 2026-07-10, continuación de LL-092 — verificación end-to-end en `frontend_admin` tras exponer soporte cross-tenant.
+- **Tags:** multi-tenant, rbac, is_staff, superadmin, support, envelope, contrato-api, frontend_admin, cross-tenant
+
+### LL-094 — Mutación que falla con 403 sin manejo de error en el frontend se percibe como "se queda congelado"
+- **Síntoma:** En `frontend_next_hub`, un usuario con rol **Member** (sin permisos `support.*` — ver [[LL-093]], solo el rol `Owner` los tiene en los fixtures del sistema) hace clic en "Enviar ticket" y el modal no hace nada visible: no cierra, no muestra error, el botón vuelve a su estado normal. En la consola del navegador aparece `POST .../support/tickets/ 403 (Forbidden)`. El usuario lo reporta como que la UI "se queda congelada", cuando en realidad la request sí respondió (rápido) pero `NewTicketModal.tsx` no tenía ningún `onError` en la mutación — un fallo silencioso indistinguible de un cuelgue real.
+- **Causa raíz:** `useCreateTicket().mutate()` solo manejaba `onSuccess`; TanStack Query sí exponía el error (`createTicket.isError`/`error`) pero nada en el componente lo leía ni renderizaba. Cualquier 4xx/5xx del backend quedaba completamente invisible para el usuario.
+- **Solución:** Se agregó `onError` al `mutate()` con un mensaje diferenciado: si `isAxiosError(error) && error.response?.status === 403` → mensaje explicando que el rol actual no tiene permiso y que solo el Owner puede crear tickets (texto exacto pedido por el usuario, traducido en `es.ts`/`en.ts` bajo `support.errorNoPermission`); cualquier otro error → mensaje genérico `support.errorGeneric`. Se renderiza en un banner rojo dentro del modal (no se cierra, el usuario puede corregir/reintentar). Nota: esto es **solo el mensaje de error**, no un cambio del modelo de permisos — el usuario decidió explícitamente no tocar el RBAC ahora (Member sigue sin poder crear tickets), solo mejorar el feedback.
+- **Prevención:** Toda mutación de TanStack Query que pueda fallar por una razón *esperable* (permiso, plan, validación de negocio) necesita un `onError` explícito con mensaje accionable — nunca asumir que "onSuccess alcanza". Un fallo silencioso en un modal que no cierra ni muestra nada se reporta casi siempre como "se congela"/"no hace nada", no como "error 403", así que hay que revisar la consola en cualquier reporte de este tipo antes de asumir un bug de rendering. Este proyecto no tenía ningún patrón `onError` en mutaciones de `frontend_next_hub` (grep sin resultados) — considerar un wrapper/hook compartido si el patrón se repite en más features.
+- **Fuente:** sesión 2026-07-10, reporte de usuario con captura de consola tras LL-093.
+- **Tags:** frontend, nextjs, react-query, error-handling, ux, permission-denied, support, mutation
+
 ---
 
 ## G. Testing (MSW, fixtures, permisos)
@@ -396,6 +558,28 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Nunca hardcodear fechas absolutas en fixtures que se comparan contra vistas "hoy/mes actual". Antes de culpar un cambio por un test roto, correr el test con `git stash` para descartar fallo pre-existente dependiente del tiempo.
 - **Fuente:** sesión 2026-06-25 (bugfix crear evento Calendario Workspace)
 - **Tags:** testing, fixtures, fechas, time-dependent, vitest, flaky
+
+### LL-063 — Test nuevo con `DatabaseError: Save with update_fields did not affect any rows`
+- **Síntoma:** Un `TestCase`/`APITestCase` nuevo (primera vez que se testea esa vista) falla con
+  `django.db.utils.DatabaseError: Save with update_fields did not affect any rows` en un `tenant.save(update_fields=[...])`
+  que en producción funciona sin problema. El código de la vista no cambió.
+- **Causa raíz:** `TenantMiddleware` (`apps/tenants/middleware.py`) resuelve `request.tenant` con un
+  lookup **cacheado en Redis por slug** (`tenant:slug:{slug}`, TTL 5 min) — no es DB-por-request. Si
+  el test crea un `Tenant` con un slug ya usado por otro test anterior en la misma corrida (o si Redis
+  no se limpia entre tests), el middleware devuelve el objeto `Tenant` **cacheado de una transacción de
+  test ya revertida** (Django envuelve cada test en una transacción que hace rollback al final). Ese
+  `Tenant` cacheado apunta a un PK que ya no existe en la BD del test actual → el `UPDATE ... WHERE id=X`
+  no afecta ninguna fila.
+- **Solución:** En el `setUp()` de cualquier test que dispare `TenantMiddleware` (cualquier request a
+  `/api/v1/admin/` o `/api/v1/app/`), usar caché en memoria y limpiarla: `@override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}})` en la clase +
+  `cache.clear()` como primera línea de `setUp()`. Patrón ya usado en `apps/auth_app/tests/test_admin_users.py`
+  y `apps/chat/tests/*.py` — replicarlo en cualquier app nueva que no tenga tests todavía.
+- **Prevención:** Al escribir el primer test de una vista que depende de `request.tenant` (o de
+  cualquier vista bajo el middleware de tenant), copiar el patrón `CACHES` + `cache.clear()` desde un
+  test file existente en vez de partir de un `TestCase` vacío — si no, el primer fallo es confuso
+  porque no menciona caché ni Redis en el traceback.
+- **Fuente:** sesión 2026-07-11 (fix Bug #2 storage — primer test de `apps/tenants/`, app sin tests previos)
+- **Tags:** testing, cache, redis, multi-tenant, middleware, database-error, test-isolation
 
 ---
 

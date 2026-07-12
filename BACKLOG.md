@@ -17,51 +17,47 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
-- **2026-07-09 — Desktop Sidebar (Bookmarks/Snippets): mismo autocompletado + filtro de tags que Notas** ✅
-  Mismo patrón exacto recién implementado en Notas, replicado sin cambios de backend (misma
-  arquitectura 100% client-side en los tres paneles). `allTags` derivado de los datos ya cargados en
-  ambos paneles; fila de pills `#tag` (teal, consistente entre los tres) después de la fila de
-  colección/lenguaje; mismo bloque de autocompletado (dropdown al enfocar, filtro por substring,
-  clic inserta) en `BookmarkForm`/`SnippetForm`. Hallazgo resuelto como parte de la paridad (no bug
-  aparte): `SnippetsPanel.tsx` nunca mostraba tags en ningún lado (a diferencia de Bookmarks/Notas)
-  — se agregó la misma fila de tags al detalle expandido de `SnippetItem`, mismo estilo que
-  `BookmarkItemRow`, para que el nuevo filtro tenga confirmación visual. `tsc` y `vite build`
-  limpios. Verificado manualmente en navegador real (mismo procedimiento que Notas): filtro por tag
-  reduce la lista en ambos paneles, autocompletado sugiere/filtra correctamente (probado con "te" →
-  `#test`+`#urgente`), detalle expandido de snippet ahora muestra sus tags.
-  _→ [Reporte](reports/2026-07-09-desktop-bookmarks-snippets-autocompletado-filtro-tags.md)_
+- **2026-07-11 — Feature: plan Enterprise agregado a la landing pública del Hub** ✅
+  Cierra la cadena de fixes de "Enterprise no aparece" (ver registro, entrada de abajo). A
+  diferencia del registro (un solo filtro), acá había 3 puntos acoplados en
+  `features/landing/LandingPageClient.tsx`: (1) filtro `plans.filter(p => p.id !== 'enterprise')`
+  — eliminado, usa `plans` directo; (2) grid fijo a 3 columnas (`md:grid-cols-3 max-w-5xl`) — pasó
+  a responsive `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl`, mismo patrón que
+  `PlanComparisonGrid.tsx`; (3) el texto del botón tenía un `else` catch-all pensado para
+  Professional (`proTrialCta` = "Probar Professional gratis 30 días") — sin una rama explícita,
+  Enterprise hubiera heredado ese texto por error. Se agregó rama `enterpriseCta` = "Empezar con
+  Enterprise" (mismo self-signup que los demás planes, sin trial — los trials de 30 días son
+  exclusivos de Professional por diseño); el `onClick` ya era genérico y no necesitó cambios.
+  Nuevas claves i18n en `es.ts`/`en.ts`. Verificado en navegador real: 4 cards en desktop,
+  responsive correcto en mobile (390px, se apila a 1 columna), botón navega a
+  `/register?plan=enterprise` con esa card preseleccionada. tsc/eslint limpios, 66 tests frontend
+  sin regresiones.
 
-- **2026-07-09 — Desktop Sidebar (Notas): autocompletado de tags + filtro de tags** ✅
-  El backend ya persistía tags correctamente (sesión previa); el campo en `NotesPanel.tsx` era texto
-  libre sin autocompletado, y no existía filtro por tag (solo por categoría). Hallazgo clave: este
-  panel filtra 100% client-side (`fetchNotes` trae todas las notas en una sola llamada, categoría y
-  búsqueda ya se filtran con `useMemo` sobre el array cargado) — así que el vocabulario de tags para
-  filtro y sugerencias se derivó directo de `notes` ya cargadas (`allTags`, mismo patrón que
-  `presentCategories`), **sin ninguna llamada nueva al backend**. Se agregó una fila de pills `#tag`
-  (mismo estilo que las de categoría, color teal) para el filtro, combinado por AND con
-  categoría/búsqueda. Para el autocompletado en `NoteForm` no había ningún dropdown/popover en toda
-  la app (grep sin resultados) — se construyó uno mínimo desde cero: lista de sugerencias al enfocar
-  el campo (todas si está vacío, filtradas por substring al escribir), clic inserta el tag y deja el
-  campo listo para el siguiente, cierre con clic-fuera o Escape. Sin cambios de backend. `tsc` y
-  `vite build` limpios; esta app no tiene infraestructura de testing (deuda ya trazada) — verificado
-  manualmente en navegador real (`vite dev` fuera de Docker + sesión sembrada en localStorage vía
-  login real): filtro por tag reduce la lista correctamente, autocompletado sugiere/filtra/inserta
-  bien, nota creada con dos tags (uno nuevo) persistió ambos y el nuevo apareció de inmediato en el
-  filtro.
-  _→ [Reporte](reports/2026-07-09-desktop-notas-autocompletado-filtro-tags.md)_
+- **2026-07-11 — Fix: `canUpgradePlan` no contemplaba Professional → Enterprise** ✅
+  Bug ya trazado en "Pendientes activos" tras la verificación en navegador del fix anterior: en
+  `apps/frontend_next_hub/hooks/usePermissions.ts`, `canUpgradePlan` era una lista fija
+  (`plan === 'free' || plan === 'starter'`) — un tenant Professional nunca veía habilitado el
+  upgrade a Enterprise en la página Suscripción (mostraba "Plan inferior" en vez de "Actualizar
+  plan"). Fix: se exportó `PLAN_ORDER` (ya existía, privado, en `features/subscription/plans-data.ts`,
+  usado por `isUpgrade()`) y se reemplazó la condición por `PLAN_ORDER.indexOf(plan) <
+  PLAN_ORDER.length - 1` ("cualquier plan que no sea el más alto"), evitando una tercera copia de
+  la lista de planes. Tests nuevos en `usePermissions.test.ts` (starter→true, professional→true);
+  los 2 existentes (free→true, enterprise→false) siguen pasando. Verificado en navegador real
+  (sesión inyectada, tenant Professional): la card Enterprise ahora muestra "Actualizar plan"
+  habilitado. Suite: 66 tests frontend (2 nuevos), tsc/eslint limpios.
 
-- **2026-07-08 — Compartir (Notas/Contactos/Snippets + Bóveda) portado al Desktop Sidebar** ✅
-  El Workspace ya tenía compartir + selección múltiple en lote (Notas/Contactos/Snippets) y compartir
-  de ítems de Bóveda (E2E); se llevó ambas funcionalidades al Desktop (Tauri), adaptadas a su
-  contenedor angosto. Como esta app no comparte código con el Workspace (sin TanStack Query/axios/
-  módulo de sharing), todo se reimplementó con sus propias convenciones (`useState` + `apiFetch`).
-  Para Notas/Contactos/Snippets: bloque de compartir inline (mismo patrón que los forms de Crear/
-  Editar, en vez de un modal que no cabría), badge compacto, y selección múltiple con checkboxes +
-  barra de acciones. Para la Bóveda: se confirmó que toda la criptografía X25519/ECDH es 100%
-  server-side (ningún frontend toca claves), así que fue un port de UI+REST puro — sin selección
-  múltiple, tal como está en el Workspace. Cero cambios de backend. Verificado por el usuario en el
-  entorno real (Tauri) tras `npx tsc --noEmit` + `npx vite build` limpios.
-  _→ [Reporte](reports/2026-07-08-compartir-desktop-sidebar.md)_
+- **2026-07-11 — Fix: el plan Enterprise no aparecía en el registro (`frontend_next_hub`)** ✅
+  El usuario notó que el wizard de registro (`/register`, step 3 "Elige tu plan") solo ofrecía
+  Free/Starter/Professional. Investigación confirmó que era una omisión, no una decisión de
+  producto: el backend (`RegisterSerializer`, `RegisterView`, `YapePaymentProofView`) ya trata
+  Enterprise igual que Starter/Professional en todo el flujo de registro + pago Yape, y el ADR-004
+  + el PRD de billing documentan explícitamente que Enterprise debía estar en el self-signup. La
+  causa: un filtro de una sola línea sin comentario en `RegisterPageClient.tsx`
+  (`allPlans.filter(p => p.id !== 'enterprise')`), presente desde el primer commit del archivo — no
+  existe en el código ningún concepto de "Enterprise = contactar ventas". Fix: se eliminó el
+  filtro, ahora usa `allPlans` (de `usePlans()` → `/public/plans/`) directo. Verificado: tsc/eslint
+  limpios, 22 tests de `features/auth` OK, curl a `/public/plans/` confirma que el backend ya
+  devolvía Enterprise correctamente ($199/mes).
 
 ---
 
@@ -92,6 +88,20 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Solo el rol `Owner` puede crear/ver tickets de soporte propios en el Hub — Member/Viewer/
+      Service Manager tienen 0 permisos `support.*` en los fixtures del sistema.** Confirmado que
+      "Soporte" es visible en el navbar del Hub para **cualquier** usuario del tenant, pero un
+      Member recibe 403 tanto al crear como al listar (ver [LL-093](.claude/skills/lessons-learned/references/knowledge-base.md),
+      [LL-094](.claude/skills/lessons-learned/references/knowledge-base.md)). El código interno
+      (`_get_ticket`, `TicketListCreateView.get`) ya tiene la lógica de "cliente ve solo sus propios
+      tickets" lista para usarse, pero el `permission_classes = [HasPermission('support.read')]` a
+      nivel de clase bloquea antes de llegar ahí. Decidido explícitamente por el usuario **no**
+      cambiar esto ahora — solo se mejoró el mensaje de error (LL-094). Pendiente decidir: ¿debería
+      cualquier miembro autenticado poder crear/ver sus propios tickets (recomendado, ya que "pedir
+      ayuda" no es una acción privilegiada), o se prefiere seguir restringiéndolo solo a Owner /
+      asignar el permiso a más roles vía seed?
+      _Origen: reporte de usuario "se queda congelado" al enviar ticket, 2026-07-10._
+
 - [ ] **Bookmarks: `collection` serializado como UUID crudo, no como objeto anidado:**
       `BookmarkSerializer.collection` es el campo FK default de DRF (`PrimaryKeyRelatedField`,
       devuelve solo el UUID), pero el tipo frontend `Bookmark.collection: BookmarkCollection | null`
@@ -118,7 +128,11 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       vista recuerde filtrar por `tenant=request.tenant` — no hay segunda capa de defensa a nivel BD.
       _Origen: [reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md](reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md)_
 - [ ] **`/team` (Hub) con i18n roto:** la página muestra literalmente `team.title`, `team.subtitle`,
-      `team.members` en vez de texto traducido — faltan esas keys en el namespace `hub` de i18next.
+      `team.members` en vez de texto traducido. Causa raíz real (confirmada al arreglar el mismo bug
+      en `/support`, ver [LL-092](.claude/skills/lessons-learned/references/knowledge-base.md)):
+      `TeamPageClient.tsx` usa `useTranslation('hub')`, namespace que **no existe** en
+      `i18n/config.ts` (solo existe `'team'`, con claves planas sin prefijo). Fix: mismo patrón que
+      support — `useTranslation('team')` + quitar el prefijo `team.` de cada `t('team.xxx')`.
       _Origen: [reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md](reports/2026-07-07-colaboracion-equipo-compartir-asistentes.md)_
 - [ ] **Detalle de recursos compartidos no accesible (Notas/Contactos/Snippets):**
       `NoteDetailView`/`ContactDetailView`/`CodeSnippetDetailView` siguen siendo owner-only; un
@@ -293,6 +307,36 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       dev real. Cubrir con tests: manifest devuelve 404 si el perfil no existe, colores/nombre
       correctos por feature, ícono responde PNG con el tamaño esperado.
       _Origen: [reports/2026-07-03-digisider-branding-pwa-vistas-publicas.md](reports/2026-07-03-digisider-branding-pwa-vistas-publicas.md)_
+- [ ] **`api_calls_per_month` de los planes nunca se mide ni se aplica:** `api_calls.current`
+      está hardcodeado a `0` en `apps/tenants/serializers.py` y `apps/subscriptions/serializers.py`
+      — no hay ningún contador de llamadas API por tenant ni middleware que lo incremente. El
+      medidor correspondiente del Admin Panel siempre muestra 0% de uso y el límite mensual
+      (1,000 Free / 10,000 Starter / 100,000 Professional) nunca se aplica. Requiere un contador
+      persistente (Redis con reset mensual, o un middleware que incremente por request) y decidir
+      qué se considera "llamada API" (¿todo `/api/v1/app/`? ¿excluyendo polling de notificaciones?).
+      `storage_gb` (el otro límite operacional detectado en la misma auditoría) ya se corrigió —
+      ver "3 Últimas tareas realizadas", 2026-07-11.
+      _Origen: auditoría de límites de plan vs "Gestión de Planes" (Admin), 2026-07-11 — ver
+      [LL-047](.claude/skills/lessons-learned/references/knowledge-base.md)._
+- [ ] **Backend de Stripe queda como código muerto tras consolidar el Hub en el flujo Yape:**
+      `StripeClient`, `UpgradeSubscriptionView`, `PaymentMethodListView._create_stripe_method` y el
+      webhook de Stripe siguen intactos pero sin ningún consumidor real en el frontend (ADR-004
+      confirma que Yape es el único mecanismo de pago de este proyecto). Evaluar si se retoma
+      Stripe a futuro (mantener) o se limpia del todo (borrar `StripeClient`, las vistas, el
+      webhook y `STRIPE_*` de settings).
+      _Origen: fix "plan del tenant desincronizado en el Hub", 2026-07-11._
+- [ ] **`ClientSubscriptionSerializer.get_mrr` usa un `PLAN_MRR_MAP` hardcodeado, no
+      `Plan.price_monthly` real:** mismo tipo de deuda que "límites de plan editables" cerró
+      parcialmente (esa feature hizo editables los límites técnicos, no el MRR mostrado en el
+      Admin "Clientes") — si se edita el precio de un plan desde "Gestión de Planes", el MRR de
+      Clientes sigue mostrando el valor viejo hardcodeado.
+      _Origen: fix "plan del tenant desincronizado en el Hub", 2026-07-11._
+- [ ] **El flujo Yape (upgrade real de plan) no soporta facturación anual:** la página Suscripción
+      tiene un toggle Mensual/Anual, pero `YapeUpgradeStep`/`useYapeUpgrade` solo manejan el precio
+      mensual — nunca lo soportó, ni siquiera el botón "Actualizar" del Dashboard antes de este
+      fix. Decidir si vale la pena agregar el ciclo anual al comprobante Yape (monto distinto,
+      `billing_cycle` en el payload) o si se quita el toggle mientras no se soporte.
+      _Origen: fix "plan del tenant desincronizado en el Hub", 2026-07-11._
 
 ---
 
