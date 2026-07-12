@@ -17,6 +17,22 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-12 — Feature: Analytics del Admin Panel — 4 paneles cross-tenant + 2 bugs corregidos** ✅
+  La sección Analytics estaba vacía por dos bugs independientes: `_compute_usage()` nunca devolvía
+  `role_distribution`, y `useSummary.ts`/`useUsageReport.ts`/`useTrends.ts` llamaban `/reports/...`
+  en vez de `/app/reports/...` (404 silencioso — por eso las KPI cards no aparecían en absoluto).
+  Investigando el primero se descubrió una vulnerabilidad real: `ClientListView`/`SuspendClientView`
+  (`/api/v1/admin/clients/`) solo validaban el permiso RBAC `customers.read`/`customers.suspend`,
+  que el rol de sistema "Owner" (asignado automáticamente a todo tenant nuevo) también tiene —
+  cualquier cliente pagante podía ver y suspender otros tenants llamando la API directo. Fix: nueva
+  clase `IsStaffUser` (`apps/rbac/permissions.py`), exige `is_staff`/`is_superuser` además del
+  permiso RBAC. Con eso resuelto, se construyeron 4 paneles staff-only cross-tenant nuevos bajo
+  `/api/v1/admin/reports/`: MRR/ARR/churn (desde `Invoice`, no `Subscription.status`, que nunca
+  expira en el flujo Yape manual), Adopción de servicios, Tráfico de Vista (generalizando
+  `build_service_analytics`) y Embudo de licencias Desktop. 760 tests backend (mismos 10 fallos
+  preexistentes no relacionados), 7/7 frontend, verificado con capturas del usuario en navegador real.
+  _→ [Reporte](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
+
 - **2026-07-11 — Fix: "Historial de facturas" vacío en el Hub (`/billing`)** ✅
   Dos causas independientes: (1) trailing slash roto en `apps/subscriptions/urls.py` (`invoices`,
   `payment-methods`, `webhooks` sin `/` final, mismo patrón que LL-005) — corregido en Django +
@@ -44,19 +60,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   responsive correcto en mobile (390px, se apila a 1 columna), botón navega a
   `/register?plan=enterprise` con esa card preseleccionada. tsc/eslint limpios, 66 tests frontend
   sin regresiones.
-
-- **2026-07-11 — Fix: `canUpgradePlan` no contemplaba Professional → Enterprise** ✅
-  Bug ya trazado en "Pendientes activos" tras la verificación en navegador del fix anterior: en
-  `apps/frontend_next_hub/hooks/usePermissions.ts`, `canUpgradePlan` era una lista fija
-  (`plan === 'free' || plan === 'starter'`) — un tenant Professional nunca veía habilitado el
-  upgrade a Enterprise en la página Suscripción (mostraba "Plan inferior" en vez de "Actualizar
-  plan"). Fix: se exportó `PLAN_ORDER` (ya existía, privado, en `features/subscription/plans-data.ts`,
-  usado por `isUpgrade()`) y se reemplazó la condición por `PLAN_ORDER.indexOf(plan) <
-  PLAN_ORDER.length - 1` ("cualquier plan que no sea el más alto"), evitando una tercera copia de
-  la lista de planes. Tests nuevos en `usePermissions.test.ts` (starter→true, professional→true);
-  los 2 existentes (free→true, enterprise→false) siguen pasando. Verificado en navegador real
-  (sesión inyectada, tenant Professional): la card Enterprise ahora muestra "Actualizar plan"
-  habilitado. Suite: 66 tests frontend (2 nuevos), tsc/eslint limpios.
 
 ---
 
@@ -209,10 +212,12 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       a server-driven consumiendo `GET /api/v1/features/` igual que Hub y Workspace,
       para eliminar la deuda de sincronización manual cuando cambian las definiciones de plan.
       _Origen: [reports/2026-06-17-feature-gates-analysis.md](reports/2026-06-17-feature-gates-analysis.md)_
-- [ ] 4 tests pre-existentes fallando sin relación con feature gates: `test_summary_returns_metrics_keys`
-      + `test_usage_returns_resource_breakdown` (endpoint analytics cambió estructura de respuesta
-      pero los tests no se actualizaron); `test_client_sees_only_own_ticket` + `test_comment_role_client_for_regular_user`
-      (usuarios regulares sin rol `support.read` asignado reciben 403 en lugar de poder ver sus propios tickets).
+- [ ] 2 tests pre-existentes fallando en `apps/support`, sin relación con nada tocado recientemente
+      (confirmado en cada corrida de la suite completa durante la sesión de Analytics, 2026-07-12):
+      `test_client_sees_only_own_ticket` + `test_comment_role_client_for_regular_user` (usuarios
+      regulares sin rol `support.read` asignado reciben 403 en lugar de poder ver sus propios tickets).
+      _(Los 2 tests de analytics que antes estaban en este ítem — `test_summary_returns_metrics_keys`
+      y el equivalente de resource_breakdown — ya pasan; se quitaron de aquí.)_
 - [ ] Cuando un usuario tiene `is_active=False`, el login devuelve "Credenciales inválidas" en
       lugar de "Cuenta suspendida". Comportamiento intencional por seguridad (no revelar si la
       cuenta existe), pero considerar agregar un mensaje más descriptivo cuando el email SÍ existe
@@ -354,6 +359,27 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       también la lectura del proof (hoy el atomic solo envuelve la escritura, vía
       `activate_yape_proof()`).
       _Origen: [reports/2026-07-11-hub-billing-facturas-invoice-yape.md](reports/2026-07-11-hub-billing-facturas-invoice-yape.md)_
+- [ ] **Yape sin expiración automática de período:** un tenant que deja de pagar mantiene su plan
+      pagado indefinidamente — `Subscription.status` nunca se degrada cuando `current_period_end`
+      vence sin renovación (solo existe `expire_professional_trials`, para trials, no para planes
+      pagados vencidos). Afecta feature-gating real, no solo las métricas de MRR/churn del Admin
+      Panel (que ya evitan este problema calculando desde `Invoice`, no desde `Subscription.status`).
+      _Origen: [reports/2026-07-12-analytics-cross-tenant-admin-panel.md](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
+- [ ] **`trial_conversions` (Admin Analytics) es una aproximación:** se calcula por la primera
+      factura pagada de cada tenant, no puede distinguir "convirtió desde trial" de "primer pago
+      tras un tiempo en plan free" — no existe un log de eventos de transición de plan.
+      _Origen: [reports/2026-07-12-analytics-cross-tenant-admin-panel.md](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
+- [ ] **`UsageTrendsChart` (Admin Analytics) con contrato desalineado:** tras corregir el prefijo
+      `/app/` de `useTrends.ts` el gráfico ya llega a datos reales, pero `_compute_trends` devuelve
+      `{active_tasks, completed_tasks, new_projects}` y el componente pinta `active_users`/
+      `new_projects`/`api_requests` — dos de tres líneas quedan vacías. Mismo tipo de deuda que el
+      botón Exportar (`analytics_export` vs. `pdf_export`, ver ítem "Reportes — transversales +
+      export ejecutivo" arriba).
+      _Origen: [reports/2026-07-12-analytics-cross-tenant-admin-panel.md](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
+- [ ] **Permisos RBAC `customers.create`/`update`/`delete`/`export` sin usar:** sembrados junto a
+      `customers.read`/`suspend`/`analytics` (que sí se usan, los últimos 4 en el Admin Panel) pero
+      sin ninguna vista que los consuma todavía.
+      _Origen: [reports/2026-07-12-analytics-cross-tenant-admin-panel.md](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
 
 ---
 
