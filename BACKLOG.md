@@ -17,6 +17,27 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-13 — Fix: el sidebar Desktop (AppBar Win32) se desconfiguraba tras suspender/reanudar** ✅
+  Bug de **7 capas**, cada fix destapaba la siguiente: (1) suspender/reanudar no emite
+  `ABN_POSCHANGED` → interceptar `WM_DISPLAYCHANGE`/`WM_SETTINGCHANGE`/`WM_DPICHANGED`/
+  `WM_POWERBROADCAST` con `reassert_appbar()` idempotente y rect de `MonitorFromWindow`; (2) el rect
+  que `ABM_SETPOS` devuelve viene encogido tras resume → geometría determinista sin leerlo; (3)
+  WebView2 blanco → `useWakeReload` (drift de timer) + espera de red estable + auto-sanado inline en
+  `index.html`; (4) `MoveWindow` crudo desincronizaba a tao (`resizable:false`) → resize vía
+  `window.set_size`/`set_position`; (5) bucle `SETPOS`↔`WM_SETTINGCHANGE` saturaba el hilo de UI →
+  rate-limit `should_reassert()` (1/seg); (6) `SHAppBarMessage` dentro del broadcast síncrono →
+  riesgo de interbloqueo con explorer → reassert diferido con `PostMessageW`; (7) **la intermitencia
+  real**: el canal IPC del WebView2 muere en silencio con algunas suspensiones (ningún `invoke()`
+  llega a Rust — imposible recuperarse desde JS) → **recrear la ventana WebView desde Rust** al
+  detectar `PBT_APMRESUME*` en `WM_POWERBROADCAST`: destroy + poll hasta liberar el label `main` +
+  rebuild `from_config`, con flag `REBUILDING` + `prevent_exit` para que la app no se cierre en el
+  hueco. Diagnóstico clave: `eprintln!` en Rust — tras el resume malo el click no logueaba nada.
+  Verificado por el usuario con **varios ciclos reales** de suspensión: recreación automática (~2-3s),
+  panel al ancho completo, sin blanco, app viva. Tras reanudar el panel arranca cerrado (ventana
+  nueva) — aceptado. Ver [LL-095].
+  _→ [Reporte](reports/2026-07-13-appbar-suspend-resume-desktop.md)_
+  _→ Pendiente menor: validar el ciclo suspender→reanudar en el build de producción (en dev depende de Vite vivo; en prod, frontend embebido)._
+
 - **2026-07-12 — Feature: Analytics del Admin Panel — 4 paneles cross-tenant + 2 bugs corregidos** ✅
   La sección Analytics estaba vacía por dos bugs independientes: `_compute_usage()` nunca devolvía
   `role_distribution`, y `useSummary.ts`/`useUsageReport.ts`/`useTrends.ts` llamaban `/reports/...`
@@ -44,22 +65,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   esperaba. De regalo corrige `get_mrr()`, que siempre daba 0. 43/43 tests backend + 66/66 tests
   frontend, verificado en navegador real y confirmado por el usuario.
   _→ [Reporte](reports/2026-07-11-hub-billing-facturas-invoice-yape.md)_
-
-- **2026-07-11 — Feature: plan Enterprise agregado a la landing pública del Hub** ✅
-  Cierra la cadena de fixes de "Enterprise no aparece" (ver registro, entrada de abajo). A
-  diferencia del registro (un solo filtro), acá había 3 puntos acoplados en
-  `features/landing/LandingPageClient.tsx`: (1) filtro `plans.filter(p => p.id !== 'enterprise')`
-  — eliminado, usa `plans` directo; (2) grid fijo a 3 columnas (`md:grid-cols-3 max-w-5xl`) — pasó
-  a responsive `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl`, mismo patrón que
-  `PlanComparisonGrid.tsx`; (3) el texto del botón tenía un `else` catch-all pensado para
-  Professional (`proTrialCta` = "Probar Professional gratis 30 días") — sin una rama explícita,
-  Enterprise hubiera heredado ese texto por error. Se agregó rama `enterpriseCta` = "Empezar con
-  Enterprise" (mismo self-signup que los demás planes, sin trial — los trials de 30 días son
-  exclusivos de Professional por diseño); el `onClick` ya era genérico y no necesitó cambios.
-  Nuevas claves i18n en `es.ts`/`en.ts`. Verificado en navegador real: 4 cards en desktop,
-  responsive correcto en mobile (390px, se apila a 1 columna), botón navega a
-  `/register?plan=enterprise` con esa card preseleccionada. tsc/eslint limpios, 66 tests frontend
-  sin regresiones.
 
 ---
 
