@@ -17,6 +17,18 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-14 — Fix: sesión web del Hub bloqueaba el re-login en el Desktop (deep link)** ✅
+  El `middleware.ts` de `frontend_next_hub` redirigía `/login` → `/dashboard` descartando los query
+  params `source=desktop&state=` cuando el navegador ya tenía sesión activa, así que el handoff
+  `rbacdesktop://` hacia el sidebar Tauri nunca se disparaba (el poll de 500ms del lado Desktop
+  expiraba a los 120s sin recibir nada) — el usuario quedaba bloqueado para volver a iniciar sesión
+  en el Desktop mientras la pestaña web siguiera logueada. Fix: el middleware ahora preserva esos
+  params, y un nuevo hook `useDesktopHandoff` en el dashboard completa el handoff automáticamente
+  reusando la sesión web ya activa, sin pedir credenciales de nuevo ni requerir cerrar la pestaña;
+  `buildDesktopDeepLinkUrl` se extrajo a un util compartido con `LoginPageClient`. 69/69 tests
+  (3 nuevos), `tsc --noEmit` + `eslint` limpios. **Confirmado por el usuario en su entorno real.**
+  _→ Ver [LL-098](.claude/skills/lessons-learned/references/knowledge-base.md)_
+
 - **2026-07-14 — Feature: paginación server-side en 6 secciones del sidebar Desktop** ✅
   Tareas, Notas, Bookmarks, Contactos, Snippets y Bóveda de `frontend_sidebar_desktop` (Tauri)
   replican el patrón ya aplicado un día antes en el Workspace, adaptado a que esta app no usa
@@ -44,18 +56,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   2 fallos preexistentes de auth). **Confirmado por el usuario en su entorno real**, probando las 6
   secciones.
   _→ [Reporte](reports/2026-07-13-paginacion-server-side-workspace-6-secciones.md)_
-
-- **2026-07-13 — Feature: scroll vertical en la franja de iconos del sidebar Desktop (+ fix carrera StrictMode)** ✅
-  La franja de 60px (`IconStrip.tsx`) no manejaba overflow: con los 16 iconos (~816px) en pantallas
-  768p los últimos quedaban inaccesibles. Ahora la zona de iconos es scrolleable (scrollbar oculta,
-  rueda del mouse) con chevrones/fade que aparecen solo cuando hay overflow; Settings y ✕ anclados
-  abajo. Tooltips migrados a portal para no recortarse con `overflow-y-auto`. Cero cambios de
-  geometría/invokes — no toca el fix suspend/resume (LL-095). La prueba en la app real destapó una
-  **carrera preexistente solo-dev**: StrictMode double-mount intercalaba register→unregister→register
-  del AppBar sin orden garantizado y podía dejarlo desregistrado (sin work-area + panel en tira);
-  fix: quitar el `unregister_appbar` del cleanup del efecto (el teardown real es el handler nativo
-  `Destroyed`). Ver [LL-097]. Verificado por el usuario en la app real.
-  _→ [Reporte](reports/2026-07-13-scroll-iconos-sidebar-desktop.md)_
 
 ---
 
@@ -95,6 +95,14 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **`DashboardPageClient` (Hub) sin test para el handoff de escritorio:** se cubrió el hook
+      `useDesktopHandoff` con tests unitarios (3 casos: sin params, sin sesión válida, con sesión
+      activa), pero no se agregó un test de integración de la página del dashboard porque el
+      proyecto no tiene un patrón existente de mock de `react-i18next` en tests a nivel de página
+      (todas usan `useTranslation` sin mock establecido). Agregar si se define ese patrón, o
+      mockear puntualmente `react-i18next` en ese test.
+      _Origen: fix "sesión web bloqueaba re-login desktop", 2026-07-14 — ver
+      [LL-098](.claude/skills/lessons-learned/references/knowledge-base.md)._
 - [ ] **Pills de lenguaje de Snippets (Desktop) ya no reflejan uso real:** al migrar a paginación
       server-side se optó por mostrar siempre los 14 valores fijos del enum `language` en vez de
       filtrar por presencia (como sí hacen categorías/grupos/tags en notes/bookmarks/contacts, que
