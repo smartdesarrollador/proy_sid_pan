@@ -17,6 +17,21 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-14 — Feature: paginación server-side en 6 secciones del sidebar Desktop** ✅
+  Tareas, Notas, Bookmarks, Contactos, Snippets y Bóveda de `frontend_sidebar_desktop` (Tauri)
+  replican el patrón ya aplicado un día antes en el Workspace, adaptado a que esta app no usa
+  TanStack Query (hooks custom `useState`/`useEffect` + `apiFetch` propio, decisión confirmada con
+  el usuario). Componente `Pagination.tsx` creado en Tareas y reutilizado 6 veces. Notas conservó
+  las fijadas siempre completas fuera de la paginación (mismo criterio que Workspace); Snippets se
+  migró de `fetch` nativo (con logging que exponía parte del access token) a `apiFetch`, y sus
+  pills de lenguaje pasaron a mostrar los 14 valores fijos siempre en vez de filtrar por presencia
+  (decisión consultada con el usuario, evita 14 requests paralelas); Bóveda fue la migración más
+  simple — el hook de mutaciones y el patrón de refetch-por-remount de `VaultPanel.tsx` ya estaban
+  listos. Sin infraestructura de testing en esta app (deuda ya conocida): verificado con
+  `tsc --noEmit` + `vite build` limpios en cada sección. **Confirmado por el usuario en su entorno
+  real**, probando las 6 secciones.
+  _→ [Reporte](reports/2026-07-14-paginacion-server-side-desktop-6-secciones.md)_
+
 - **2026-07-13 — Feature: paginación server-side en 6 secciones del Workspace** ✅
   Tareas, Notas, Contactos, Bookmarks, Snippets y Bóveda pasan de traer todo sin paginar a
   paginación opt-in vía `?page=`, con un único componente `Pagination.tsx` reutilizado en las 6.
@@ -80,6 +95,12 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Pills de lenguaje de Snippets (Desktop) ya no reflejan uso real:** al migrar a paginación
+      server-side se optó por mostrar siempre los 14 valores fijos del enum `language` en vez de
+      filtrar por presencia (como sí hacen categorías/grupos/tags en notes/bookmarks/contacts, que
+      tienen conteo server-side) — evita 14 requests paralelas por carga/búsqueda, a costa de un
+      cambio de UX menor. Revertir a filtrar por presencia si se agrega un endpoint de "lenguajes
+      usados" en el backend. _Origen: [reports/2026-07-14-paginacion-server-side-desktop-6-secciones.md](reports/2026-07-14-paginacion-server-side-desktop-6-secciones.md)_
 - [ ] **`BookmarkListCreateView.get` pierde el filtro de colección al combinarlo con `search`:**
       `qs.filter(title__icontains=search) | Bookmark.objects.filter(tenant=..., user=...,
       url__icontains=search)` — el segundo lado del OR es un queryset nuevo desde cero que no
@@ -384,10 +405,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Sería bueno tenerlo, sin compromiso de fecha.
 
-- [ ] Paginar la Bóveda de `frontend_sidebar_desktop` (Tauri) igual que ya se hizo en
-      `frontend_workspace`: el backend (`GET /app/vault/items/`) ya soporta `?page=` opt-in, así
-      que solo faltaría un hook y un componente de paginación propios en esa app (no comparte
-      código con el Workspace). _Origen: [reports/2026-07-13-paginacion-server-side-workspace-6-secciones.md](reports/2026-07-13-paginacion-server-side-workspace-6-secciones.md)_
 - [ ] Fase 2 chat IA: migrar búsqueda de artículos a pgvector/embeddings cuando la KB
       supere ~50 artículos (actualmente usa full-text search con icontains).
 - [ ] Agregar analytics de chat al Admin Panel: mensajes por día, preguntas más frecuentes,
