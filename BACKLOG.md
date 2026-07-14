@@ -17,6 +17,19 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-13 — Feature: paginación server-side en 6 secciones del Workspace** ✅
+  Tareas, Notas, Contactos, Bookmarks, Snippets y Bóveda pasan de traer todo sin paginar a
+  paginación opt-in vía `?page=`, con un único componente `Pagination.tsx` reutilizado en las 6.
+  Ajustes por sección: Kanban (Tareas) y fijadas (Notas) quedaron sin paginar por decisión de
+  diseño; se corrigió un bug real en Contactos (`group_id` vs `group` como query param, rompía el
+  filtro de grupo); se encontró (no corregido, en Deuda técnica) un bug de `search`+`collection` en
+  Bookmarks; Bóveda quedó limitada a `frontend_workspace` (Desktop fuera de alcance a propósito,
+  backend ya listo para cuando se aborde). 68 tests backend nuevos (772→840 suite completa, mismos
+  10 fallos preexistentes) + suite frontend completa corrida en cada sección (341/343 final, mismos
+  2 fallos preexistentes de auth). **Confirmado por el usuario en su entorno real**, probando las 6
+  secciones.
+  _→ [Reporte](reports/2026-07-13-paginacion-server-side-workspace-6-secciones.md)_
+
 - **2026-07-13 — Feature: scroll vertical en la franja de iconos del sidebar Desktop (+ fix carrera StrictMode)** ✅
   La franja de 60px (`IconStrip.tsx`) no manejaba overflow: con los 16 iconos (~816px) en pantallas
   768p los últimos quedaban inaccesibles. Ahora la zona de iconos es scrolleable (scrollbar oculta,
@@ -29,43 +42,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   `Destroyed`). Ver [LL-097]. Verificado por el usuario en la app real.
   _→ [Reporte](reports/2026-07-13-scroll-iconos-sidebar-desktop.md)_
 
-- **2026-07-13 — Fix: el sidebar Desktop (AppBar Win32) se desconfiguraba tras suspender/reanudar** ✅
-  Bug de **7 capas**, cada fix destapaba la siguiente: (1) suspender/reanudar no emite
-  `ABN_POSCHANGED` → interceptar `WM_DISPLAYCHANGE`/`WM_SETTINGCHANGE`/`WM_DPICHANGED`/
-  `WM_POWERBROADCAST` con `reassert_appbar()` idempotente y rect de `MonitorFromWindow`; (2) el rect
-  que `ABM_SETPOS` devuelve viene encogido tras resume → geometría determinista sin leerlo; (3)
-  WebView2 blanco → `useWakeReload` (drift de timer) + espera de red estable + auto-sanado inline en
-  `index.html`; (4) `MoveWindow` crudo desincronizaba a tao (`resizable:false`) → resize vía
-  `window.set_size`/`set_position`; (5) bucle `SETPOS`↔`WM_SETTINGCHANGE` saturaba el hilo de UI →
-  rate-limit `should_reassert()` (1/seg); (6) `SHAppBarMessage` dentro del broadcast síncrono →
-  riesgo de interbloqueo con explorer → reassert diferido con `PostMessageW`; (7) **la intermitencia
-  real**: el canal IPC del WebView2 muere en silencio con algunas suspensiones (ningún `invoke()`
-  llega a Rust — imposible recuperarse desde JS) → **recrear la ventana WebView desde Rust** al
-  detectar `PBT_APMRESUME*` en `WM_POWERBROADCAST`: destroy + poll hasta liberar el label `main` +
-  rebuild `from_config`, con flag `REBUILDING` + `prevent_exit` para que la app no se cierre en el
-  hueco. Diagnóstico clave: `eprintln!` en Rust — tras el resume malo el click no logueaba nada.
-  Verificado por el usuario con **varios ciclos reales** de suspensión: recreación automática (~2-3s),
-  panel al ancho completo, sin blanco, app viva. Tras reanudar el panel arranca cerrado (ventana
-  nueva) — aceptado. Ver [LL-095].
-  _→ [Reporte](reports/2026-07-13-appbar-suspend-resume-desktop.md)_
-  _→ Pendiente menor: validar el ciclo suspender→reanudar en el build de producción (en dev depende de Vite vivo; en prod, frontend embebido)._
-
-- **2026-07-12 — Feature: Analytics del Admin Panel — 4 paneles cross-tenant + 2 bugs corregidos** ✅
-  La sección Analytics estaba vacía por dos bugs independientes: `_compute_usage()` nunca devolvía
-  `role_distribution`, y `useSummary.ts`/`useUsageReport.ts`/`useTrends.ts` llamaban `/reports/...`
-  en vez de `/app/reports/...` (404 silencioso — por eso las KPI cards no aparecían en absoluto).
-  Investigando el primero se descubrió una vulnerabilidad real: `ClientListView`/`SuspendClientView`
-  (`/api/v1/admin/clients/`) solo validaban el permiso RBAC `customers.read`/`customers.suspend`,
-  que el rol de sistema "Owner" (asignado automáticamente a todo tenant nuevo) también tiene —
-  cualquier cliente pagante podía ver y suspender otros tenants llamando la API directo. Fix: nueva
-  clase `IsStaffUser` (`apps/rbac/permissions.py`), exige `is_staff`/`is_superuser` además del
-  permiso RBAC. Con eso resuelto, se construyeron 4 paneles staff-only cross-tenant nuevos bajo
-  `/api/v1/admin/reports/`: MRR/ARR/churn (desde `Invoice`, no `Subscription.status`, que nunca
-  expira en el flujo Yape manual), Adopción de servicios, Tráfico de Vista (generalizando
-  `build_service_analytics`) y Embudo de licencias Desktop. 760 tests backend (mismos 10 fallos
-  preexistentes no relacionados), 7/7 frontend, verificado con capturas del usuario en navegador real.
-  _→ [Reporte](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
-
 ---
 
 ## Pendientes activos
@@ -77,6 +53,10 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       `apps/frontend_sidebar_desktop/src/components/IconStrip.tsx` (import de lucide, constante
       `TEMP_TEST_ITEMS` y su bloque de render). Su click es no-op; solo rellenan para forzar scroll.
       _Origen: [reports/2026-07-13-scroll-iconos-sidebar-desktop.md](reports/2026-07-13-scroll-iconos-sidebar-desktop.md)_
+- [ ] **Validar el ciclo suspender→reanudar del sidebar Desktop (AppBar) en el build de
+      producción**, no solo en dev: en dev depende de Vite vivo; en prod el frontend va embebido,
+      así que el fix de recreación de la ventana WebView2 (ver LL-095) no quedó probado ahí.
+      _Origen: [reports/2026-07-13-appbar-suspend-resume-desktop.md](reports/2026-07-13-appbar-suspend-resume-desktop.md)_
 - [ ] **Verificar instalación PWA real de las 4 vistas públicas (tarjeta/landing/portafolio/cv)
       fuera de `curl`:** `navigator.serviceWorker` requiere "secure context" — `localhost`/
       `127.0.0.1` califican sin HTTPS, pero el hostname de dev del proyecto
@@ -100,6 +80,13 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **`BookmarkListCreateView.get` pierde el filtro de colección al combinarlo con `search`:**
+      `qs.filter(title__icontains=search) | Bookmark.objects.filter(tenant=..., user=...,
+      url__icontains=search)` — el segundo lado del OR es un queryset nuevo desde cero que no
+      hereda el filtro `collection__pk=...` ya aplicado a `qs`. Buscar por texto que matchea la URL
+      con una colección seleccionada devuelve también bookmarks de otras colecciones. Bug
+      preexistente, independiente de la paginación (no lo introduce ni lo empeora).
+      _Origen: descubierto al implementar paginación server-side de Bookmarks, 2026-07-13._
 - [ ] **Solo el rol `Owner` puede crear/ver tickets de soporte propios en el Hub — Member/Viewer/
       Service Manager tienen 0 permisos `support.*` en los fixtures del sistema.** Confirmado que
       "Soporte" es visible en el navbar del Hub para **cualquier** usuario del tenant, pero un
@@ -397,6 +384,10 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Sería bueno tenerlo, sin compromiso de fecha.
 
+- [ ] Paginar la Bóveda de `frontend_sidebar_desktop` (Tauri) igual que ya se hizo en
+      `frontend_workspace`: el backend (`GET /app/vault/items/`) ya soporta `?page=` opt-in, así
+      que solo faltaría un hook y un componente de paginación propios en esa app (no comparte
+      código con el Workspace). _Origen: [reports/2026-07-13-paginacion-server-side-workspace-6-secciones.md](reports/2026-07-13-paginacion-server-side-workspace-6-secciones.md)_
 - [ ] Fase 2 chat IA: migrar búsqueda de artículos a pgvector/embeddings cuando la KB
       supere ~50 artículos (actualmente usa full-text search con icontains).
 - [ ] Agregar analytics de chat al Admin Panel: mensajes por día, preguntas más frecuentes,
