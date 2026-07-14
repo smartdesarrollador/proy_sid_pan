@@ -82,7 +82,8 @@ tocó la reconciliación completa Stripe vs Yape (deuda ya trackeada en `BACKLOG
 
 ## Lección
 
-Se registró **[[LL-095]]** en la sección E (Seguridad y lógica de negocio) de la KB: un evento de
+Se registró **[[LL-096]]** en la sección E (Seguridad y lógica de negocio) de la KB (originalmente
+como LL-095; renumerada el 2026-07-13 por colisión de ID con la entrada del AppBar): un evento de
 negocio (`Invoice`) puede no registrarse nunca porque las rutas de aprobación estaban duplicadas y
 ninguna lo escribía — mismo tipo de riesgo que [[LL-047]] (recurso con dos vías de entrada), pero
 aquí la feature nunca existió en absoluto, no se "olvidó copiar" a una segunda vía. También se

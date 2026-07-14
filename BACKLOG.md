@@ -17,6 +17,18 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-13 — Feature: scroll vertical en la franja de iconos del sidebar Desktop (+ fix carrera StrictMode)** ✅
+  La franja de 60px (`IconStrip.tsx`) no manejaba overflow: con los 16 iconos (~816px) en pantallas
+  768p los últimos quedaban inaccesibles. Ahora la zona de iconos es scrolleable (scrollbar oculta,
+  rueda del mouse) con chevrones/fade que aparecen solo cuando hay overflow; Settings y ✕ anclados
+  abajo. Tooltips migrados a portal para no recortarse con `overflow-y-auto`. Cero cambios de
+  geometría/invokes — no toca el fix suspend/resume (LL-095). La prueba en la app real destapó una
+  **carrera preexistente solo-dev**: StrictMode double-mount intercalaba register→unregister→register
+  del AppBar sin orden garantizado y podía dejarlo desregistrado (sin work-area + panel en tira);
+  fix: quitar el `unregister_appbar` del cleanup del efecto (el teardown real es el handler nativo
+  `Destroyed`). Ver [LL-097]. Verificado por el usuario en la app real.
+  _→ [Reporte](reports/2026-07-13-scroll-iconos-sidebar-desktop.md)_
+
 - **2026-07-13 — Fix: el sidebar Desktop (AppBar Win32) se desconfiguraba tras suspender/reanudar** ✅
   Bug de **7 capas**, cada fix destapaba la siguiente: (1) suspender/reanudar no emite
   `ABN_POSCHANGED` → interceptar `WM_DISPLAYCHANGE`/`WM_SETTINGCHANGE`/`WM_DPICHANGED`/
@@ -54,24 +66,17 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   preexistentes no relacionados), 7/7 frontend, verificado con capturas del usuario en navegador real.
   _→ [Reporte](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
 
-- **2026-07-11 — Fix: "Historial de facturas" vacío en el Hub (`/billing`)** ✅
-  Dos causas independientes: (1) trailing slash roto en `apps/subscriptions/urls.py` (`invoices`,
-  `payment-methods`, `webhooks` sin `/` final, mismo patrón que LL-005) — corregido en Django +
-  los 5 hooks de billing del Hub, que ya mandaban la barra manual del lado del cliente; (2) nunca
-  se creaba un `Invoice` al aprobar un pago Yape (ni en registro ni en upgrade) — se extrajo
-  `activate_yape_proof()` a `apps/subscriptions/services.py`, compartido entre
-  `YapeProofReviewView` (panel admin) y `YapeActivateView` (links de Telegram), más campos
-  `number`/`amount` agregados al `InvoiceSerializer` para que coincidan con lo que el frontend ya
-  esperaba. De regalo corrige `get_mrr()`, que siempre daba 0. 43/43 tests backend + 66/66 tests
-  frontend, verificado en navegador real y confirmado por el usuario.
-  _→ [Reporte](reports/2026-07-11-hub-billing-facturas-invoice-yape.md)_
-
 ---
 
 ## Pendientes activos
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
+- [ ] **Quitar los 10 iconos temporales de prueba del `IconStrip` del Desktop** cuando el usuario
+      termine su demostración: buscar `TEMP-SCROLL-TEST` en
+      `apps/frontend_sidebar_desktop/src/components/IconStrip.tsx` (import de lucide, constante
+      `TEMP_TEST_ITEMS` y su bloque de render). Su click es no-op; solo rellenan para forzar scroll.
+      _Origen: [reports/2026-07-13-scroll-iconos-sidebar-desktop.md](reports/2026-07-13-scroll-iconos-sidebar-desktop.md)_
 - [ ] **Verificar instalación PWA real de las 4 vistas públicas (tarjeta/landing/portafolio/cv)
       fuera de `curl`:** `navigator.serviceWorker` requiere "secure context" — `localhost`/
       `127.0.0.1` califican sin HTTPS, pero el hostname de dev del proyecto

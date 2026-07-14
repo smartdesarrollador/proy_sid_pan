@@ -9,11 +9,11 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - [B. Variables de entorno y build (Next.js / Dokploy)](#b-variables-de-entorno-y-build-nextjs--dokploy) — LL-010 … LL-011
 - [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-025
 - [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-034
-- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-049
+- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-049, LL-096
 - [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-059
 - [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-063
 - [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-080
-- [I. Tauri / Desktop en producción](#i-tauri--desktop-en-producción) — LL-090 … LL-091
+- [I. Tauri / Desktop en producción](#i-tauri--desktop-en-producción) — LL-090 … LL-091, LL-095, LL-097
 
 ---
 
@@ -99,7 +99,7 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
   intermedio absorba el error.
 - **Fuente:** fix "plan del tenant desincronizado" + verificación en navegador con Chrome DevTools,
   sesión 2026-07-11. También `reports/2026-07-11-hub-billing-facturas-invoice-yape.md` (mismo
-  patrón en billing, sesión distinta). Ver también [[LL-034]], [[LL-095]].
+  patrón en billing, sesión distinta). Ver también [[LL-034]], [[LL-096]].
 - **Tags:** trailing-slash, nextjs-proxy, django, 404, browser-verification, rewrite
 
 ---
@@ -422,7 +422,10 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** feature "límites de plan editables desde el Admin", sesión 2026-07-11. Ver [[LL-048]].
 - **Tags:** business-logic, plan-limit, refactor, cache, hidden-coupling, code-review
 
-### LL-095 — Un evento de negocio (`Invoice`) nunca se registraba porque las dos rutas de aprobación duplicadas nunca lo escribían
+### LL-096 — Un evento de negocio (`Invoice`) nunca se registraba porque las dos rutas de aprobación duplicadas nunca lo escribían
+
+> Nota: esta entrada se registró originalmente como LL-095, ID que quedó duplicado con la entrada
+> del AppBar (sección I). Renumerada a LL-096 el 2026-07-13; el LL-095 "oficial" es el del AppBar.
 - **Síntoma:** "Historial de facturas" en el Hub (`/billing`) siempre vacío ("No tienes facturas
   aún"), incluso para tenants que ya adquirieron un plan de pago en el registro o vía upgrade. No
   es un bug de query ni de permisos: la tabla `invoices` estaba **literalmente vacía** para
@@ -792,3 +795,11 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Un AppBar Win32 debe re-registrarse/reposicionarse ante cambios de display/DPI/energía, no solo ante `ABN_POSCHANGED`. Nunca dimensionar la ventana con el rect de vuelta de `ABM_SETPOS` (puede encogerlo el shell tras resume): calcular la geometría uno mismo (borde del monitor + ancho pedido). Jamás llamar `SHAppBarMessage` (ni nada síncrono hacia explorer) **dentro** del handler de un broadcast — diferir con `PostMessage`; y rate-limitar cualquier respuesta a `WM_SETTINGCHANGE`, porque el propio `SETPOS` lo re-difunde (bucle → hilo de UI saturado → los `invoke` IPC no corren). Ante síntomas post-resume "raros" en Tauri/WebView2 (clicks sin efecto, comandos que no loguean), sospechar **IPC muerto** antes que lógica propia: la única recuperación es nativa (recrear la ventana o reiniciar el proceso), nunca desde JS. Al recrear ventanas Tauri: `destroy()` es asíncrono (poll del label antes de rebuild) y destruir la única ventana dispara `ExitRequested` (usar `prevent_exit` durante el hueco). Complementa el skill `tauri-native-integration/references/appbar-windows.md`.
 - **Fuente:** `reports/2026-07-13-appbar-suspend-resume-desktop.md` (verificado por el usuario con ciclos reales de suspensión/reanudación)
 - **Tags:** tauri, appbar, win32, suspend-resume, wm-displaychange, wm-settingchange, wm-dpichanged, wm-powerbroadcast, monitorfromwindow, dpi, desktop, feedback-loop, ui-thread, webview2-blank, wake-reload
+
+### LL-097 — StrictMode double-mount + invokes fire-and-forget: el `unregister_appbar` del cleanup podía llegar último y dejar el AppBar desregistrado (solo dev)
+- **Síntoma:** En `tauri dev`, **arranque en frío** (sin suspensión de por medio): el sidebar no reserva el work-area (otras ventanas de Windows se solapan encima) y al hacer click en un icono este se marca activo pero la ventana se queda en 60px — el panel solo asoma una tira. A simple vista idéntico a los síntomas post-resume de [[LL-095]], lo que despista hacia el AppBar nativo cuando la causa está en React.
+- **Causa raíz:** `React.StrictMode` (solo dev) monta → desmonta → remonta la app, así que el efecto de `App.tsx` disparaba **tres** invokes fire-and-forget: `register_appbar` #1 → `unregister_appbar` (cleanup) → `register_appbar` #2. Los comandos síncronos de Tauri corren en un thread pool **sin garantía de orden entre invokes**; si el `unregister` se procesa último, el estado queda `registered=false` → no hay banda reservada y `resize_appbar` se vuelve **no-op silencioso** (su guard `if guard.registered` no devuelve error — el click "funciona" en JS y no pasa nada en nativo). Carrera intermitente: depende del scheduling, puede no aparecer en decenas de arranques.
+- **Solución:** Quitar el `invoke("unregister_appbar")` del cleanup del efecto en `App.tsx`. El teardown real ya lo hace el lado nativo: handler `WindowEvent::Destroyed` en `lib.rs` des-registra el AppBar al cerrar/destruir la ventana. La secuencia de dev queda register → register, inocua porque `register_appbar` hace registro fresco idempotente (`ABM_REMOVE`→`ABM_NEW`).
+- **Prevención:** En Tauri + StrictMode, **no emparejar setup/teardown de recursos nativos como invoke en efecto + invoke en cleanup**: el doble montaje de dev los intercala sin orden garantizado. Preferir teardown nativo (window events) o comandos idempotentes que toleren cualquier orden. Además el cleanup de React **tampoco corre en `location.reload()`** (el wake-reload de LL-095), así que ese unregister desde JS no aportaba nada en ningún flujo real. Ante síntomas "iguales a LL-095" pero en arranque frío y solo en dev, sospechar esta carrera primero.
+- **Fuente:** `reports/2026-07-13-scroll-iconos-sidebar-desktop.md`
+- **Tags:** tauri, strictmode, react, ipc, race-condition, invoke, appbar, dev-only, desktop, fire-and-forget

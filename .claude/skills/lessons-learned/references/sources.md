@@ -20,6 +20,9 @@ generó cada uno. Para el modo **seed incremental**: procesar solo los reportes 
 | `reports/2026-04-04-deploy-desktop-produccion.md` | LL-031 (caso prod), LL-090, LL-091 |
 | `reports/2026-02-27-backend-status.md` | (sin entradas — reporte de estado/roadmap, sin incidencias reutilizables) |
 | memoria PASO 21 (Admin Panel 403/404) | LL-061 |
+| `reports/2026-07-11-hub-billing-facturas-invoice-yape.md` | LL-096 (registrada originalmente como LL-095; renumerada por colisión de ID) |
+| `reports/2026-07-13-appbar-suspend-resume-desktop.md` | LL-095 |
+| `reports/2026-07-13-scroll-iconos-sidebar-desktop.md` | LL-097 |
 
 ## Reportes digeridos sin entradas nuevas
 
