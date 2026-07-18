@@ -495,12 +495,12 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Tags:** axios, multipart, form-data, content-type, 415, upload
 
 ### LL-053 — Interfaces TypeScript desincronizadas con los serializers DRF
-- **Síntoma:** El front no envía/usa un campo que el backend sí devuelve (p.ej. `tenant.slug` ausente en `DesktopTenant` aunque `TenantSerializer` lo retorna) → bugs aguas abajo.
-- **Causa raíz:** La interfaz TS no se actualizó cuando el serializer cambió.
-- **Solución:** Añadir el campo faltante a la interfaz y propagarlo.
-- **Prevención:** Al cambiar un serializer, revisar las interfaces TS que consumen ese payload. Candidato a generación de tipos desde el schema OpenAPI.
-- **Fuente:** `reports/2026-03-15-bugfix-desktop-snippets.md`
-- **Tags:** typescript, serializer-sync, drf, types
+- **Síntoma:** (a) El front no envía/usa un campo que el backend sí devuelve (p.ej. `tenant.slug` ausente en `DesktopTenant` aunque `TenantSerializer` lo retorna) → bugs aguas abajo. (b) **Variante grave (Desktop, 2026-07-18):** al abrir el panel Inicio con sesión iniciada, la app entera quedaba en blanco. Consola: `Uncaught Error: Objects are not valid as a React child (found: object with keys {id, name, color, notes_count})`.
+- **Causa raíz:** La interfaz TS no se actualizó cuando el serializer cambió. En la variante (b): la feature de gestión de categorías cambió `note.category` de `string` a objeto anidado `{id, name, color, notes_count}` (nullable); `NotesPanel` se actualizó pero `HomePanel` ("Continuá donde lo dejaste") conservó el tipo viejo y renderizaba `{lastNote.category}` directo en JSX → React lanza en render y, sin Error Boundary, la excepción desmonta TODA la app (icon strip incluido) → pantalla blanca total, sin pista visual.
+- **Solución:** Añadir el campo/forma nueva a la interfaz y propagarlo. En (b): aceptar ambas formas (`HomeNoteCategory | string | null`) + helper `categoryLabel()` que nunca renderiza un objeto; y `PanelErrorBoundary` alrededor de cada panel en `PanelContainer` para que un crash de un panel muestre fallback "Reintentar" en vez de tumbar la app.
+- **Prevención:** Al cambiar un serializer (sobre todo un campo escalar → objeto anidado), grep del campo en TODOS los frontends que consumen ese payload, no solo la feature que motivó el cambio (el Desktop tiene consumidores secundarios como el HomePanel que agregan datos de varios endpoints). Nunca interpolar en JSX un valor de API sin garantía de tipo primitivo. Todo panel/vista debe colgar de un Error Boundary. Candidato a generación de tipos desde el schema OpenAPI.
+- **Fuente:** `reports/2026-03-15-bugfix-desktop-snippets.md`; sesión 2026-07-18 (pantalla blanca en Home del Desktop)
+- **Tags:** typescript, serializer-sync, drf, types, react-child-object, error-boundary, pantalla-blanca, desktop
 
 ### LL-054 — Import default vs nombrado ("Module has no default export")
 - **Síntoma:** Error TS "Module has no default export" al importar un componente.

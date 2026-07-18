@@ -17,6 +17,17 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-18 — Fix: pantalla blanca total al abrir Inicio en el Desktop con sesión iniciada** ✅
+  Al loguearse y hacer click en Home, `frontend_sidebar_desktop` quedaba completamente en blanco.
+  Causa: la gestión de categorías de notas cambió `note.category` de `string` a objeto anidado
+  `{id, name, color, notes_count}`; `NotesPanel` se actualizó pero el `HomePanel` ("Continuá donde
+  lo dejaste") seguía renderizando `{lastNote.category}` directo en JSX → React lanzaba "Objects
+  are not valid as a React child" y, sin Error Boundary, desmontaba toda la app. Fix: tipo
+  `HomeNoteCategory | string | null` + helper `categoryLabel()` en `HomePanel.tsx`, sumado al
+  `PanelErrorBoundary` por panel en `PanelContainer` (fallback "Reintentar" en vez de app caída)
+  y a la normalización defensiva `toArray()` de respuestas paginadas. `tsc --noEmit` limpio.
+  _→ Ver [LL-053 variante b](.claude/skills/lessons-learned/references/knowledge-base.md)_
+
 - **2026-07-14 — Fix: sesión web del Hub bloqueaba el re-login en el Desktop (deep link)** ✅
   El `middleware.ts` de `frontend_next_hub` redirigía `/login` → `/dashboard` descartando los query
   params `source=desktop&state=` cuando el navegador ya tenía sesión activa, así que el handoff
@@ -43,19 +54,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   `tsc --noEmit` + `vite build` limpios en cada sección. **Confirmado por el usuario en su entorno
   real**, probando las 6 secciones.
   _→ [Reporte](reports/2026-07-14-paginacion-server-side-desktop-6-secciones.md)_
-
-- **2026-07-13 — Feature: paginación server-side en 6 secciones del Workspace** ✅
-  Tareas, Notas, Contactos, Bookmarks, Snippets y Bóveda pasan de traer todo sin paginar a
-  paginación opt-in vía `?page=`, con un único componente `Pagination.tsx` reutilizado en las 6.
-  Ajustes por sección: Kanban (Tareas) y fijadas (Notas) quedaron sin paginar por decisión de
-  diseño; se corrigió un bug real en Contactos (`group_id` vs `group` como query param, rompía el
-  filtro de grupo); se encontró (no corregido, en Deuda técnica) un bug de `search`+`collection` en
-  Bookmarks; Bóveda quedó limitada a `frontend_workspace` (Desktop fuera de alcance a propósito,
-  backend ya listo para cuando se aborde). 68 tests backend nuevos (772→840 suite completa, mismos
-  10 fallos preexistentes) + suite frontend completa corrida en cada sección (341/343 final, mismos
-  2 fallos preexistentes de auth). **Confirmado por el usuario en su entorno real**, probando las 6
-  secciones.
-  _→ [Reporte](reports/2026-07-13-paginacion-server-side-workspace-6-secciones.md)_
 
 ---
 
