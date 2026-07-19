@@ -17,43 +17,41 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
-- **2026-07-18 — Fix: pantalla blanca total al abrir Inicio en el Desktop con sesión iniciada** ✅
-  Al loguearse y hacer click en Home, `frontend_sidebar_desktop` quedaba completamente en blanco.
-  Causa: la gestión de categorías de notas cambió `note.category` de `string` a objeto anidado
-  `{id, name, color, notes_count}`; `NotesPanel` se actualizó pero el `HomePanel` ("Continuá donde
-  lo dejaste") seguía renderizando `{lastNote.category}` directo en JSX → React lanzaba "Objects
-  are not valid as a React child" y, sin Error Boundary, desmontaba toda la app. Fix: tipo
-  `HomeNoteCategory | string | null` + helper `categoryLabel()` en `HomePanel.tsx`, sumado al
-  `PanelErrorBoundary` por panel en `PanelContainer` (fallback "Reintentar" en vez de app caída)
-  y a la normalización defensiva `toArray()` de respuestas paginadas. `tsc --noEmit` limpio.
-  _→ Ver [LL-053 variante b](.claude/skills/lessons-learned/references/knowledge-base.md)_
+- **2026-07-18 — Feature: fijar paneles como accesos rápidos en la barra de control del Desktop** ✅
+  Fijar/desfijar vía **menú contextual (click derecho)** — el usuario descartó el botón de pin
+  tras probarlo: click derecho en cualquier icono de la tira (scrolleables + anclados), en la
+  barra de control o en un icono ya fijado abre un `ContextMenu` propio
+  (`components/shared/ContextMenu.tsx`, portal + `preventDefault` para suprimir el menú nativo
+  del WebView; se cierra con click fuera/Escape/scroll) con "Fijar en la barra de control" /
+  "Desfijar de la barra de control" según corresponda. Los iconos fijados aparecen en el centro
+  del `PanelHeader` (entre `‹ ›` y `✕`) y navegan con `navigateTo()` → quedan en el historial.
+  Estado `pinnedPanels` persistente en `settingsStore` (tope `MAX_PINNED_PANELS = 5`; al tope el
+  ítem del menú se deshabilita). `ALL_NAV_META` extraído a `lib/navMeta.ts`, `ACCENT_BG`
+  exportado de `NavIcon.tsx` (resaltado del fijado activo), `NavIcon` acepta `onContextMenu`.
+  Verificado en navegador: fijar desde tira/barra, desfijar desde icono fijado, tope, persistencia.
+  `tsc` + `vite build` limpios.
 
-- **2026-07-14 — Fix: sesión web del Hub bloqueaba el re-login en el Desktop (deep link)** ✅
-  El `middleware.ts` de `frontend_next_hub` redirigía `/login` → `/dashboard` descartando los query
-  params `source=desktop&state=` cuando el navegador ya tenía sesión activa, así que el handoff
-  `rbacdesktop://` hacia el sidebar Tauri nunca se disparaba (el poll de 500ms del lado Desktop
-  expiraba a los 120s sin recibir nada) — el usuario quedaba bloqueado para volver a iniciar sesión
-  en el Desktop mientras la pestaña web siguiera logueada. Fix: el middleware ahora preserva esos
-  params, y un nuevo hook `useDesktopHandoff` en el dashboard completa el handoff automáticamente
-  reusando la sesión web ya activa, sin pedir credenciales de nuevo ni requerir cerrar la pestaña;
-  `buildDesktopDeepLinkUrl` se extrajo a un util compartido con `LoginPageClient`. 69/69 tests
-  (3 nuevos), `tsc --noEmit` + `eslint` limpios. **Confirmado por el usuario en su entorno real.**
-  _→ Ver [LL-098](.claude/skills/lessons-learned/references/knowledge-base.md)_
+- **2026-07-18 — Feature: Home y Perfil anclados en la zona fija inferior de la barra del Desktop** ✅
+  Los iconos Home y Perfil salieron de la lista scrolleable del `IconStrip` y ahora viven anclados
+  abajo junto a Configuración y el botón de cerrar app (orden: Home → Perfil → Settings → ✕),
+  siempre visibles sin depender del scroll. `PINNED_PANELS` en `IconStrip.tsx` (mismo tratamiento
+  que `settings`: ignoran `hiddenPanels` y el orden configurable); en Configuración → Sidebar ya no
+  se listan para reordenar/ocultar (se quitó también la lógica `isProtected` de Home, ahora muerta).
+  Sin cambios en `settingsStore` — `DEFAULT_SIDEBAR_ORDER` y el ancla `'profile'` de `load()`
+  intactos; settings guardados de usuarios existentes siguen válidos (filtrado solo en render).
+  Ajuste posterior: línea divisoria sutil (`h-px w-8 bg-white/15`) entre la zona scrolleable y la
+  fija, a pedido del usuario. Verificado en navegador (Vite + DevTools). `tsc` + `vite build` limpios.
 
-- **2026-07-14 — Feature: paginación server-side en 6 secciones del sidebar Desktop** ✅
-  Tareas, Notas, Bookmarks, Contactos, Snippets y Bóveda de `frontend_sidebar_desktop` (Tauri)
-  replican el patrón ya aplicado un día antes en el Workspace, adaptado a que esta app no usa
-  TanStack Query (hooks custom `useState`/`useEffect` + `apiFetch` propio, decisión confirmada con
-  el usuario). Componente `Pagination.tsx` creado en Tareas y reutilizado 6 veces. Notas conservó
-  las fijadas siempre completas fuera de la paginación (mismo criterio que Workspace); Snippets se
-  migró de `fetch` nativo (con logging que exponía parte del access token) a `apiFetch`, y sus
-  pills de lenguaje pasaron a mostrar los 14 valores fijos siempre en vez de filtrar por presencia
-  (decisión consultada con el usuario, evita 14 requests paralelas); Bóveda fue la migración más
-  simple — el hook de mutaciones y el patrón de refetch-por-remount de `VaultPanel.tsx` ya estaban
-  listos. Sin infraestructura de testing en esta app (deuda ya conocida): verificado con
-  `tsc --noEmit` + `vite build` limpios en cada sección. **Confirmado por el usuario en su entorno
-  real**, probando las 6 secciones.
-  _→ [Reporte](reports/2026-07-14-paginacion-server-side-desktop-6-secciones.md)_
+- **2026-07-18 — Feature: barra de control fija superior del panel Desktop (atrás/adelante/cerrar)** ✅
+  Nuevo `PanelHeader` fijo arriba del contenido en `PanelContainer` (aparece en los 17 paneles sin
+  tocarlos): botones `‹ ›` para navegar el historial de paneles visitados estilo navegador y `✕`
+  que colapsa el panel a la tira de iconos ("minimizar" = colapsar; minimizar la ventana AppBar
+  quedó fuera de alcance — dejaría el área de trabajo reservada vacía). Historial en
+  `navigationStore` (`history`/`index`/`push`/`back`/`forward`): abrir estando "atrás" trunca el
+  adelante, cerrar NO borra el historial (reabrir lo conserva), y la navegación desde Home/Search
+  (`pendingPanel`) pasó de toggle a open y también se registra. Notas/Tareas/Snippets siguen
+  siempre montados → volver con `‹` conserva borradores. Verificado en navegador (Vite +
+  DevTools): back/forward/deshabilitado en extremos/truncación/cierre. `tsc` + `vite build` limpios.
 
 ---
 
@@ -61,6 +59,15 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
+- [ ] **Probar en el entorno real la nueva ubicación izquierda de la barra del Desktop:**
+      Configuración → "Ubicación de la barra" → Izquierda → "Aplicar ahora" (recarga el WebView,
+      ya no reinicia el proceso — ver LL-099), y verificar
+      (1) anclaje AppBar al borde izquierdo con área de trabajo reservada (maximizar una ventana
+      no la tapa), (2) panel abriéndose hacia la derecha de los iconos, (3) resize arrastrando el
+      borde derecho del panel + slider "Ancho del panel" en vivo, (4) tooltips desplegando hacia
+      la derecha, (5) volver a Derecha + reiniciar restaura el comportamiento original. Compilado
+      (`tsc` + `cargo check`) pero sin prueba interactiva del anclaje Win32.
+      _Origen: feature ubicación configurable de la barra, 2026-07-18._
 - [ ] **Quitar los 10 iconos temporales de prueba del `IconStrip` del Desktop** cuando el usuario
       termine su demostración: buscar `TEMP-SCROLL-TEST` en
       `apps/frontend_sidebar_desktop/src/components/IconStrip.tsx` (import de lucide, constante
