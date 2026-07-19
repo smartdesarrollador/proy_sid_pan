@@ -17,6 +17,29 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-19 — Feature: sin sesión, los iconos del Desktop redirigen al panel de Perfil** ✅
+  Sin autenticar, clickear cualquier icono de la tira abría su panel con el mensaje "Inicia
+  sesión para ver tus X" sin acción posible. Ahora `App.tsx` resuelve el destino
+  (`resolvePanel`): sin sesión todo redirige a Perfil (botón "Iniciar sesión" a la mano),
+  excepto `AUTH_FREE_PANELS = ["profile", "settings", "tools"]` que funcionan sin login
+  (decisión del usuario). Al redirigir no aplica el toggle (clickear otro icono con Perfil
+  abierto no colapsa el panel); cubre clicks de la tira y navegación vía `pendingPanel`
+  (Home/Search/fijados). Verificado en navegador ambas ramas (sin sesión → Perfil resaltado;
+  con sesión seed local → navegación normal). Nota de entorno descubierta al verificar: el
+  `.env` de dev del Desktop apunta `VITE_API_URL` a **prod** (`api-rbac.digisider.com`) — para
+  probar contra el backend local: `$env:VITE_API_URL='http://rbac.local.test'; npm run dev`.
+  `tsc` + `vite build` limpios.
+
+- **2026-07-18/19 — Fix: los buscadores del Desktop perdían el foco en cada tecleo (5 paneles)** ✅
+  Al escribir en el buscador, el refetch debounced ponía `isLoading=true` y el bloque del buscador
+  estaba gateado con `!isLoading` → el `<input>` se desmontaba (skeleton) y se remontaba sin foco.
+  Fix: incluir `isLoading` en el OR de la condición para que la barra no se desmonte durante la
+  carga (el skeleton solo reemplaza la lista). Aplicado primero en `NotesPanel.tsx` (reporte del
+  usuario) y al confirmarse el mismo síntoma en Snippets/Contactos, también en
+  `SnippetsPanel.tsx`, `ContactsPanel.tsx`, `BookmarksPanel.tsx` y `TasksPanel.tsx` (mismo patrón
+  latente). `tsc` + `vite build` limpios.
+  _→ Ver [LL-100](.claude/skills/lessons-learned/references/knowledge-base.md)_
+
 - **2026-07-18 — Feature: fijar paneles como accesos rápidos en la barra de control del Desktop** ✅
   Fijar/desfijar vía **menú contextual (click derecho)** — el usuario descartó el botón de pin
   tras probarlo: click derecho en cualquier icono de la tira (scrolleables + anclados), en la
@@ -31,33 +54,12 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   Verificado en navegador: fijar desde tira/barra, desfijar desde icono fijado, tope, persistencia.
   `tsc` + `vite build` limpios.
 
-- **2026-07-18 — Feature: Home y Perfil anclados en la zona fija inferior de la barra del Desktop** ✅
-  Los iconos Home y Perfil salieron de la lista scrolleable del `IconStrip` y ahora viven anclados
-  abajo junto a Configuración y el botón de cerrar app (orden: Home → Perfil → Settings → ✕),
-  siempre visibles sin depender del scroll. `PINNED_PANELS` en `IconStrip.tsx` (mismo tratamiento
-  que `settings`: ignoran `hiddenPanels` y el orden configurable); en Configuración → Sidebar ya no
-  se listan para reordenar/ocultar (se quitó también la lógica `isProtected` de Home, ahora muerta).
-  Sin cambios en `settingsStore` — `DEFAULT_SIDEBAR_ORDER` y el ancla `'profile'` de `load()`
-  intactos; settings guardados de usuarios existentes siguen válidos (filtrado solo en render).
-  Ajuste posterior: línea divisoria sutil (`h-px w-8 bg-white/15`) entre la zona scrolleable y la
-  fija, a pedido del usuario. Verificado en navegador (Vite + DevTools). `tsc` + `vite build` limpios.
-
-- **2026-07-18 — Feature: barra de control fija superior del panel Desktop (atrás/adelante/cerrar)** ✅
-  Nuevo `PanelHeader` fijo arriba del contenido en `PanelContainer` (aparece en los 17 paneles sin
-  tocarlos): botones `‹ ›` para navegar el historial de paneles visitados estilo navegador y `✕`
-  que colapsa el panel a la tira de iconos ("minimizar" = colapsar; minimizar la ventana AppBar
-  quedó fuera de alcance — dejaría el área de trabajo reservada vacía). Historial en
-  `navigationStore` (`history`/`index`/`push`/`back`/`forward`): abrir estando "atrás" trunca el
-  adelante, cerrar NO borra el historial (reabrir lo conserva), y la navegación desde Home/Search
-  (`pendingPanel`) pasó de toggle a open y también se registra. Notas/Tareas/Snippets siguen
-  siempre montados → volver con `‹` conserva borradores. Verificado en navegador (Vite +
-  DevTools): back/forward/deshabilitado en extremos/truncación/cierre. `tsc` + `vite build` limpios.
-
 ---
 
 ## Pendientes activos
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
+
 
 - [ ] **Probar en el entorno real la nueva ubicación izquierda de la barra del Desktop:**
       Configuración → "Ubicación de la barra" → Izquierda → "Aplicar ahora" (recarga el WebView,
