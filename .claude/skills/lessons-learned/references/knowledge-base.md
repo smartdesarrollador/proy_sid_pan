@@ -7,11 +7,11 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 
 - [A. Trailing slash, proxies y routing HTTP](#a-trailing-slash-proxies-y-routing-http) — LL-001 … LL-005
 - [B. Variables de entorno y build (Next.js / Dokploy)](#b-variables-de-entorno-y-build-nextjs--dokploy) — LL-010 … LL-011
-- [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-025
+- [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-027, LL-103
 - [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-034
-- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-049, LL-096
+- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-049, LL-096, LL-101
 - [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-059
-- [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-063
+- [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-063, LL-102
 - [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-080
 - [I. Tauri / Desktop en producción](#i-tauri--desktop-en-producción) — LL-090 … LL-091, LL-095, LL-097 … LL-099
 
@@ -204,6 +204,15 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Al añadir una dependencia npm a una app dockerizada: instalar en el **contenedor vivo** y dejarla en `package.json` para el próximo build de imagen. No fiarse de que el typecheck/build/test del host pasen — el host y el contenedor tienen `node_modules` distintos. Ver `project_per_app_docker.md` (memoria) y [[LL-022]].
 - **Fuente:** `reports/2026-06-29-export-datos-workspace.md` (jszip para export de datos)
 - **Tags:** docker, npm, node_modules, volumen, vite, nextjs, dependencies, dev, failed-to-resolve
+
+### LL-103 — Contenedor Next.js dev sirve JSX compilado stale tras editar un componente montado por volumen, sin ningún error
+- **Síntoma:** Se edita un componente (`YapePaymentStep.tsx`) del Hub, se recarga el navegador (incluso con hard-refresh) y sigue mostrando la versión **anterior** del componente — sin el bloque nuevo agregado, sin warning en consola, sin error de build ni de red. A diferencia de [[LL-023]]/[[LL-025]], no hay `ChunkLoadError` ni pantalla rota: la UI vieja renderiza perfectamente, solo que no es la del código actual.
+- **Causa raíz:** El contenedor (`rbac_next_hub_dev`) monta el código por bind-mount (`- .:/app` en `docker-compose.yml`) igual que Django ([[LL-020]]), pero el HMR/dev-server de Next (webpack o Turbopack) a veces no detecta el cambio a través del bind-mount de Docker (watcher de archivos entre el filesystem del host y el del contenedor) o queda con el módulo cacheado en memoria del proceso Node — sin lanzar ningún error visible, simplemente sigue sirviendo el bundle anterior.
+- **Solución:** `docker restart rbac_next_hub_dev` (no basta con guardar el archivo ni con esperar) y luego, en el navegador, recarga forzada (`navigate_page` con `ignoreCache: true` o `Ctrl+Shift+R`) para descartar el manifest/WS de HMR que el cliente tenía cacheado.
+- **Prevención:** Si tras editar un componente del Hub la UI en el navegador no refleja el cambio y no hay ningún error en consola ni en la respuesta HTTP, sospechar de esto **antes** de revisar el código — no es un bug del componente. Verificar primero con `docker exec rbac_next_hub_dev sed -n '1,5p' /app/ruta/al/archivo.tsx` que el contenedor efectivamente ve el archivo actualizado (si no coincide, el bind-mount está bien pero el proceso Next no recompiló); si coincide y aun así la UI no cambia, reiniciar el contenedor directamente sin perder tiempo depurando la lógica.
+- **Casos vistos:** `YapePaymentStep.tsx` (paso de pago del registro, feature cupones) y `YapeUpgradeStep.tsx` (paso de pago del upgrade de plan, misma feature) — ambos requirieron restart tras editar.
+- **Fuente:** sesión 2026-07-19/20 (feature cupones de descuento — registro y upgrade de plan, Hub)
+- **Tags:** docker-reload, nextjs, hmr, bind-mount, dev-only, stale-build, hub, cache
 
 ---
 
@@ -462,6 +471,14 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
   concurrente en esta sesión).
 - **Tags:** business-logic, billing, invoice, duplicate-code, multi-entry-point, yape, transaction
 
+### LL-101 — Django `ForeignKey(on_delete=PROTECT)` bloquea el DELETE para **cualquier** fila relacionada, no solo las que el guard de la app filtra
+- **Síntoma:** Un test de `DELETE` que debía pasar (la fila objetivo solo tenía relacionados en estados que el guard de negocio consideraba "seguros") falla con `django.db.models.deletion.ProtectedError: Cannot delete some instances of model 'X' because they are referenced through protected foreign keys`, aunque el código de la vista ya comprobaba explícitamente que no había relacionados "peligrosos" antes de borrar.
+- **Causa raíz:** El guard de aplicación (`promotion.redemptions.filter(status='confirmed').exists()`) era **más angosto** que la restricción real de la base de datos: el `ForeignKey(PromotionRedemption.promotion, on_delete=models.PROTECT)` protege la fila padre si existe **cualquier** hijo, sin importar su `status` — incluidos `pending` y `released`, que el filtro del guard no contemplaba. El guard dejaba pasar al `.delete()` casos que Django igual iba a rechazar a nivel de constraint.
+- **Solución:** Alinear el guard de aplicación con lo que el `PROTECT` realmente exige: comprobar existencia de **cualquier** fila relacionada (`promotion.redemptions.exists()`), no un subconjunto filtrado por estado. Si de verdad se necesita permitir el borrado con relacionados en ciertos estados, la alternativa correcta es cambiar el `on_delete` (a `SET_NULL`/`CASCADE` según el caso) o borrar/reasignar esos relacionados explícitamente antes — nunca dejar que el guard "prometa" un comportamiento más permisivo que el que la FK va a aplicar.
+- **Prevención:** Al escribir un guard de negocio para un `DELETE` sobre un modelo con `PROTECT`, verificar primero el `on_delete` de **todas** las FKs que apuntan a él (no solo la que se tiene en mente) y hacer el guard tan amplio como esa protección — o más. Un test que ejercite el guard con datos en cada estado posible del modelo relacionado (no solo el estado "peligroso" obvio) habría detectado esto antes de llegar a producción.
+- **Fuente:** sesión 2026-07-19 (feature cupones de descuento — `apps/promotions/admin_views.py::AdminPromotionDetailView.destroy`, modelo `PromotionRedemption.promotion`)
+- **Tags:** django, orm, foreignkey, protect, delete, protectederror, business-logic, guard
+
 ---
 
 ## F. Frontend React / Next.js (estado, SSR, tipos)
@@ -630,6 +647,30 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
   porque no menciona caché ni Redis en el traceback.
 - **Fuente:** sesión 2026-07-11 (fix Bug #2 storage — primer test de `apps/tenants/`, app sin tests previos)
 - **Tags:** testing, cache, redis, multi-tenant, middleware, database-error, test-isolation
+
+### LL-102 — `FormData` + jsdom + adapter `http` de axios (forzado para MSW) no se puede interceptar con MSW — espiar el cliente en su lugar
+- **Síntoma:** Un test de un hook que sube un archivo (`FormData` con un `screenshot`) falla con
+  `AxiosError [TypeError]: data should be a string, Buffer or Uint8Array`, aunque el handler MSW
+  correspondiente está bien registrado y otros tests JSON contra la misma URL funcionan sin problema.
+- **Causa raíz:** `test/setup.ts` fuerza `axios.defaults.adapter = 'http'` (el adapter de Node, no el
+  de browser/XHR) para que MSW pueda interceptar las requests en Vitest+jsdom. Ese adapter de Node
+  espera poder serializar el `data` del request como string/Buffer/Uint8Array — pero un `FormData` de
+  jsdom no es ninguna de esas cosas (es distinto del `FormData` real de Node), así que la
+  serialización revienta **antes** de que la request llegue a MSW. No es un problema del handler ni
+  del hook: **ninguna** mutation con `FormData` puede pasar por MSW en este stack de test tal como
+  está configurado.
+- **Solución:** No usar `server.use(http.post(...))` para estos hooks. En su lugar, espiar el método
+  del cliente axios directamente: `vi.spyOn(apiClient, 'post').mockResolvedValue({ data: {...} })` (o
+  `publicClient` según el hook), y verificar el contrato leyendo el `FormData` capturado en
+  `postSpy.mock.calls[0][1]` (`form.get('campo')`) en vez de interceptar por red.
+- **Prevención:** Cualquier hook nuevo que suba archivos (`FormData`) en `frontend_next_hub` o
+  `frontend_admin` debe testearse con `vi.spyOn(cliente, 'post')`, no con MSW — de entrada, sin
+  perder tiempo diagnosticando el `TypeError` primero. Los tests JSON normales siguen usando MSW sin
+  cambios; el problema es específico de `FormData`.
+- **Casos vistos:** `useUploadYapeProof.test.ts` (comprobante de pago del registro) y
+  `useYapeUpgrade.test.ts` (comprobante del upgrade de plan) — ambos migrados a este patrón.
+- **Fuente:** sesión 2026-07-19/20 (feature cupones de descuento — Hub)
+- **Tags:** testing, msw, formdata, axios, jsdom, adapter, vitest, file-upload, multipart
 
 ---
 

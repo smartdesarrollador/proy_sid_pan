@@ -17,6 +17,20 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-19/20 — Feature: cupones de descuento en el registro y en el upgrade de plan (pago Yape)** ✅
+  8 fases (PRD + backend `apps/promotions` + integración Yape + Admin + Hub + upgrade de plan):
+  monto **siempre** calculado en servidor (cierra la vulnerabilidad del `amount` confiado del
+  cliente, tanto en registro como en upgrade), canje ligado al comprobante (confirma al aprobar,
+  libera al rechazar, activación directa si el cupón cubre el 100% del plan), UI de cupón en
+  `YapePaymentStep`/`YapeUpgradeStep` del Hub y en Promociones/Comprobantes del Admin, desglose del
+  cupón en el mensaje de Telegram (`workflows/yape-payment-verification.json`). Verificado E2E en
+  navegador contra backend real en cada fase. Suites backend (140+ tests) y frontend (Hub 77 tests,
+  Admin promotions/yape) en verde.
+  _→ [PRD](prd/features/promo-codes-registro.md) ·
+  [LL-101](.claude/skills/lessons-learned/references/knowledge-base.md) ·
+  [LL-102](.claude/skills/lessons-learned/references/knowledge-base.md) ·
+  [LL-103](.claude/skills/lessons-learned/references/knowledge-base.md)_
+
 - **2026-07-19 — Feature: sin sesión, los iconos del Desktop redirigen al panel de Perfil** ✅
   Sin autenticar, clickear cualquier icono de la tira abría su panel con el mensaje "Inicia
   sesión para ver tus X" sin acción posible. Ahora `App.tsx` resuelve el destino
@@ -40,27 +54,18 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   latente). `tsc` + `vite build` limpios.
   _→ Ver [LL-100](.claude/skills/lessons-learned/references/knowledge-base.md)_
 
-- **2026-07-18 — Feature: fijar paneles como accesos rápidos en la barra de control del Desktop** ✅
-  Fijar/desfijar vía **menú contextual (click derecho)** — el usuario descartó el botón de pin
-  tras probarlo: click derecho en cualquier icono de la tira (scrolleables + anclados), en la
-  barra de control o en un icono ya fijado abre un `ContextMenu` propio
-  (`components/shared/ContextMenu.tsx`, portal + `preventDefault` para suprimir el menú nativo
-  del WebView; se cierra con click fuera/Escape/scroll) con "Fijar en la barra de control" /
-  "Desfijar de la barra de control" según corresponda. Los iconos fijados aparecen en el centro
-  del `PanelHeader` (entre `‹ ›` y `✕`) y navegan con `navigateTo()` → quedan en el historial.
-  Estado `pinnedPanels` persistente en `settingsStore` (tope `MAX_PINNED_PANELS = 5`; al tope el
-  ítem del menú se deshabilita). `ALL_NAV_META` extraído a `lib/navMeta.ts`, `ACCENT_BG`
-  exportado de `NavIcon.tsx` (resaltado del fijado activo), `NavIcon` acepta `onContextMenu`.
-  Verificado en navegador: fijar desde tira/barra, desfijar desde icono fijado, tope, persistencia.
-  `tsc` + `vite build` limpios.
-
 ---
 
 ## Pendientes activos
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
-
+- [ ] **Reimportar/activar en n8n el workflow `workflows/yape-payment-verification.json`
+      actualizado** (agrega el desglose de cupón + tipo de cambio real al mensaje de Telegram, en
+      vez del 3.75 hardcodeado): desactivar el workflow viejo y activar el importado (mismo
+      webhook path `yape-payment` — no pueden estar los dos activos a la vez), verificar que la
+      credencial de OpenAI quede asignada al nodo "Analizar con OpenAI Vision".
+      _Origen: feature cupones de descuento, 2026-07-20._
 - [ ] **Probar en el entorno real la nueva ubicación izquierda de la barra del Desktop:**
       Configuración → "Ubicación de la barra" → Izquierda → "Aplicar ahora" (recarga el WebView,
       ya no reinicia el proceso — ver LL-099), y verificar
@@ -256,10 +261,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       cuenta existe), pero considerar agregar un mensaje más descriptivo cuando el email SÍ existe
       y la cuenta está explícitamente suspendida por un admin.
 
-- [ ] El endpoint `POST /api/v1/admin/subscriptions/yape-upgrade` (upgrade autenticado
-      desde el Hub) duplica parte de la lógica de `YapePaymentProofView` del registro.
-      Candidato a extraer a un helper/service compartido si se añaden más puntos de
-      entrada de comprobantes Yape.
 - [ ] Template HTML para el email de expiración de trial — `expire_professional_trials` usa `send_mail`
       con texto plano; diseñar template consistente con el resto de emails de la plataforma.
       _Origen: [reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md](reports/2026-06-21-trial-30-dias-professional-descarga-desktop.md)_
@@ -413,6 +414,22 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       `customers.read`/`suspend`/`analytics` (que sí se usan, los últimos 4 en el Admin Panel) pero
       sin ninguna vista que los consuma todavía.
       _Origen: [reports/2026-07-12-analytics-cross-tenant-admin-panel.md](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
+- [ ] **Token del bot de Telegram hardcodeado en `workflows/yape-payment-verification.json`
+      (versionado en git):** cualquiera con acceso al repo puede controlar el bot. Revocar el
+      token actual con @BotFather y migrar los nodos HTTP Request a la credencial nativa de
+      Telegram de n8n (o una variable de entorno de n8n), no una URL con el token inline.
+      _Origen: feature cupones de descuento, revisión del workflow n8n, 2026-07-20._
+- [ ] **Cupón de descuento 100% en el upgrade de plan no activa directo (a diferencia del
+      registro):** `YapeUpgradeView` deja el monto en $0 pero sigue exigiendo subir un
+      comprobante — decisión deliberada para no ampliar el alcance de la Fase A/B, pero es
+      inconsistente con el registro (que sí tiene `yape-activate-free`). Si se quiere paridad,
+      replicar el mismo endpoint de activación directa para el flujo de upgrade.
+      _Origen: feature cupones de descuento, Fase B, 2026-07-20._
+- [ ] **5 tests de rate-limiting preexistentes fallando en `apps/auth_app/tests/test_throttles.py`**
+      (`RateLimitFunctionalTest`, ej. `test_login_rate_limit_returns_429`): fallan igual en
+      aislamiento, sin relación con la feature de cupones — se reconfirmó en cada corrida de la
+      suite completa del backend durante las 8 fases. No investigado a fondo.
+      _Origen: detectado repetidamente durante feature cupones de descuento, 2026-07-19/20._
 
 ---
 
