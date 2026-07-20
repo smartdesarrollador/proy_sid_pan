@@ -38,6 +38,12 @@
               "type": "string"
             },
             {
+              "id": "assign-exchange-rate",
+              "name": "exchange_rate",
+              "value": "={{ $json.body.exchange_rate ?? '' }}",
+              "type": "string"
+            },
+            {
               "id": "assign-tenant-name",
               "name": "tenant_name",
               "value": "={{ $json.body.tenant.name }}",
@@ -110,7 +116,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rawData = $('Extraer Datos').first().json;\nconst openaiResponse = $input.first().json;\n\nconst ai_analysis = openaiResponse?.choices?.[0]?.message?.content ?? 'No se pudo analizar la imagen.';\n\nconst plan_display = rawData.plan.charAt(0).toUpperCase() + rawData.plan.slice(1);\nconst amount_pen = (parseFloat(rawData.amount) * 3.75).toFixed(2);\n\nconst caption = [\n  `💳 *Nuevo comprobante Yape*`,\n  ``,\n  `👤 *Cliente:* ${rawData.user_name}`,\n  `📧 *Email:* ${rawData.user_email}`,\n  `🏢 *Empresa:* ${rawData.tenant_name}`,\n  `📦 *Plan:* ${plan_display} ($${rawData.amount} USD ≈ S/ ${amount_pen})`,\n  ``,\n  `🤖 *Análisis IA:*`,\n  ai_analysis\n].join('\\n');\n\nconst action_message = [\n  `🔗 *Acciones para activar/rechazar:*`,\n  ``,\n  `✅ [APROBAR CUENTA](${rawData.approve_url})`,\n  `❌ [RECHAZAR PAGO](${rawData.reject_url})`,\n  ``,\n  `_ID: ${rawData.proof_id}_`\n].join('\\n');\n\nreturn [{\n  json: {\n    ...rawData,\n    ai_analysis,\n    caption,\n    action_message\n  }\n}];"
+        "jsCode": "const rawData = $('Extraer Datos').first().json;\nconst openaiResponse = $input.first().json;\n\nconst ai_analysis = openaiResponse?.choices?.[0]?.message?.content ?? 'No se pudo analizar la imagen.';\n\nconst plan_display = rawData.plan.charAt(0).toUpperCase() + rawData.plan.slice(1);\n\n// Tipo de cambio: usa el que envía el backend (YapeConfig); fallback 3.75 para payloads antiguos\nconst rate = parseFloat(rawData.exchange_rate) || 3.75;\nconst amount_pen = (parseFloat(rawData.amount) * rate).toFixed(2);\n\n// Cupón aplicado (puede ser null): se lee directo del webhook porque el nodo Set no acepta objetos null\nconst promo = $('Webhook Yape').first().json.body.promo ?? null;\n\nconst planLines = promo && promo.code\n  ? [\n      `📦 *Plan:* ${plan_display}`,\n      `🏷️ *Cupón:* \\`${promo.code}\\``,\n      `💵 *Precio:* $${promo.original_amount} − $${promo.discount_amount} = *$${promo.final_amount} USD* (≈ S/ ${amount_pen})`\n    ]\n  : [\n      `📦 *Plan:* ${plan_display} ($${rawData.amount} USD ≈ S/ ${amount_pen})`\n    ];\n\nconst caption = [\n  `💳 *Nuevo comprobante Yape*`,\n  ``,\n  `👤 *Cliente:* ${rawData.user_name}`,\n  `📧 *Email:* ${rawData.user_email}`,\n  `🏢 *Empresa:* ${rawData.tenant_name}`,\n  ...planLines,\n  ``,\n  `🤖 *Análisis IA:*`,\n  ai_analysis\n].join('\\n');\n\nconst action_message = [\n  `🔗 *Acciones para activar/rechazar:*`,\n  ``,\n  `✅ [APROBAR CUENTA](${rawData.approve_url})`,\n  `❌ [RECHAZAR PAGO](${rawData.reject_url})`,\n  ``,\n  `_ID: ${rawData.proof_id}_`\n].join('\\n');\n\nreturn [{\n  json: {\n    ...rawData,\n    promo,\n    ai_analysis,\n    caption,\n    action_message\n  }\n}];"
       },
       "id": "d4e5f6a7-1004-1004-1004-100000000004",
       "name": "Formatear Mensaje",

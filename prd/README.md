@@ -24,6 +24,7 @@ Este PRD está organizado en módulos para facilitar la navegación y mantenimie
 - **[Digital Services](features/digital-services.md)** - Tarjeta digital, Landing page, Portafolio, CV público con SSR
 - **[Analytics de Negocio](features/analytics.md)** - Dashboard con KPIs, métricas de clientes, MRR, ARPC, Health Score
 - **[Sistema de Promociones](features/promotions.md)** - Códigos de descuento, promociones temporales, tracking de usos
+- **[Cupones en el Registro](features/promo-codes-registro.md)** - Cupones de descuento en el registro del Hub integrados al pago Yape (spec v1 de Promociones)
 - **[Productivity Services](features/productivity-services.md)** - Notas, Contactos, Bookmarks con feature gates por plan
 - **[DevOps Services](features/devops-services.md)** - Variables de Entorno (cifradas), Claves SSH, Certificados SSL, Snippets
 - **[Admin Services](features/admin-services.md)** - Formularios, Log de Auditoría (immutable), Reportes del Sistema

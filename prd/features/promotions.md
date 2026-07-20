@@ -2,6 +2,13 @@
 
 [⬅️ Volver al README](../README.md)
 
+> **⚠️ Estado (2026-07-19):** este documento es la spec original (pre-Yape) y quedó parcialmente
+> desalineado con la implementación real. La versión v1 que se implementa está especificada en
+> **[promo-codes-registro.md](promo-codes-registro.md)**, que **prevalece donde difieran**:
+> contratos de campos alineados a la UI real del Admin (`type`, `starts_at/expires_at`,
+> `new_customers_only`), flujo de pago Yape manual en lugar de checkout, y alcance v1 (sin
+> `extra_days`, webhooks, `tentative_uses` ni exports).
+
 ---
 
 ## Índice
