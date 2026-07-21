@@ -17,6 +17,18 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-21 — Fix: upgrade de plan daba `405` en producción al enviar el comprobante Yape** ✅
+  `useYapeUpgrade.ts` llamaba `POST /admin/subscriptions/yape-upgrade` (sin trailing slash)
+  confiando en que el rewrite de `next.config.ts` la agregaría (convención de LL-005) — cierto
+  solo en dev, donde `NEXT_PUBLIC_API_URL` está vacía y el cliente pasa por el proxy. En
+  producción esa var es el dominio absoluto del backend (`api-rbac.digisider.com`), así que el
+  Hub llama **directo** a Django sin pasar por ningún rewrite → `path('yape-upgrade/', ...)` no
+  matcheaba → `APPEND_SLASH` → 405 (confirmado con curl directo a Django: sin slash 500, con
+  slash 401/ruta correcta). Fix: agregar el slash en el cliente. Verificado que sigue funcionando
+  también en dev (a través del proxy) con un upgrade real end-to-end en navegador.
+  _→ [LL-001 (caso agregado)](.claude/skills/lessons-learned/references/knowledge-base.md) ·
+  advertencia agregada a LL-005 para no repetir la generalización_
+
 - **2026-07-19/20 — Feature: cupones de descuento en el registro y en el upgrade de plan (pago Yape)** ✅
   8 fases (PRD + backend `apps/promotions` + integración Yape + Admin + Hub + upgrade de plan):
   monto **siempre** calculado en servidor (cierra la vulnerabilidad del `amount` confiado del
@@ -43,16 +55,6 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   `.env` de dev del Desktop apunta `VITE_API_URL` a **prod** (`api-rbac.digisider.com`) — para
   probar contra el backend local: `$env:VITE_API_URL='http://rbac.local.test'; npm run dev`.
   `tsc` + `vite build` limpios.
-
-- **2026-07-18/19 — Fix: los buscadores del Desktop perdían el foco en cada tecleo (5 paneles)** ✅
-  Al escribir en el buscador, el refetch debounced ponía `isLoading=true` y el bloque del buscador
-  estaba gateado con `!isLoading` → el `<input>` se desmontaba (skeleton) y se remontaba sin foco.
-  Fix: incluir `isLoading` en el OR de la condición para que la barra no se desmonte durante la
-  carga (el skeleton solo reemplaza la lista). Aplicado primero en `NotesPanel.tsx` (reporte del
-  usuario) y al confirmarse el mismo síntoma en Snippets/Contactos, también en
-  `SnippetsPanel.tsx`, `ContactsPanel.tsx`, `BookmarksPanel.tsx` y `TasksPanel.tsx` (mismo patrón
-  latente). `tsc` + `vite build` limpios.
-  _→ Ver [LL-100](.claude/skills/lessons-learned/references/knowledge-base.md)_
 
 ---
 
@@ -414,6 +416,14 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       `customers.read`/`suspend`/`analytics` (que sí se usan, los últimos 4 en el Admin Panel) pero
       sin ninguna vista que los consuma todavía.
       _Origen: [reports/2026-07-12-analytics-cross-tenant-admin-panel.md](reports/2026-07-12-analytics-cross-tenant-admin-panel.md)_
+- [ ] **Auditar otros hooks de `frontend_next_hub` (y `frontend_next_vista`/`frontend_workspace`
+      si aplica) contra el mismo bug de trailing slash que rompió `useYapeUpgrade` en
+      producción:** cualquier hook que llame una URL **sin** slash confiando en que el rewrite de
+      `next.config.ts` la agregue (convención de LL-002/LL-005) puede estar rota en producción,
+      donde `NEXT_PUBLIC_API_URL` es el dominio absoluto del backend y el rewrite nunca se
+      ejecuta (ver LL-001, causa raíz). Verificar con `curl` directo a Django (no contra el proxy
+      del Hub) que cada endpoint bajo `/admin/`, `/app/` coincide exacto con su `path()` real.
+      _Origen: fix "405 en upgrade de plan en producción", 2026-07-21._
 - [ ] **Token del bot de Telegram hardcodeado en `workflows/yape-payment-verification.json`
       (versionado en git):** cualquiera con acceso al repo puede controlar el bot. Revocar el
       token actual con @BotFather y migrar los nodos HTTP Request a la credencial nativa de

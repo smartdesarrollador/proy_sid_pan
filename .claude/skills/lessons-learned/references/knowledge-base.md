@@ -28,9 +28,18 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Causa raíz:** Django responde `301/308` redirigiendo a la URL con `/`. El navegador re-emite el redirect como `GET`, perdiendo el método y el body. En dev no se nota porque el proxy de Next.js normaliza la slash; en prod el Hub llama directo a `api-rbac.digisider.com` sin ese proxy.
 - **Solución:** Llamar a los endpoints DRF con trailing slash exacto que espera el `urls.py` de Django (la mayoría de `/api/v1/app/`, `/admin/`, `/public/` lo llevan). Ej. hook → `POST /public/contact/`.
 - **Prevención:** Verificar el `path(...)` real en el `urls.py` correspondiente antes de escribir la URL en un hook. No asumir.
-- **Casos vistos:** reCAPTCHA contacto (POST 405 en prod); SSO `sso/token/` (500 APPEND_SLASH).
-- **Fuente:** `reports/2026-06-22-formulario-contacto-recaptcha.md`, `reports/varios/frontend_next_hub_deployment_issues.md`
-- **Tags:** trailing-slash, append-slash, django, 405, 500, 308, proxy
+- **Casos vistos:** reCAPTCHA contacto (POST 405 en prod); SSO `sso/token/` (500 APPEND_SLASH);
+  `useYapeUpgrade.ts` → `POST /admin/subscriptions/yape-upgrade` (sin slash) mientras Django tiene
+  `path('yape-upgrade/', ...)` — funcionaba en dev (a través del proxy, tolerante) y daba 405 en
+  producción real al intentar un upgrade de plan; confirmado con curl directo a Django: sin slash
+  → 500 (RuntimeError de APPEND_SLASH), con slash → ruta correctamente. Fix: agregar el slash en
+  el cliente (`/admin/subscriptions/yape-upgrade/`), verificado que sigue funcionando también a
+  través del proxy de dev (LL-005 advierte de doble-slash con la regla catch-all, pero en la
+  práctica el catch-all no dobló la slash en este caso — confirmar siempre con curl antes de
+  descartar una solución por miedo al caso LL-002).
+- **Fuente:** `reports/2026-06-22-formulario-contacto-recaptcha.md`, `reports/varios/frontend_next_hub_deployment_issues.md`,
+  sesión 2026-07-21 (bug reportado por el usuario en producción, feature cupones de descuento)
+- **Tags:** trailing-slash, append-slash, django, 405, 500, 308, proxy, yape-upgrade
 
 ### LL-002 — Doble slash en el proxy de Next.js → Django 404
 - **Síntoma:** `GET /api/v1/public/footer/` (con slash) → 404. Sin slash funciona.
@@ -100,6 +109,19 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** fix "plan del tenant desincronizado" + verificación en navegador con Chrome DevTools,
   sesión 2026-07-11. También `reports/2026-07-11-hub-billing-facturas-invoice-yape.md` (mismo
   patrón en billing, sesión distinta). Ver también [[LL-034]], [[LL-096]].
+
+  > **⚠️ Advertencia (2026-07-21):** la convención "cliente sin slash, el rewrite de Next la
+  > agrega" de esta entrada **solo es cierta cuando el request pasa por el rewrite de
+  > `next.config.ts`**, lo cual depende de `NEXT_PUBLIC_API_URL`. En dev (`.env.local` la tiene
+  > vacía) el cliente llama a una ruta **relativa** del propio Next.js → sí pasa por el rewrite. En
+  > producción real, `NEXT_PUBLIC_API_URL` suele ser el **dominio absoluto** del backend
+  > (`https://api-rbac.digisider.com`), así que `apiClient`/`publicClient` llaman **directo**,
+  > cross-origin, sin tocar el rewrite en absoluto — ver la causa raíz de [[LL-001]], que ya lo
+  > documentaba correctamente. "Verificar por navegador real" en **dev** no destapa este caso,
+  > porque dev también pasa por el proxy. Antes de dejar una URL de hook sin trailing slash
+  > confiando en esta convención, verificar con `curl` directo contra Django (no contra el proxy
+  > del Hub) que el path coincide exacto — ver el caso `yape-upgrade` agregado en [[LL-001]], donde
+  > exactamente esta entrada llevó a dejar el cliente sin slash y rompió en producción.
 - **Tags:** trailing-slash, nextjs-proxy, django, 404, browser-verification, rewrite
 
 ---
