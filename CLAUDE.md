@@ -125,6 +125,13 @@ GET  /api/v1/app/services/active/ → Active (acquired) services for tenant
 ## Key Patterns
 
 - **Plan gating**: `check_plan_limit(user, 'feature_key', current_count)` → raises 402 if over limit
+- **File uploads**: TODA subida de archivo/imagen (cualquier `request.FILES[...]` o `ImageField`/
+  `FileField` con entrada de usuario) DEBE pasar por `validate_upload(file, category=..., tenant=...)`
+  de `utils/uploads.py` — valida extensión + tipo real (magic bytes/Pillow, nunca el `content_type`
+  del cliente) + tope de peso por plan + cuota. Nunca asignar el archivo directo al modelo sin
+  validar. Si es una categoría nueva, agregarla al catálogo `UPLOAD_CATEGORIES` (no inventar límites
+  ad-hoc). El peso máximo por plan se edita desde Gestión de Planes del Admin (`max_image_upload_mb`/
+  `max_file_upload_mb`). Ver `prd/features/limites-archivos-por-plan.md`.
 - **Feature permissions**: `HasFeature('feature_key')` permission class on views
 - **Audit logging**: Use `AuditMixin` on views that mutate data
 - **Encryption**: `save()` auto-encrypts sensitive fields; `is_encrypted=False` triggers re-encrypt on PATCH

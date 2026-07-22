@@ -30,6 +30,7 @@ Este PRD está organizado en módulos para facilitar la navegación y mantenimie
 - **[Admin Services](features/admin-services.md)** - Formularios, Log de Auditoría (immutable), Reportes del Sistema
 - **[Desktop App](features/desktop-app.md)** - Aplicacion de escritorio (Tauri) con sidebar para acceso rapido a servicios
 - **[Hub - Portal del Cliente](features/hub-client-portal.md)** - Portal central del cliente: registro, suscripción, catálogo de servicios y acceso SSO
+- **[Límites de Archivos por Plan](features/limites-archivos-por-plan.md)** - Validador central de subidas (tipo + peso), peso máximo configurable por plan desde el Admin
 
 ### 🔧 Technical (Documentación Técnica)
 - **[Architecture](technical/architecture.md)** - Arquitectura general del sistema, multi-tenancy, seguridad

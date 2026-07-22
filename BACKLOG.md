@@ -62,6 +62,18 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
+- [ ] **Límites centralizados de archivos e imágenes por plan — Fases 1-5 implementadas (sin
+      commitear), pendiente prueba en vivo final + commit.** Hecho en el árbol de trabajo:
+      `utils/uploads.py` (whitelist de tipos + magic bytes + tope duro por categoría), claves
+      `max_image_upload_mb`/`max_file_upload_mb` por plan editables desde `PlanEditModal`, migración
+      de los **7 puntos de subida** al validador (cerrado el agujero del `.exe` como logo/comprobante),
+      `FeaturesView`/`PlanLimitsSerializer` exponen las claves, y consumo dinámico en el chat de
+      Workspace y Desktop (+ `accept`). La **Fase 6 (Vista) se descartó**: Vista no sube archivos y su
+      gating no es editable desde el Admin (ver PRD). **Pendiente:** una pasada de prueba en vivo con
+      un usuario cliente (chat Workspace/Desktop) y luego commit. Baseline de tests: 930 backend +
+      Workspace chat verde; 10 fallos backend preexistentes ajenos a la feature (ver deuda técnica).
+      _Origen: revisión de la subida de adjuntos del chat del Workspace, 2026-07-22._
+      _→ [PRD](prd/features/limites-archivos-por-plan.md)_
 - [ ] **Reimportar/activar en n8n el workflow `workflows/yape-payment-verification.json`
       actualizado** (agrega el desglose de cupón + tipo de cambio real al mensaje de Telegram, en
       vez del 3.75 hardcodeado): desactivar el workflow viejo y activar el importado (mismo
@@ -109,6 +121,65 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Vista duplica el mapa plan→features en `FEATURES_BY_PLAN` (`frontend_next_vista/src/data/featureGates.ts`, ~26 claves):**
+      es una tabla hardcodeada paralela al `PLAN_FEATURES` del backend, con riesgo de que ambas
+      deriven. No se unificó en la feature de límites de subida porque (a) el Admin no edita feature
+      flags, solo límites numéricos, así que consumir `/features/` no volvería nada editable; (b) el
+      endpoint solo expone ~7 flags gruesos de servicios digitales, no las ~26 claves finas de Vista
+      (`landingTemplates`, `cvTemplates`, `maxProjects`…). Unificar de verdad exigiría **ampliar el
+      backend**: mover esas 26 claves a `PLAN_FEATURES`, exponerlas en `FeaturesView`, y —si además se
+      quieren editables— añadirlas a `PlanLimitsSerializer` + `PlanEditModal`. Refactor opcional, no
+      bloqueante. `currentPlan` de Vista ya viene del backend (`user.tenant_plan`), así que el plan
+      en sí no está duplicado, solo el mapeo plan→feature.
+      _Origen: Fase 6 (descartada) de la feature de límites de subida, 2026-07-22 — ver
+      [PRD](prd/features/limites-archivos-por-plan.md) § "Nota sobre Vista"._
+- [ ] **`/media/` se sirve sin autenticación ni aislamiento por tenant:** `config/urls.py:118-120`
+      monta `django.views.static.serve` para toda la ruta `^media/`, sin importar `DEBUG`.
+      Cualquiera con la URL descarga el archivo — sin sesión y sin verificar pertenencia al tenant —
+      y esas URLs se filtran en el JSON de los mensajes (`apps/chat/serializers.py:38-47`). Los
+      nombres son poco adivinables por el `upload_to`, lo que reduce pero no elimina el riesgo;
+      afecta adjuntos de chat, logos y **comprobantes de pago Yape**. El PRD de límites de archivos
+      mitiga el vector prohibiendo tipos ejecutables en el navegador (SVG/HTML), pero no lo cierra:
+      el fix real es servir los adjuntos tras autenticación validando el tenant, y toca
+      Traefik/nginx además de las URLs que arma el serializer.
+      _Origen: auditoría de subidas del chat, 2026-07-22 — ver
+      [PRD](prd/features/limites-archivos-por-plan.md) § Seguridad._
+- [ ] **`OrganizationView` devuelve 500 si la petición no trae `X-Tenant-Slug`:**
+      `TenantMiddleware._resolve_tenant` (`apps/tenants/middleware.py:32-36`) resuelve el tenant
+      **solo** desde ese header, sin fallback a `request.user.tenant`; si falta, `request.tenant`
+      queda en `None` y el `PATCH` de `apps/tenants/admin_views.py` revienta al usar el tenant
+      (antes con `AttributeError` dentro de `check_storage_limit`, ahora con el `ValueError` del
+      validador central). El `GET` sí responde 200. Los frontends siempre mandan el header, así
+      que no se ve en la práctica, pero un endpoint autenticado no debería dar 500 ante una
+      petición malformada: corresponde un 400 explícito, como ya hace
+      `yape_upgrade_views.py:57-62` (`if not tenant: return 400`).
+      _Origen: verificación con curl de la Fase 2 de límites de archivos, 2026-07-22._
+- [ ] **10 tests del backend fallan en `main`, sin relación con la feature en curso:** `pytest`
+      completo da **922 passed / 10 failed**. Se verificó que son preexistentes restaurando
+      `utils/plans.py` a HEAD y reproduciendo exactamente los mismos 10 fallos. Impide cumplir la
+      regla del repo de "correr `make test` antes de commitear" en verde, y — más grave — normaliza
+      la suite en rojo, con lo que un fallo *nuevo* pasa desapercibido. Tres grupos independientes:
+
+      1. **`apps/auth_app/tests/test_throttles.py::RateLimitFunctionalTest` (5 tests)** — los tests
+         asumen que la **3ª** petición ya devuelve 429, es decir un rate de `2/minute`, pero
+         `config/settings/base.py:198-207` configura `login: 5/minute`, `mfa: 5/minute`,
+         `register: 10/hour`, `forgot_password: 5/hour`. La 3ª petición devuelve 400 (credenciales
+         malas), no 429. La clase además **no lleva** el `@override_settings(CACHES=_LOCMEM_CACHE)`
+         que el propio módulo define, así que cuenta contra Redis real. Fix probable: decorar la
+         clase con rates de test explícitos (`DEFAULT_THROTTLE_RATES` con `2/minute`) + el locmem,
+         en vez de depender de los rates de producción.
+      2. **`apps/support/tests/test_support.py` (2 tests)** — 403 al listar/comentar tickets
+         propios. Coincide exactamente con
+         [LL-061](.claude/skills/lessons-learned/references/knowledge-base.md) (permisos no
+         sembrados → rol Owner inexistente o permiso ausente del fixture de `seed_permissions`).
+         Empezar por ahí antes de depurar la vista.
+      3. **`apps/chat_assistant/tests/test_chat.py` (3 tests)** — la vista devuelve 400 donde el
+         test espera 404 (token inválido) o 429 (límite de sesiones). Sin diagnóstico aún; la
+         hipótesis a verificar es que la validación del serializer corre **antes** del lookup del
+         token, convirtiendo un "no existe" en un "payload inválido".
+
+      _Origen: verificación de la Fase 1 de límites de archivos, 2026-07-22 — los fallos no los
+      introdujo esa fase._
 - [ ] **`DashboardPageClient` (Hub) sin test para el handoff de escritorio:** se cubrió el hook
       `useDesktopHandoff` con tests unitarios (3 casos: sin params, sin sesión válida, con sesión
       activa), pero no se agregó un test de integración de la página del dashboard porque el

@@ -9,7 +9,7 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - [B. Variables de entorno y build (Next.js / Dokploy)](#b-variables-de-entorno-y-build-nextjs--dokploy) — LL-010 … LL-011
 - [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-027, LL-103
 - [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-034
-- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-049, LL-096, LL-101
+- [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-049, LL-096, LL-101, LL-104
 - [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-059
 - [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-063, LL-102
 - [H. Deploy: Dokploy / Traefik / Nginx / build](#h-deploy-dokploy--traefik--nginx--build) — LL-070 … LL-080
@@ -500,6 +500,14 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Prevención:** Al escribir un guard de negocio para un `DELETE` sobre un modelo con `PROTECT`, verificar primero el `on_delete` de **todas** las FKs que apuntan a él (no solo la que se tiene en mente) y hacer el guard tan amplio como esa protección — o más. Un test que ejercite el guard con datos en cada estado posible del modelo relacionado (no solo el estado "peligroso" obvio) habría detectado esto antes de llegar a producción.
 - **Fuente:** sesión 2026-07-19 (feature cupones de descuento — `apps/promotions/admin_views.py::AdminPromotionDetailView.destroy`, modelo `PromotionRedemption.promotion`)
 - **Tags:** django, orm, foreignkey, protect, delete, protectederror, business-logic, guard
+
+### LL-104 — `ValidationError({'campo': 'texto'})` con string suelto llega al cliente como un genérico "Validation error"
+- **Síntoma:** Una validación de servidor rechaza correctamente la petición con 400, pero el cliente recibe `{"error":{"code":"invalid","message":"Validation error"}}` — sin el motivo real y sin `details`. Los tests unitarios no lo detectan porque afirman sobre `str(exception)`, que sí contiene el texto: el mensaje solo se pierde al atravesar el exception handler.
+- **Causa raíz:** El handler del proyecto (`core/exceptions.py::_get_message`) extrae el texto recorriendo el dict y quedándose con el primer valor que sea **lista** (`if isinstance(value, list)`), que es la forma que tienen los errores de campo de DRF. DRF **no** envuelve en lista lo que ya viene como string dentro de un dict: `ValidationError({'file': 'msg'})` deja `detail = {'file': ErrorDetail('msg')}` (string, no lista). Al no encontrar ninguna lista, `_get_message` cae al `return 'Validation error'` final, y el bloque que rellena `details` — condicionado a la misma comprobación — tampoco se activa.
+- **Solución:** Pasar el detalle **siempre como lista**: `ValidationError({'file': ['El tipo de archivo .exe no está permitido.']})`. Con eso `message` queda `"file: El tipo de archivo..."` y `details` se puebla. Para `APIException` con `detail=` string (p. ej. `PlanLimitExceeded`) no aplica: DRF produce `{'detail': ...}` y `_get_message` lo lee por la rama `if 'detail' in data`.
+- **Prevención:** En este repo, cualquier `raise ValidationError({...})` va con el valor en lista. Y sobre todo: **una validación nueva no está verificada hasta haber visto la respuesta HTTP real** — con `curl` contra el contenedor o en el navegador. Los tests que solo inspeccionan la excepción no cubren el tramo handler→cliente, que es justamente donde se pierde el mensaje que el usuario final va a leer.
+- **Fuente:** sesión 2026-07-22 (Fase 2 del PRD de límites de archivos — `utils/uploads.py`, detectado al probar `PATCH /api/v1/admin/organization/` con curl tras tener los 261 tests en verde)
+- **Tags:** drf, validationerror, exception-handler, error-messages, api, testing, curl
 
 ---
 
