@@ -8,7 +8,8 @@ un problema general de seguridad en las subidas y motivó construir un sistema c
 configurable por plan desde el Admin.
 **PRD:** [`prd/features/limites-archivos-por-plan.md`](../prd/features/limites-archivos-por-plan.md)
 **Estado:** Fases 1-5 implementadas y verificadas (incl. prueba en vivo con usuario cliente real).
-Fase 6 (Vista) descartada por decisión de alcance. **Aún sin commitear** al cierre del reporte.
+Fase 6 (Vista) descartada por decisión de alcance. Mejora posterior: CTA de upgrade en los mensajes
+de límite (ver última sección). **Aún sin commitear** al cierre del reporte.
 
 ## Resumen
 
@@ -230,6 +231,30 @@ Al llegar a implementarla se verificó que la premisa no se sostiene:
 - `currentPlan` de Vista **ya** viene del backend (`user.tenant_plan` → `authStore`).
 
 El refactor de `FEATURES_BY_PLAN` (DRY con el backend) quedó como **deuda técnica opcional**.
+
+---
+
+## Mejora posterior — CTA de upgrade en el mensaje de límite (2026-07-23)
+
+A pedido del usuario (viendo el mensaje con un tenant `free`): cuando un cliente supera el tope de
+subida de su plan, el mensaje ahora **invita a mejorar el plan**, alineado entre backend y frontend.
+
+- **Texto único** en los 3 puntos: `El archivo supera el límite de {N} MB de tu plan. Cambia a un
+  plan superior para aumentar la capacidad.` (y el genérico `El archivo supera el límite de {N} MB.`
+  cuando no hay upgrade posible).
+- **Guard de Enterprise:** el CTA no se muestra a quien ya está en el plan más alto (sería un callejón
+  sin salida). En backend ya estaba resuelto (`from_plan` en `_resolve_max_bytes` → Enterprise en el
+  tope cae al 400 genérico, no al 402 con upgrade). En frontend se replica con una prop `canUpgrade`
+  (`plan !== 'enterprise'`; con el plan aún cargando → sin CTA).
+- **Alcance:** solo los mensajes gateados por plan (chat de Workspace y Desktop + 402 del backend).
+  Excluidos `ImportModal` (parseo CSV, no depende del plan) y las subidas del Admin (staff).
+- **Archivos:** `utils/uploads.py` (mensaje 402); Workspace `MessageComposer.tsx` + `ChatPage.tsx`
+  (pasa `canUpgrade` desde `useFeatureGate().plan`); Desktop `MessageComposer.tsx` + `ChatPanel.tsx`
+  (lee `authStore.tenant.plan`).
+- **Verificado:** backend `test_uploads.py` (29 tests, aserción actualizada); Workspace
+  `MessageComposer.test.tsx` (8 tests, incl. caso con CTA y caso Enterprise sin CTA); Desktop
+  `tsc` limpio; y **en vivo** con `cliente108@cliente.com` (bajando professional a 1 MB) → mensaje
+  con CTA confirmado en el navegador, plan restaurado.
 
 ---
 
