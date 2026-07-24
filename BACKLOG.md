@@ -62,6 +62,23 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
+- [ ] **Cuota de almacenamiento real en Vista — Fases 1-6 implementadas (sin commitear), pendiente
+      prueba en vivo final + commit.** Antes la cuota `storage_gb` del plan (Free 1 GB, editable en
+      Gestión de Planes) no reflejaba lo de Vista: las imágenes eran `URLField` externos que no
+      ocupaban cuota. Ahora: modelo `DigitalAsset` (broker de subidas con `ImageField`) que cuenta
+      hacia `storage_gb` vía `get_tenant_storage_bytes` (única fuente de verdad, la heredan Hub y
+      analytics); categoría `digital_asset` en `utils/uploads.py` (valida tipo real + tope de plan +
+      cuota, **402** si excede, SVG excluido); endpoints `POST/GET/DELETE /api/v1/app/digital/assets/`
+      (aislados por dueño, auditados); ciclo de vida (signal `post_delete` borra el binario + GC
+      Celery nocturno de huérfanos >24 h); UI de subida real en Vista (avatar, OG, portafolio
+      cover+galería, con fallback de URL externa); indicador de uso en el Dashboard del Hub. **Sin
+      commitear.** Pendiente: prueba en vivo (subir/borrar imagen en Vista, ver la barra del Hub
+      moverse, forzar el 402 con cuota llena) y commit. Baseline de tests: backend `digital_services`
+      (85+) + `audit` verde, Vista 64, Hub 82; 10 fallos backend preexistentes ajenos (throttle).
+      _Origen: consulta sobre si el límite de almacenamiento del Admin se respetaba de verdad,
+      2026-07-23 — ver [PRD](prd/features/cuota-almacenamiento-real-vista.md),
+      [ADR-007](docs/adr/007-almacenamiento-gestionado-cuota.md) y
+      [LL-105](.claude/skills/lessons-learned/references/knowledge-base.md)._
 - [ ] **Límites centralizados de archivos e imágenes por plan — Fases 1-5 implementadas (sin
       commitear), pendiente prueba en vivo final + commit.** Hecho en el árbol de trabajo:
       `utils/uploads.py` (whitelist de tipos + magic bytes + tope duro por categoría), claves
@@ -121,6 +138,19 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > No es urgente, pero si no se corrige puede morder después.
 
+- [ ] **Cuota de almacenamiento real — piezas diferidas de la feature (v1 cubrió avatar/OG/portafolio):**
+      (a) **Subidas de Landing y CV**: `landing_image` (imágenes dentro del JSON `sections`) y
+      `cv_photo` (hoy la foto de CV = el `avatar_url` del perfil, sin campo propio) quedaron fuera de
+      v1 y están **excluidos del GC** (`apps/digital_services/tasks.py::_COLLECTABLE_SLOTS`) porque su
+      referencia no se rastrea. Para cablearlas hay que extender el colector de referencias del GC a
+      las secciones JSON de landing / añadir un campo de foto de CV + su referencia; si no, esos
+      assets nunca se recolectan. (b) **Contabilizar texto de Workspace** (notas, snippets, tareas)
+      hacia la cuota — descartado en v1 (el texto casi nunca mueve la aguja del GB). (c) **Denormalizar
+      `Tenant.storage_bytes_used`** con signals + recálculo nocturno si se suman más fuentes: hoy
+      `get_tenant_storage_bytes` agrega en vivo en cada subida, aceptable con una sola fuente nueva.
+      (d) **Backfill** de las URLs externas de Vista ya existentes a assets gestionados (opcional).
+      _Origen: Fase 6 de la feature de cuota real, 2026-07-23 — ver
+      [PRD](prd/features/cuota-almacenamiento-real-vista.md) § Fuera de Alcance._
 - [ ] **Vista duplica el mapa plan→features en `FEATURES_BY_PLAN` (`frontend_next_vista/src/data/featureGates.ts`, ~26 claves):**
       es una tabla hardcodeada paralela al `PLAN_FEATURES` del backend, con riesgo de que ambas
       deriven. No se unificó en la feature de límites de subida porque (a) el Admin no edita feature

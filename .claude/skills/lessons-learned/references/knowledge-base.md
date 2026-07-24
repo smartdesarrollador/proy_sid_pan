@@ -8,7 +8,7 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - [A. Trailing slash, proxies y routing HTTP](#a-trailing-slash-proxies-y-routing-http) — LL-001 … LL-005
 - [B. Variables de entorno y build (Next.js / Dokploy)](#b-variables-de-entorno-y-build-nextjs--dokploy) — LL-010 … LL-011
 - [C. Docker / contenedores / recarga](#c-docker--contenedores--recarga) — LL-020 … LL-027, LL-103
-- [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-034
+- [D. Multi-tenancy, CORS y headers](#d-multi-tenancy-cors-y-headers) — LL-030 … LL-034, LL-105
 - [E. Seguridad y lógica de negocio](#e-seguridad-y-lógica-de-negocio) — LL-040 … LL-049, LL-096, LL-101, LL-104
 - [F. Frontend React / Next.js (estado, SSR, tipos)](#f-frontend-react--nextjs-estado-ssr-tipos) — LL-050 … LL-059
 - [G. Testing (MSW, fixtures, permisos)](#g-testing-msw-fixtures-permisos) — LL-060 … LL-063, LL-102
@@ -302,6 +302,38 @@ Formato y reglas en `../SKILL.md`. Índice de reportes digeridos en `sources.md`
 - **Fuente:** fix "plan del tenant desincronizado en el Hub (Dashboard/Suscripción)", 2026-07-11.
   Ver también [[LL-041]], [[LL-049]].
 - **Tags:** multi-tenant, data-consistency, business-logic, source-of-truth, get_or_create, signals
+
+---
+
+### LL-105 — `request.tenant` es None sin el header `X-Tenant-Slug` → `AuditMixin` (o cualquier write con `tenant=request.tenant`) **envenena la transacción**, no falla suave
+- **Síntoma:** Un endpoint autenticado que funciona en tests (que mandan el header) revienta desde un
+  frontend que **no** manda `X-Tenant-Slug` (Vista autentica solo con `Authorization: Bearer`). El
+  error no es un 400 limpio sino un `TransactionManagementError` / 500: "An error occurred in the
+  current transaction. You can't execute queries until the end of the 'atomic' block."
+- **Causa raíz:** `TenantMiddleware` resuelve `request.tenant` **solo** desde el header
+  `X-Tenant-Slug` (`apps/tenants/middleware.py`); sin header queda `None` (relacionado con [[LL-030]]).
+  `AuditMixin.log_action` (`core/mixins.py`) hacía `AuditLog.objects.create(tenant=request.tenant, ...)`
+  y `audit_logs.tenant_id` es `NOT NULL` → `IntegrityError`. Aunque estaba envuelto en
+  `try/except Exception: pass`, en PostgreSQL una sentencia que falla **aborta toda la transacción**:
+  el `except` traga la excepción pero **no** revierte el savepoint, así que la siguiente query del
+  request (o el `ATOMIC_REQUESTS`/atomic de test) explota con `TransactionManagementError`. El
+  "audit no debe bloquear la respuesta" era falso: sí la bloqueaba.
+- **Solución:** `log_action` resuelve el tenant con fallback y **omite** si no hay ninguno, sin
+  intentar el INSERT que rompe: `tenant = getattr(request, 'tenant', None) or (request.user.tenant if
+  request.user.is_authenticated else None); if tenant is None: return`. Y las vistas llamadas desde
+  Vista (p.ej. subida de imágenes) pasan `tenant=request.user.tenant` a `validate_upload`, no
+  `request.tenant`.
+- **Prevención:** (1) Cualquier código que dependa de `request.tenant` debe asumir que puede ser
+  `None` para requests sin el header (Vista, y cualquier cliente que solo mande Bearer); derivar el
+  tenant de `request.user` cuando el endpoint es `IsAuthenticated`. (2) Un bloque best-effort
+  (`try/except pass`) que hace **writes a la BD** dentro de una transacción **no es seguro**: una
+  `IntegrityError` envenena la transacción aunque tragues la excepción. O se corre en su propio
+  savepoint (`with transaction.atomic():` anidado) o se **evita el write inválido antes de intentarlo**
+  (guard previo). (3) Test que reproduzca el escenario real del cliente: subir/mutar **sin** el header
+  `X-Tenant-Slug`.
+- **Fuente:** Fase 4 de "cuota de almacenamiento real en Vista" (subida de imágenes), 2026-07-23.
+  Ver también [[LL-030]].
+- **Tags:** multi-tenant, x-tenant-slug, request.tenant, audit, transaction, IntegrityError, savepoint, vista
 
 ---
 
