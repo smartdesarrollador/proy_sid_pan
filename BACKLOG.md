@@ -17,6 +17,21 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
 
 > Referencia rápida — ver detalles completos en [`reports/`](reports/).
 
+- **2026-07-24 — Feature: cuota de almacenamiento real por tenant (Vista + chat) + avisos de límite** ✅
+  6 fases. La cuota `storage_gb` ahora cuenta las imágenes de Vista (antes `URLField` externos que no
+  ocupaban nada) vía el broker `DigitalAsset` + `get_tenant_storage_bytes` (fuente única, la heredan
+  Hub y analytics); endpoints de assets aislados por dueño; ciclo de vida (signal `post_delete` + GC
+  Celery nocturno de huérfanos 24 h); subida real en Vista (avatar/OG/portafolio, con fallback de URL);
+  barra de uso en el Dashboard + franja proactiva (≥80%/100%) en el Hub; mensaje de bloqueo 402 en el
+  chat (Workspace+Desktop); decimales en Almacenamiento (GB) del Admin (`0.03 GB`) + display en MB; y
+  **eliminar adjuntos del chat** (soft-delete del mensaje + borrado real del adjunto para liberar cuota).
+  Bug clave corregido: `request.tenant` None sin `X-Tenant-Slug` reventaba el `AuditMixin` (LL-105).
+  Verificado en vivo por el usuario y commiteado.
+  _→ [Reporte](reports/2026-07-24-cuota-almacenamiento-real-vista.md) ·
+  [PRD](prd/features/cuota-almacenamiento-real-vista.md) ·
+  [ADR-007](docs/adr/007-almacenamiento-gestionado-cuota.md) ·
+  [LL-105](.claude/skills/lessons-learned/references/knowledge-base.md)_
+
 - **2026-07-21 — Fix: upgrade de plan daba `405` en producción al enviar el comprobante Yape** ✅
   `useYapeUpgrade.ts` llamaba `POST /admin/subscriptions/yape-upgrade` (sin trailing slash)
   confiando en que el rewrite de `next.config.ts` la agregaría (convención de LL-005) — cierto
@@ -43,42 +58,12 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
   [LL-102](.claude/skills/lessons-learned/references/knowledge-base.md) ·
   [LL-103](.claude/skills/lessons-learned/references/knowledge-base.md)_
 
-- **2026-07-19 — Feature: sin sesión, los iconos del Desktop redirigen al panel de Perfil** ✅
-  Sin autenticar, clickear cualquier icono de la tira abría su panel con el mensaje "Inicia
-  sesión para ver tus X" sin acción posible. Ahora `App.tsx` resuelve el destino
-  (`resolvePanel`): sin sesión todo redirige a Perfil (botón "Iniciar sesión" a la mano),
-  excepto `AUTH_FREE_PANELS = ["profile", "settings", "tools"]` que funcionan sin login
-  (decisión del usuario). Al redirigir no aplica el toggle (clickear otro icono con Perfil
-  abierto no colapsa el panel); cubre clicks de la tira y navegación vía `pendingPanel`
-  (Home/Search/fijados). Verificado en navegador ambas ramas (sin sesión → Perfil resaltado;
-  con sesión seed local → navegación normal). Nota de entorno descubierta al verificar: el
-  `.env` de dev del Desktop apunta `VITE_API_URL` a **prod** (`api-rbac.digisider.com`) — para
-  probar contra el backend local: `$env:VITE_API_URL='http://rbac.local.test'; npm run dev`.
-  `tsc` + `vite build` limpios.
-
 ---
 
 ## Pendientes activos
 
 > Lo inmediato — lo primero que se retoma la próxima vez que se abre el proyecto.
 
-- [ ] **Cuota de almacenamiento real en Vista — Fases 1-6 implementadas (sin commitear), pendiente
-      prueba en vivo final + commit.** Antes la cuota `storage_gb` del plan (Free 1 GB, editable en
-      Gestión de Planes) no reflejaba lo de Vista: las imágenes eran `URLField` externos que no
-      ocupaban cuota. Ahora: modelo `DigitalAsset` (broker de subidas con `ImageField`) que cuenta
-      hacia `storage_gb` vía `get_tenant_storage_bytes` (única fuente de verdad, la heredan Hub y
-      analytics); categoría `digital_asset` en `utils/uploads.py` (valida tipo real + tope de plan +
-      cuota, **402** si excede, SVG excluido); endpoints `POST/GET/DELETE /api/v1/app/digital/assets/`
-      (aislados por dueño, auditados); ciclo de vida (signal `post_delete` borra el binario + GC
-      Celery nocturno de huérfanos >24 h); UI de subida real en Vista (avatar, OG, portafolio
-      cover+galería, con fallback de URL externa); indicador de uso en el Dashboard del Hub. **Sin
-      commitear.** Pendiente: prueba en vivo (subir/borrar imagen en Vista, ver la barra del Hub
-      moverse, forzar el 402 con cuota llena) y commit. Baseline de tests: backend `digital_services`
-      (85+) + `audit` verde, Vista 64, Hub 82; 10 fallos backend preexistentes ajenos (throttle).
-      _Origen: consulta sobre si el límite de almacenamiento del Admin se respetaba de verdad,
-      2026-07-23 — ver [PRD](prd/features/cuota-almacenamiento-real-vista.md),
-      [ADR-007](docs/adr/007-almacenamiento-gestionado-cuota.md) y
-      [LL-105](.claude/skills/lessons-learned/references/knowledge-base.md)._
 - [ ] **Límites centralizados de archivos e imágenes por plan — Fases 1-5 implementadas (sin
       commitear), pendiente prueba en vivo final + commit.** Hecho en el árbol de trabajo:
       `utils/uploads.py` (whitelist de tipos + magic bytes + tope duro por categoría), claves
@@ -149,8 +134,11 @@ su propio archivo. Se actualiza constantemente — no lleva fecha, no es histór
       `Tenant.storage_bytes_used`** con signals + recálculo nocturno si se suman más fuentes: hoy
       `get_tenant_storage_bytes` agrega en vivo en cada subida, aceptable con una sola fuente nueva.
       (d) **Backfill** de las URLs externas de Vista ya existentes a assets gestionados (opcional).
-      _Origen: Fase 6 de la feature de cuota real, 2026-07-23 — ver
-      [PRD](prd/features/cuota-almacenamiento-real-vista.md) § Fuera de Alcance._
+      (e) **Sync realtime del borrado** de mensajes de chat: hoy el `DELETE` no se propaga por el
+      websocket; los demás participantes de un grupo ven el tombstone al refrescar/recargar.
+      _Origen: Fase 6 + mejoras de la feature de cuota real, 2026-07-23/24 — ver
+      [PRD](prd/features/cuota-almacenamiento-real-vista.md) § Fuera de Alcance y
+      [reporte](reports/2026-07-24-cuota-almacenamiento-real-vista.md)._
 - [ ] **Vista duplica el mapa plan→features en `FEATURES_BY_PLAN` (`frontend_next_vista/src/data/featureGates.ts`, ~26 claves):**
       es una tabla hardcodeada paralela al `PLAN_FEATURES` del backend, con riesgo de que ambas
       deriven. No se unificó en la feature de límites de subida porque (a) el Admin no edita feature
